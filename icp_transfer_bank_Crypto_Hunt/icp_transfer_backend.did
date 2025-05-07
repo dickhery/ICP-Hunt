@@ -1,0 +1,30 @@
+type LogEntry = record {
+  action : text;
+  block_index : opt nat64;
+  amount_e8s : nat64;
+  timestamp : nat64;
+  caller : principal;
+};
+type Result = variant { Ok : nat64; Err : text };
+type Tokens = record { e8s : nat64 };
+type TransferArgs = record {
+  to_principal : principal;
+  to_subaccount : opt blob;
+  amount : Tokens;
+};
+type TransferResult = variant { Ok : nat64; Err : text };
+service : () -> {
+  addToGoldPot : (nat64) -> (bool);
+  addToSilverPot : (nat64) -> (bool);
+  getBalanceOf : (principal) -> (nat64) query;
+  getGoldPot : () -> (nat64) query;
+  getLogs : () -> (vec LogEntry) query;
+  getMyBalance : () -> (nat64) query;
+  getSilverPot : () -> (nat64) query;
+  getTotalPot : () -> (nat64) query;
+  recordDeposit : (principal, nat64, nat64) -> (bool);
+  resetGoldPot : () -> (bool);
+  resetSilverPot : () -> (bool);
+  transfer : (TransferArgs) -> (Result);
+  withdraw : (nat64) -> (TransferResult);
+}
