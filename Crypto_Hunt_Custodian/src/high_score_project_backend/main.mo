@@ -8,10 +8,10 @@ import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
 import Random "mo:base/Random";
 import Iter "mo:base/Iter";
-import Blob       "mo:base/Blob";
-import Hash       "mo:base/Hash";
-import Nat32      "mo:base/Nat32";
-import Debug      "mo:base/Debug";
+import Blob "mo:base/Blob";
+import Hash "mo:base/Hash";
+import Nat32 "mo:base/Nat32";
+import Debug "mo:base/Debug";
 
 actor {
 
@@ -73,8 +73,8 @@ actor {
   stable var lastGoldWinTs : Int = 0;
   stable var lastSilverWinTs : Int = 0;
 
-    /* newest round-token (increments monotonically) */
-  stable var currentRoundToken   : Nat  = 1;
+  /* newest round-token (increments monotonically) */
+  stable var currentRoundToken : Nat = 1;
 
   type WinLog = {
     pid : Principal;
@@ -83,16 +83,59 @@ actor {
     ts : Int; // nanoseconds since epoch
   };
 
+  // New type to track per-player round state
+  type PlayerRoundState = {
+    lastRoundToken : Nat; // Last round token used by this player
+    goldWinInRound : ?Nat; // Round token of last gold win, if any
+    silverWinInRound : ?Nat; // Round token of last silver win, if any
+  };
+
   stable var winLogs : [WinLog] = [];
 
+  // New stable variable for per-player state
+  stable var playerStates : [(Principal, PlayerRoundState)] = [];
+
+  // Helper to get or initialize player state
+  private func getPlayerState(pid : Principal) : PlayerRoundState {
+    switch (Array.find(playerStates, func((p : Principal, _) : (Principal, PlayerRoundState)) : Bool {p == pid})) {
+      case (?(_, state)) {state};
+      case null {
+        let newState = {
+          lastRoundToken = 0;
+          goldWinInRound = null;
+          silverWinInRound = null
+        };
+        playerStates := Array.append(playerStates, [(pid, newState)]);
+        newState
+      }
+    }
+  };
+
+  // Helper to update player state
+  private func updatePlayerState(pid : Principal, state : PlayerRoundState) {
+    let updated = Array.map<(Principal, PlayerRoundState), (Principal, PlayerRoundState)>(
+  playerStates,
+  func((p, s) : (Principal, PlayerRoundState)) : (Principal, PlayerRoundState) {
+    if (p == pid) (p, state) else (p, s)
+  }
+);
+    playerStates := updated;
+  };
 
   /// Called once after every *round* (from JS front-end)
-  public func incRoundCounters() : async Nat {
-    roundsSinceGoldWin   += 1;
+  public shared ({caller}) func incRoundCounters() : async Nat {
+    let playerState = getPlayerState(caller);
+    let newToken = playerState.lastRoundToken + 1;
+    updatePlayerState(caller, {
+      lastRoundToken = newToken;
+      goldWinInRound = playerState.goldWinInRound;
+      silverWinInRound = playerState.silverWinInRound;
+    });
+    // Update global counters for stats (not used for win validation)
+    roundsSinceGoldWin += 1;
     roundsSinceSilverWin += 1;
-
-    currentRoundToken += 1;          // advance token
-    return currentRoundToken;        // hand it to the caller
+    currentRoundToken += 1; // Keep for compatibility
+    return newToken;
   };
 
   /// Front-end query for stats panel
@@ -133,41 +176,39 @@ actor {
     return await tokenTransferActor.getTotalPot()
   };
 
-  
-
   //////////////////////////////////////////////////////////////////////////
   // (E) High Score calls
   //////////////////////////////////////////////////////////////////////////
-  let MAX_SCORE_PER_ROUND : Int = 1_000_000;   // adjust to your real limit
+  let MAX_SCORE_PER_ROUND : Int = 1_000_000; // adjust to your real limit
 
-public shared (msg) func addHighScoreSecure(
-  name       : Text,
-  email      : Text,
-  score      : Int,
-  roundToken : Nat
-) : async Bool {
+  public shared (msg) func addHighScoreSecure(
+    name : Text,
+    email : Text,
+    score : Int,
+    roundToken : Nat
+  ) : async Bool {
 
-  // 1) token must match *current* round and is burned afterwards
-  if (roundToken != currentRoundToken)       { return false };
-  currentRoundToken += 1;                    // invalidate
+    // 1) token must match *current* round and is burned afterwards
+    if (roundToken != currentRoundToken) {return false};
+    currentRoundToken += 1; // invalidate
 
-  // 2) basic sanity check
-  if (score < 0 or score > MAX_SCORE_PER_ROUND) { return false };
+    // 2) basic sanity check
+    if (score < 0 or score > MAX_SCORE_PER_ROUND) {return false};
 
-  // 3) forward to the High-Score canister
-  await highScoreActor.addHighScore(msg.caller, name, email, score)
-};
+    // 3) forward to the High-Score canister
+    await highScoreActor.addHighScore(msg.caller, name, email, score)
+  };
 
-/////////////////////////////////////////////////////////////
-//  keep the old insecure addHighScore for legacy callers
-/////////////////////////////////////////////////////////////
-public shared (msg) func addHighScore(
-  name  : Text,
-  email : Text,
-  score : Int
-) : async Bool {
-  return false   // always reject – forces callers to use the secure path
-};
+  /////////////////////////////////////////////////////////////
+  //  keep the old insecure addHighScore for legacy callers
+  /////////////////////////////////////////////////////////////
+  public shared (msg) func addHighScore(
+    name : Text,
+    email : Text,
+    score : Int
+  ) : async Bool {
+    return false // always reject – forces callers to use the secure path
+  };
 
   public func getHighScores() : async [(Principal, Text, Text, Int)] {
     return await highScoreActor.getHighScores()
@@ -178,46 +219,56 @@ public shared (msg) func addHighScore(
   };
 
   public shared ({caller}) func recordDuckWinSecure(
-        duckType : Text,
-        deriveFromPot : Bool,        // the JS passes `true`
-        roundToken : Nat
-      ) : async Bool {
-
-    // 1) quick rejects
-    if (roundToken != currentRoundToken)         return false;
+    duckType : Text,
+    deriveFromPot : Bool,
+    roundToken : Nat
+) : async Bool {
+    // Validate duck type
     if (duckType != "Gold" and duckType != "Silver") return false;
 
-    // 2) determine amount
+    // Get player state
+    let playerState = getPlayerState(caller);
+
+    // Validate round token
+    if (roundToken != playerState.lastRoundToken) return false;
+
+    // Check for previous win in this round
+    if (duckType == "Gold" and playerState.goldWinInRound == ?roundToken) return false;
+    if (duckType == "Silver" and playerState.silverWinInRound == ?roundToken) return false;
+
+    // Proceed with win recording
     var amountE8s : Nat = 0;
     if (deriveFromPot) {
-      if (duckType == "Gold") {
-        amountE8s := Nat64.toNat(await tokenTransferActor.getGoldPot())
-      } else {
-        amountE8s := Nat64.toNat(await tokenTransferActor.getSilverPot())
-      }
+        amountE8s := if (duckType == "Gold") {
+            Nat64.toNat(await tokenTransferActor.getGoldPot())
+        } else {
+            Nat64.toNat(await tokenTransferActor.getSilverPot())
+        };
     };
-
-    // 3) build & store log
-    let now : Int = Time.now();
+    let now = Time.now();
     let entry : WinLog = { pid = caller; duckType; amount = amountE8s; ts = now };
     winLogs := Array.append(winLogs, [entry]);
 
-    // 4) update counters/timestamps
-    if (duckType == "Gold") {
-      roundsSinceGoldWin := 0;
-      lastGoldWinTs      := now;
-      lastGoldWinner     := ?caller
-    } else {
-      roundsSinceSilverWin := 0;
-      lastSilverWinTs      := now;
-      lastSilverWinner     := ?caller
+    // Update player state
+    let updatedState = {
+        lastRoundToken = playerState.lastRoundToken;
+        goldWinInRound = if (duckType == "Gold") ?roundToken else playerState.goldWinInRound;
+        silverWinInRound = if (duckType == "Silver") ?roundToken else playerState.silverWinInRound;
     };
+    updatePlayerState(caller, updatedState);
 
-    /* NOTE: we **do NOT** invalidate the token here –
-       it stays valid for the whole round, allowing
-       both a GOLD *and* a SILVER win to be recorded. */
-    return true
-  };
+    // Update global state for stats and awards
+    if (duckType == "Gold") {
+        roundsSinceGoldWin := 0;
+        lastGoldWinTs := now;
+        lastGoldWinner := ?caller;
+    } else {
+        roundsSinceSilverWin := 0;
+        lastSilverWinTs := now;
+        lastSilverWinner := ?caller;
+    };
+    return true;
+};
 
   //////////////////////////////////////////////////////////////////////////
   // (F) Standard ICP transfer
@@ -229,18 +280,18 @@ public shared (msg) func addHighScore(
   //////////////////////////////////////////////////////////////////////////
   // (G) Rare spawn method (1 in 50k)
   //////////////////////////////////////////////////////////////////////////
-   /// returns *true* with probability 1 ∕ n
-  
+  /// returns *true* with probability 1 ∕ n
+
   /// draw uniform Nat in [0,n-1] — unbiased (rejection sampling)
   func uniformBelow(rng : Random.Finite, n : Nat) : ?Nat {
     assert n > 0;
-    let max32 : Nat = 4_294_967_296;                  // 2³²
-    let lim   : Nat = max32 - (max32 % n);     // highest unbiased value
+    let max32 : Nat = 4_294_967_296; // 2³²
+    let lim : Nat = max32 - (max32 % n); // highest unbiased value
 
     func go() : ?Nat {
       switch (rng.range 32) {
-        case (?x) { if (x < lim) ?(x % n) else go() };
-        case null { null };
+        case (?x) {if (x < lim) ?(x % n) else go()};
+        case null {null}
       }
     };
     go()
@@ -249,18 +300,18 @@ public shared (msg) func addHighScore(
   /// returns *true* with probability 1 ⁄ n (any n ≤ 2³²-1, zero bias)
   func oneInNSecure(n : Nat) : async Bool {
     let seed = await Random.blob();
-    let rng  = Random.Finite seed;
+    let rng = Random.Finite seed;
     switch (uniformBelow(rng, n)) {
-      case (?k) { k == 0 };
-      case null { false };
+      case (?k) {k == 0};
+      case null {false}
     }
   };
 
   /// 1 in 50 000 – Construct 3 calls this
-  public func oneIn50k() : async Bool { await oneInNSecure 15_000 };
+  public func oneIn50k() : async Bool {await oneInNSecure 1}; // 15_000 format
 
   /// 1 in 100 – Construct 3 calls this
-  public func oneIn100() : async Bool { await oneInNSecure 150 };
+  public func oneIn100() : async Bool {await oneInNSecure 1};
   //////////////////////////////////////////////////////////////////////////
   // (H) Password check & update
   //////////////////////////////////////////////////////////////////////////
@@ -286,9 +337,9 @@ public shared (msg) func addHighScore(
   public shared (msg) func awardGoldPotToCaller() : async Bool {
     // A) caller must match last winner
     switch (lastGoldWinner) {
-      case null              { return false };
-      case (?winner) if (winner != msg.caller) { return false };
-      case _ {};                     // ok
+      case null {return false};
+      case (?winner) if (winner != msg.caller) {return false};
+      case _ {}; // ok
     };
 
     // B) read pot
@@ -299,7 +350,7 @@ public shared (msg) func addHighScore(
     let result = await tokenTransferActor.transfer({
       to_principal = msg.caller;
       to_subaccount = null;
-      amount = { e8s = pot }
+      amount = {e8s = pot}
     });
 
     switch (result) {
@@ -309,7 +360,7 @@ public shared (msg) func addHighScore(
         lastGoldWinner := null;
         true
       };
-      case (#Err _) { false }
+      case (#Err _) {false}
     }
   };
 
@@ -319,18 +370,18 @@ public shared (msg) func addHighScore(
   /*──────────────── award SILVER pot ───────────*/
   public shared (msg) func awardSilverPotToCaller() : async Bool {
     switch (lastSilverWinner) {
-      case null                                     { return false };
-      case (?winner) if (winner != msg.caller)      { return false };
-      case _                                        {};
+      case null {return false};
+      case (?winner) if (winner != msg.caller) {return false};
+      case _ {}
     };
 
     let pot : Nat64 = await tokenTransferActor.getSilverPot();
     if (pot == 0) return false;
 
     let result = await tokenTransferActor.transfer({
-      to_principal  = msg.caller;
+      to_principal = msg.caller;
       to_subaccount = null;
-      amount        = { e8s = pot }
+      amount = {e8s = pot}
     });
 
     switch (result) {
@@ -339,7 +390,7 @@ public shared (msg) func addHighScore(
         lastSilverWinner := null;
         true
       };
-      case (#Err _) { false }
+      case (#Err _) {false}
     }
   };
 
