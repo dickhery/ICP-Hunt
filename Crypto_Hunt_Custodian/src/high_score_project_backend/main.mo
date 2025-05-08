@@ -233,10 +233,6 @@ actor {
     return true;
   };
 
-  public shared (msg) func transferTokens(args : TransferArgs) : async TransferResult {
-    return await tokenTransferActor.transfer(args)
-  };
-
   public func oneInNSecure(n : Nat) : async Bool {
     let seed = await Random.blob();
     let rng = Random.Finite seed;

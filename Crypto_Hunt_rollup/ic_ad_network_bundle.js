@@ -22928,13 +22928,6 @@ const idlFactory$2 = ({ IDL }) => {
     'duckType' : IDL.Text,
     'amount' : IDL.Nat,
   });
-  const Tokens = IDL.Record({ 'e8s' : IDL.Nat64 });
-  const TransferArgs = IDL.Record({
-    'to_principal' : IDL.Principal,
-    'to_subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
-    'amount' : Tokens,
-  });
-  const TransferResult = IDL.Variant({ 'Ok' : IDL.Nat64, 'Err' : IDL.Text });
   return IDL.Service({
     'addHighScore' : IDL.Func([IDL.Text, IDL.Text, IDL.Int], [IDL.Bool], []),
     'addHighScoreSecure' : IDL.Func(
@@ -22977,7 +22970,6 @@ const idlFactory$2 = ({ IDL }) => {
     'resetGoldPotFromCustodian' : IDL.Func([], [IDL.Bool], []),
     'resetHighScores' : IDL.Func([], [], []),
     'resetSilverPotFromCustodian' : IDL.Func([], [IDL.Bool], []),
-    'transferTokens' : IDL.Func([TransferArgs], [TransferResult], []),
     'updatePassword' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'verify_password' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   });
