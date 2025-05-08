@@ -50,6 +50,7 @@ export const idlFactory = ({ IDL }) => {
     'incRoundCounters' : IDL.Func([], [IDL.Nat], []),
     'oneIn100' : IDL.Func([], [IDL.Bool], []),
     'oneIn50k' : IDL.Func([], [IDL.Bool], []),
+    'oneInNSecure' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'recordDuckWinSecure' : IDL.Func(
         [IDL.Text, IDL.Bool, IDL.Nat],
         [IDL.Bool],
