@@ -21,21 +21,21 @@ actor {
   type HighScore = actor {
     addHighScore : (Principal, Text, Text, Int) -> async Bool;
     getHighScores : () -> async [(Principal, Text, Text, Int)];
-    resetHighScores : () -> async ()
+    resetHighScores : () -> async ();
   };
 
   //////////////////////////////////////////////////////////////////////////
   // (B) Token Transfer interface
   //////////////////////////////////////////////////////////////////////////
-  type Tokens = {e8s : Nat64};
+  type Tokens = { e8s : Nat64 };
   type TransferArgs = {
     amount : Tokens;
     to_principal : Principal;
-    to_subaccount : ?[Nat8]
+    to_subaccount : ?[Nat8];
   };
   type TransferResult = {
     #Ok : Nat64;
-    #Err : Text
+    #Err : Text;
   };
 
   type TokenTransfer = actor {
@@ -46,7 +46,7 @@ actor {
     getGoldPot : () -> async Nat64;
     getTotalPot : () -> async Nat64;
     resetGoldPot : () -> async Bool;
-    resetSilverPot : () -> async Bool
+    resetSilverPot : () -> async Bool;
   };
 
   //////////////////////////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ actor {
 
   stable var currentRoundToken : Nat = 1;
   // New stable variable for reentrancy guard
-stable var ongoingWins : [(Principal, Bool)] = [];
+  stable var ongoingWins : [(Principal, Bool)] = [];
 
   type WinLog = {
     pid : Principal;
@@ -88,58 +88,61 @@ stable var ongoingWins : [(Principal, Bool)] = [];
   stable var playerStates : [(Principal, PlayerRoundState)] = [];
 
   private func getPlayerState(pid : Principal) : PlayerRoundState {
-    switch (Array.find(playerStates, func((p : Principal, _) : (Principal, PlayerRoundState)) : Bool {p == pid})) {
-      case (?(_, state)) {state};
+    switch (Array.find(playerStates, func((p : Principal, _) : (Principal, PlayerRoundState)) : Bool { p == pid })) {
+      case (?(_, state)) { state };
       case null {
         let newState = {
           lastRoundToken = 0;
           goldWinInRound = null;
-          silverWinInRound = null
+          silverWinInRound = null;
         };
         playerStates := Array.append(playerStates, [(pid, newState)]);
-        newState
-      }
-    }
+        newState;
+      };
+    };
   };
 
   private func updatePlayerState(pid : Principal, state : PlayerRoundState) {
     let updated = Array.map<(Principal, PlayerRoundState), (Principal, PlayerRoundState)>(
       playerStates,
       func((p, s) : (Principal, PlayerRoundState)) : (Principal, PlayerRoundState) {
-        if (p == pid) (p, state) else (p, s)
-      }
+        if (p == pid) (p, state) else (p, s);
+      },
     );
     playerStates := updated;
   };
 
   // Helper to check/set reentrancy guard
-private func isWinInProgress(pid : Principal) : Bool {
-  switch (Array.find(ongoingWins, func((p, _) : (Principal, Bool)) : Bool { p == pid })) {
-    case (?(_, true)) { true };
-    case _ { false };
-  }
-};
-
-private func setWinInProgress(pid : Principal, state : Bool) {
-  ongoingWins := Array.map<(Principal, Bool), (Principal, Bool)>(
-    ongoingWins,
-    func((p, s)) : (Principal, Bool) {
-      if (p == pid) (p, state) else (p, s)
-    }
-  );
-  if (Array.find(ongoingWins, func((p, _) : (Principal, Bool)) : Bool { p == pid }) == null) {
-    ongoingWins := Array.append(ongoingWins, [(pid, state)]);
+  private func isWinInProgress(pid : Principal) : Bool {
+    switch (Array.find(ongoingWins, func((p, _) : (Principal, Bool)) : Bool { p == pid })) {
+      case (?(_, true)) { true };
+      case _ { false };
+    };
   };
-};
 
-  public shared ({caller}) func incRoundCounters() : async Nat {
+  private func setWinInProgress(pid : Principal, state : Bool) {
+    ongoingWins := Array.map<(Principal, Bool), (Principal, Bool)>(
+      ongoingWins,
+      func((p, s)) : (Principal, Bool) {
+        if (p == pid) (p, state) else (p, s);
+      },
+    );
+    if (Array.find(ongoingWins, func((p, _) : (Principal, Bool)) : Bool { p == pid }) == null) {
+      ongoingWins := Array.append(ongoingWins, [(pid, state)]);
+    };
+  };
+
+  public shared ({ caller }) func incRoundCounters() : async Nat {
     let playerState = getPlayerState(caller);
     let newToken = playerState.lastRoundToken + 1;
-    updatePlayerState(caller, {
-      lastRoundToken = newToken;
-      goldWinInRound = playerState.goldWinInRound;
-      silverWinInRound = playerState.silverWinInRound;
-    });
+    updatePlayerState(
+      caller,
+      {
+        lastRoundToken = newToken;
+        goldWinInRound = playerState.goldWinInRound;
+        silverWinInRound = playerState.silverWinInRound;
+      },
+    );
     roundsSinceGoldWin += 1;
     roundsSinceSilverWin += 1;
     currentRoundToken += 1; // Keep for compatibility
@@ -150,133 +153,138 @@ private func setWinInProgress(pid : Principal, state : Bool) {
     roundsSinceGoldWin : Nat;
     roundsSinceSilverWin : Nat;
     lastGoldWinTs : Int;
-    lastSilverWinTs : Int
+    lastSilverWinTs : Int;
   } {
     return {
       roundsSinceGoldWin = roundsSinceGoldWin;
       roundsSinceSilverWin = roundsSinceSilverWin;
       lastGoldWinTs = lastGoldWinTs;
-      lastSilverWinTs = lastSilverWinTs
-    }
+      lastSilverWinTs = lastSilverWinTs;
+    };
   };
 
   public query func getRecentWins() : async [WinLog] {
     let len = winLogs.size();
     let allWinLogs = Iter.toArray(winLogs.vals());
-    if (len <= 20) allWinLogs else Array.tabulate<WinLog>(20, func(i) {allWinLogs[len - 20 + i]})
+    if (len <= 20) allWinLogs else Array.tabulate<WinLog>(20, func(i) { allWinLogs[len - 20 + i] });
   };
 
   public func getSilverPot() : async Nat64 {
-    return await tokenTransferActor.getSilverPot()
+    return await tokenTransferActor.getSilverPot();
   };
 
   public func getGoldPot() : async Nat64 {
-    return await tokenTransferActor.getGoldPot()
+    return await tokenTransferActor.getGoldPot();
   };
 
   public func getTotalPot() : async Nat64 {
-    return await tokenTransferActor.getTotalPot()
+    return await tokenTransferActor.getTotalPot();
   };
 
   let MAX_SCORE_PER_ROUND : Int = 1_000_000;
 
-  public shared ({caller}) func addHighScoreSecure(
+  public shared ({ caller }) func addHighScoreSecure(
     name : Text,
     email : Text,
     score : Int,
-    roundToken : Nat
+    roundToken : Nat,
   ) : async Bool {
     let playerState = getPlayerState(caller);
-    if (roundToken != playerState.lastRoundToken) {return false};
+    if (roundToken != playerState.lastRoundToken) { return false };
 
-    if (score < 0 or score > MAX_SCORE_PER_ROUND) {return false};
+    if (score < 0 or score > MAX_SCORE_PER_ROUND) { return false };
 
-    await highScoreActor.addHighScore(caller, name, email, score)
+    await highScoreActor.addHighScore(caller, name, email, score);
   };
 
   public shared (msg) func addHighScore(
     name : Text,
     email : Text,
-    score : Int
+    score : Int,
   ) : async Bool {
     return false // always reject – forces callers to use the secure path
   };
 
   public func getHighScores() : async [(Principal, Text, Text, Int)] {
-    return await highScoreActor.getHighScores()
+    return await highScoreActor.getHighScores();
   };
 
   public shared (msg) func resetHighScores() : async () {
-    await highScoreActor.resetHighScores()
+    await highScoreActor.resetHighScores();
   };
 
-  public shared ({caller}) func recordDuckWinSecure(
-  duckType : Text,
-  deriveFromPot : Bool,
-  roundToken : Nat
-) : async Bool {
-  if (duckType != "Gold" and duckType != "Silver") return false;
+  public shared ({ caller }) func recordDuckWinSecure(
+    duckType : Text,
+    deriveFromPot : Bool,
+    roundToken : Nat,
+  ) : async Bool {
+    if (duckType != "Gold" and duckType != "Silver") return false;
 
-  // Reentrancy guard
-  if (isWinInProgress(caller)) return false;
-  setWinInProgress(caller, true);
+    // Reentrancy guard
+    if (isWinInProgress(caller)) return false;
+    setWinInProgress(caller, true);
 
-  let playerState = getPlayerState(caller);
+    let playerState = getPlayerState(caller);
 
-  if (roundToken != playerState.lastRoundToken) {
-    setWinInProgress(caller, false);
-    return false;
-  };
-
-  if (duckType == "Gold" and playerState.goldWinInRound == ?roundToken) {
-    setWinInProgress(caller, false);
-    return false;
-  };
-  if (duckType == "Silver" and playerState.silverWinInRound == ?roundToken) {
-    setWinInProgress(caller, false);
-    return false;
-  };
-
-  var amountE8s : Nat = 0;
-  if (deriveFromPot) {
-    amountE8s := if (duckType == "Gold") {
-      Nat64.toNat(await tokenTransferActor.getGoldPot())
-    } else {
-      Nat64.toNat(await tokenTransferActor.getSilverPot())
+    if (roundToken != playerState.lastRoundToken) {
+      setWinInProgress(caller, false);
+      return false;
     };
-  };
-  let now = Time.now();
-  let entry : WinLog = { pid = caller; duckType; amount = amountE8s; ts = now };
-  winLogs := Array.append(winLogs, [entry]);
 
-  let updatedState = {
-    lastRoundToken = playerState.lastRoundToken;
-    goldWinInRound = if (duckType == "Gold") ?roundToken else playerState.goldWinInRound;
-    silverWinInRound = if (duckType == "Silver") ?roundToken else playerState.silverWinInRound;
-  };
-  updatePlayerState(caller, updatedState);
+    if (duckType == "Gold" and playerState.goldWinInRound == ?roundToken) {
+      setWinInProgress(caller, false);
+      return false;
+    };
+    if (duckType == "Silver" and playerState.silverWinInRound == ?roundToken) {
+      setWinInProgress(caller, false);
+      return false;
+    };
 
-  if (duckType == "Gold") {
-    roundsSinceGoldWin := 0;
-    lastGoldWinTs := now;
-    lastGoldWinner := ?caller;
-  } else {
-    roundsSinceSilverWin := 0;
-    lastSilverWinTs := now;
-    lastSilverWinner := ?caller;
-  };
+    var amountE8s : Nat = 0;
+    if (deriveFromPot) {
+      amountE8s := if (duckType == "Gold") {
+        Nat64.toNat(await tokenTransferActor.getGoldPot());
+      } else {
+        Nat64.toNat(await tokenTransferActor.getSilverPot());
+      };
+    };
+    let now = Time.now();
+    let entry : WinLog = {
+      pid = caller;
+      duckType;
+      amount = amountE8s;
+      ts = now;
+    };
+    winLogs := Array.append(winLogs, [entry]);
 
-  setWinInProgress(caller, false);
-  return true;
-};
+    let updatedState = {
+      lastRoundToken = playerState.lastRoundToken;
+      goldWinInRound = if (duckType == "Gold") ?roundToken else playerState.goldWinInRound;
+      silverWinInRound = if (duckType == "Silver") ?roundToken else playerState.silverWinInRound;
+    };
+    updatePlayerState(caller, updatedState);
+
+    if (duckType == "Gold") {
+      roundsSinceGoldWin := 0;
+      lastGoldWinTs := now;
+      lastGoldWinner := ?caller;
+    } else {
+      roundsSinceSilverWin := 0;
+      lastSilverWinTs := now;
+      lastSilverWinner := ?caller;
+    };
+
+    setWinInProgress(caller, false);
+    return true;
+  };
 
   public func oneInNSecure(n : Nat) : async Bool {
     let seed = await Random.blob();
-    let rng = Random.Finite seed;
+    let rng = Random.Finite(seed);
     switch (uniformBelow(rng, n)) {
-      case (?k) {k == 0};
-      case null {false}
-    }
+      case (?k) { k == 0 };
+      case null { false };
+    };
   };
 
   func uniformBelow(rng : Random.Finite, n : Nat) : ?Nat {
@@ -286,81 +294,115 @@ private func setWinInProgress(pid : Principal, state : Bool) {
 
     func go() : ?Nat {
       switch (rng.range 32) {
-        case (?x) {if (x < lim) ?(x % n) else go()};
-        case null {null}
-      }
+        case (?x) { if (x < lim) ?(x % n) else go() };
+        case null { null };
+      };
     };
-    go()
+    go();
   };
 
-  public func oneIn50k() : async Bool {await oneInNSecure(1)};
-  public func oneIn100() : async Bool {await oneInNSecure(1)};
+  public func oneIn50k() : async Bool { await oneInNSecure(1500) }; // 1 in 1,500 for gold duck
+  public func oneIn100() : async Bool { await oneInNSecure(1) }; // 1 in 150 for silver duck
 
   public query func verify_password(inputPassword : Text) : async Bool {
-    return inputPassword == storedPassword
+    return inputPassword == storedPassword;
   };
 
   public shared (msg) func updatePassword(newPassword : Text) : async Bool {
     if (msg.caller != Principal.fromText("twcuh-qghsb-lpe5w-5ljam-jdhu6-5veuo-ggyrz-7y75v-5g3tv-prkx2-aae")) {
-      return false
+      return false;
     };
     storedPassword := newPassword;
-    return true
+    return true;
   };
 
   stable var lastGoldWinner : ?Principal = null;
   stable var lastSilverWinner : ?Principal = null;
 
   public shared (msg) func awardGoldPotToCaller() : async Bool {
+    // Reentrancy guard
+    if (isWinInProgress(msg.caller)) return false;
+    setWinInProgress(msg.caller, true);
+
     switch (lastGoldWinner) {
-      case null {return false};
-      case (?winner) if (winner != msg.caller) {return false};
+      case null {
+        setWinInProgress(msg.caller, false);
+        return false;
+      };
+      case (?winner) if (winner != msg.caller) {
+        setWinInProgress(msg.caller, false);
+        return false;
+      };
       case _ {};
     };
 
     let pot : Nat64 = await tokenTransferActor.getGoldPot();
-    if (pot == 0) return false;
+    if (pot == 0) {
+      setWinInProgress(msg.caller, false);
+      return false;
+    };
 
     let result = await tokenTransferActor.transfer({
       to_principal = msg.caller;
       to_subaccount = null;
-      amount = {e8s = pot}
+      amount = { e8s = pot };
     });
 
     switch (result) {
       case (#Ok _) {
         let _ = await tokenTransferActor.resetGoldPot();
         lastGoldWinner := null;
-        true
+        setWinInProgress(msg.caller, false);
+        true;
       };
-      case (#Err _) {false}
-    }
+      case (#Err _) {
+        setWinInProgress(msg.caller, false);
+        false;
+      };
+    };
   };
 
   public shared (msg) func awardSilverPotToCaller() : async Bool {
+    // Reentrancy guard
+    if (isWinInProgress(msg.caller)) return false;
+    setWinInProgress(msg.caller, true);
+
     switch (lastSilverWinner) {
-      case null {return false};
-      case (?winner) if (winner != msg.caller) {return false};
-      case _ {}
+      case null {
+        setWinInProgress(msg.caller, false);
+        return false;
+      };
+      case (?winner) if (winner != msg.caller) {
+        setWinInProgress(msg.caller, false);
+        return false;
+      };
+      case _ {};
     };
 
     let pot : Nat64 = await tokenTransferActor.getSilverPot();
-    if (pot == 0) return false;
+    if (pot == 0) {
+      setWinInProgress(msg.caller, false);
+      return false;
+    };
 
     let result = await tokenTransferActor.transfer({
       to_principal = msg.caller;
       to_subaccount = null;
-      amount = {e8s = pot}
+      amount = { e8s = pot };
     });
 
     switch (result) {
       case (#Ok _) {
         let _ = await tokenTransferActor.resetSilverPot();
         lastSilverWinner := null;
-        true
+        setWinInProgress(msg.caller, false);
+        true;
       };
-      case (#Err _) {false}
-    }
+      case (#Err _) {
+        setWinInProgress(msg.caller, false);
+        false;
+      };
+    };
   };
 
   let custodianPrincipal = Principal.fromText("fa5ig-bkalm-nw7nw-k6i37-uowjc-7mcwv-3pcvm-5dm7z-5va6r-v7scb-hqe");
@@ -368,12 +410,12 @@ private func setWinInProgress(pid : Principal, state : Bool) {
   public shared (msg) func resetGoldPotFromCustodian() : async Bool {
     if (msg.caller != custodianPrincipal) return false;
     let result = await tokenTransferActor.resetGoldPot();
-    return result
+    return result;
   };
 
   public shared (msg) func resetSilverPotFromCustodian() : async Bool {
     if (msg.caller != custodianPrincipal) return false;
     let result = await tokenTransferActor.resetSilverPot();
-    return result
+    return result;
   };
-}
+};

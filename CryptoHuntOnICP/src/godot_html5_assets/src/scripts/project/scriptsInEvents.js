@@ -54,19 +54,20 @@ const scriptsInEvents = {
 		        runtime.callFunction("OnCheckSilverDuckComplete");
 	},
 
-	async Game_event_Event184_Act11(runtime, localVars)
+	async Game_event_Event184_Act12(runtime, localVars)
 	{
-		const res = await window.custodianActor.awardGoldPotToCaller();
-		    await window.recordDuckWin("Gold", res);
-		
-		
+		const success = await self.recordDuckWin("Gold");
+		if (!success) {
+		    runtime.globalVars.StatusMessage = "Cannot record Gold duck win: Operation in progress or invalid token.";
+		}
 	},
 
-	async Game_event_Event185_Act11(runtime, localVars)
+	async Game_event_Event185_Act12(runtime, localVars)
 	{
-		const res = await window.custodianActor.awardSilverPotToCaller();
-		    await window.recordDuckWin("Silver", res);
-		
+		const success = await self.recordDuckWin("Silver");
+		if (!success) {
+		    runtime.globalVars.StatusMessage = "Cannot record Silver duck win: Operation in progress or invalid token.";
+		}
 	},
 
 	async Game_event_Event214_Act7(runtime, localVars)
@@ -78,16 +79,6 @@ const scriptsInEvents = {
 	{
 		self.fetchNextAd();
 		
-	},
-
-	async Menu_event_Event11_Act5(runtime, localVars)
-	{
-		window.addToGoldPot(0.004);
-	},
-
-	async Menu_event_Event11_Act6(runtime, localVars)
-	{
-		window.addToSilverPot(0.004);
 	},
 
 	async Menu_event_Event14_Act1(runtime, localVars)
@@ -149,11 +140,14 @@ const scriptsInEvents = {
 
 	async Game_over_event_Event9_Act1(runtime, localVars)
 	{
-		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
+		const nameBox  = runtime.objects.NameInputBox.getFirstInstance();
 		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
-		runtime.globalVars.PlayerNameInput = nameBox.text;
+		
+		runtime.globalVars.PlayerNameInput  = nameBox.text;
 		runtime.globalVars.PlayerEmailInput = emailBox.text;
-		self.submitHighScore();
+		
+		self.submitHighScore();   
+		
 	},
 
 	async Auth_event_Event1_Act1(runtime, localVars)

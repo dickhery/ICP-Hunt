@@ -1794,6 +1794,11 @@ self.C3_ExpressionFuncs = [
 		() => 5.01,
 		() => 1801,
 		() => 83,
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			const v1 = p._GetNode(1).GetVar();
+			return () => or(v0.GetValue(), v1.GetValue());
+		},
 		() => "Gameplay",
 		() => "Pause",
 		() => "Show_Pause_Settings",

@@ -22808,7 +22808,7 @@ async function _deleteStorage(storage) {
 //
 // ad_network_canister.js
 //
-const idlFactory$3 = ({ IDL }) => {
+const idlFactory$4 = ({ IDL }) => {
   // Reuse your existing Ad, Project, LogEntry, AdLite definitions.
   const Ad = IDL.Record({
     'id' : IDL.Nat,
@@ -22872,7 +22872,7 @@ const idlFactory$3 = ({ IDL }) => {
 const canisterId$4 = "qanay-uyaaa-aaaag-qbbwa-cai";
 
 // ledger_canister.js
-const idlFactory$2 = ({ IDL }) => {
+const idlFactory$3 = ({ IDL }) => {
     // Use the provided ledger IDL from your question
     // (Pasting the entire given IDL)
     
@@ -22921,24 +22921,20 @@ const idlFactory$2 = ({ IDL }) => {
 // Removed the import line for "custodian_canister_idl.js"
 // because we're defining the IDL inline below.
 
-const idlFactory$1 = ({ IDL }) => {
+const idlFactory$2 = ({ IDL }) => {
   const WinLog = IDL.Record({
     'ts' : IDL.Int,
     'pid' : IDL.Principal,
     'duckType' : IDL.Text,
     'amount' : IDL.Nat,
   });
-  const Tokens = IDL.Record({ 'e8s' : IDL.Nat64 });
-  const TransferArgs = IDL.Record({
-    'to_principal' : IDL.Principal,
-    'to_subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
-    'amount' : Tokens,
-  });
-  const TransferResult = IDL.Variant({ 'Ok' : IDL.Nat64, 'Err' : IDL.Text });
   return IDL.Service({
     'addHighScore' : IDL.Func([IDL.Text, IDL.Text, IDL.Int], [IDL.Bool], []),
-    'addToGoldPot' : IDL.Func([IDL.Nat64], [IDL.Bool], []),
-    'addToSilverPot' : IDL.Func([IDL.Nat64], [IDL.Bool], []),
+    'addHighScoreSecure' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Int, IDL.Nat],
+        [IDL.Bool],
+        [],
+      ),
     'awardGoldPotToCaller' : IDL.Func([], [IDL.Bool], []),
     'awardSilverPotToCaller' : IDL.Func([], [IDL.Bool], []),
     'getGoldPot' : IDL.Func([], [IDL.Nat64], []),
@@ -22962,14 +22958,18 @@ const idlFactory$1 = ({ IDL }) => {
         ],
         ['query'],
       ),
-    'incRoundCounters' : IDL.Func([], [], []),
+    'incRoundCounters' : IDL.Func([], [IDL.Nat], []),
     'oneIn100' : IDL.Func([], [IDL.Bool], []),
     'oneIn50k' : IDL.Func([], [IDL.Bool], []),
-    'recordDuckWin' : IDL.Func([IDL.Text, IDL.Nat], [], []),
+    'oneInNSecure' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'recordDuckWinSecure' : IDL.Func(
+        [IDL.Text, IDL.Bool, IDL.Nat],
+        [IDL.Bool],
+        [],
+      ),
     'resetGoldPotFromCustodian' : IDL.Func([], [IDL.Bool], []),
     'resetHighScores' : IDL.Func([], [], []),
     'resetSilverPotFromCustodian' : IDL.Func([], [IDL.Bool], []),
-    'transferTokens' : IDL.Func([TransferArgs], [TransferResult], []),
     'updatePassword' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'verify_password' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   });
@@ -22980,22 +22980,21 @@ const idlFactory$1 = ({ IDL }) => {
 
 // high_score_canister.js
 
-const highScoreIdlFactory = ({ IDL }) => {
-    return IDL.Service({
-      // sque3-gyaaa-aaaam-qde7a-cai exposes these methods:
-      'addHighScore' : IDL.Func(
-          [IDL.Principal, IDL.Text, IDL.Text, IDL.Int],
-          [IDL.Bool],
-          []
-        ),
-      'getHighScores' : IDL.Func(
-          [],
-          [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Text, IDL.Text, IDL.Int))],
-          ['query']
-        ),
-      'resetHighScores' : IDL.Func([], [], []),
-    });
-  };
+const idlFactory$1 = ({ IDL }) => {
+  return IDL.Service({
+    'addHighScore' : IDL.Func(
+        [IDL.Principal, IDL.Text, IDL.Text, IDL.Int],
+        [IDL.Bool],
+        [],
+      ),
+    'getHighScores' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Text, IDL.Text, IDL.Int))],
+        ['query'],
+      ),
+    'resetHighScores' : IDL.Func([], [IDL.Bool], []),
+  });
+};
   
   const canisterId$1 = "sque3-gyaaa-aaaam-qde7a-cai";
 
@@ -23058,7 +23057,7 @@ function getCurrentIdentity() {
 async function initActorUnauthenticated() {
   if (!adNetworkActor) {
     const agent = new HttpAgent({ host: "https://ic0.app", identity: undefined });
-    adNetworkActor = Actor.createActor(idlFactory$3, {
+    adNetworkActor = Actor.createActor(idlFactory$4, {
       agent,
       canisterId: canisterId$4,
     });
@@ -23074,7 +23073,7 @@ async function initActorWithPlug() {
   // -- REMOVED requestConnect here! We'll rely on initAllWithPlug instead.
   adNetworkActor = await window.ic.plug.createActor({
     canisterId: canisterId$4,
-    interfaceFactory: idlFactory$3,
+    interfaceFactory: idlFactory$4,
   });
   window.adNetworkActor = adNetworkActor;
   return true;
@@ -23088,7 +23087,7 @@ async function initActorWithInternetIdentity() {
   if (await authClient.isAuthenticated()) {
     const identity = authClient.getIdentity();
     const agent = new HttpAgent({ identity, host: "https://ic0.app" });
-    adNetworkActor = Actor.createActor(idlFactory$3, {
+    adNetworkActor = Actor.createActor(idlFactory$4, {
       agent,
       canisterId: canisterId$4,
     });
@@ -23101,7 +23100,7 @@ async function initActorWithInternetIdentity() {
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         const agent = new HttpAgent({ identity, host: "https://ic0.app" });
-        adNetworkActor = Actor.createActor(idlFactory$3, {
+        adNetworkActor = Actor.createActor(idlFactory$4, {
           agent,
           canisterId: canisterId$4,
         });
@@ -23124,11 +23123,13 @@ function checkAdNetworkActor() {
 async function initCustodianActorUnauthenticated() {
   if (!custodianActor) {
     const agent = new HttpAgent({ host: "https://ic0.app", identity: undefined });
-    custodianActor = Actor.createActor(idlFactory$1, {
+    custodianActor = Actor.createActor(idlFactory$2, {
       agent,
       canisterId: canisterId$2,
     });
     window.custodianActor = custodianActor; // optional
+    if (window.installSecureWinShim)               // ← NEW
+      window.installSecureWinShim(window.runtimeGlobal);
   }
 }
 
@@ -23140,9 +23141,11 @@ async function initCustodianActorWithPlug() {
   // -- REMOVED requestConnect here!
   custodianActor = await window.ic.plug.createActor({
     canisterId: canisterId$2,
-    interfaceFactory: idlFactory$1,
+    interfaceFactory: idlFactory$2,
   });
   window.custodianActor = custodianActor;
+  if (window.installSecureWinShim)               // ← NEW
+    window.installSecureWinShim(window.runtimeGlobal);
   return true;
 }
 
@@ -23155,11 +23158,13 @@ async function initCustodianActorWithInternetIdentity() {
   if (await authClient.isAuthenticated()) {
     const identity = authClient.getIdentity();
     const agent = new HttpAgent({ identity, host: "https://ic0.app" });
-    custodianActor = Actor.createActor(idlFactory$1, {
+    custodianActor = Actor.createActor(idlFactory$2, {
       agent,
       canisterId: canisterId$2,
     });
     window.custodianActor = custodianActor;
+    if (window.installSecureWinShim)               // ← NEW
+      window.installSecureWinShim(window.runtimeGlobal);
     return;
   }
 
@@ -23169,7 +23174,7 @@ async function initCustodianActorWithInternetIdentity() {
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         const agent = new HttpAgent({ identity, host: "https://ic0.app" });
-        custodianActor = Actor.createActor(idlFactory$1, {
+        custodianActor = Actor.createActor(idlFactory$2, {
           agent,
           canisterId: canisterId$2,
         });
@@ -23208,7 +23213,7 @@ async function initLedgerActorWithPlug() {
   // -- REMOVED requestConnect here!
   ledgerActor = await window.ic.plug.createActor({
     canisterId: canisterId$3,
-    interfaceFactory: idlFactory$2,
+    interfaceFactory: idlFactory$3,
   });
   window.ledgerActor = ledgerActor;
   return true;
@@ -23255,19 +23260,19 @@ async function initAllWithPlug() {
   // Now create each actor:
   adNetworkActor = await window.ic.plug.createActor({
     canisterId: canisterId$4,
-    interfaceFactory: idlFactory$3,
+    interfaceFactory: idlFactory$4,
   });
   window.adNetworkActor = adNetworkActor;
 
   ledgerActor = await window.ic.plug.createActor({
     canisterId: canisterId$3,
-    interfaceFactory: idlFactory$2,
+    interfaceFactory: idlFactory$3,
   });
   window.ledgerActor = ledgerActor;
 
   custodianActor = await window.ic.plug.createActor({
     canisterId: canisterId$2,
-    interfaceFactory: idlFactory$1,
+    interfaceFactory: idlFactory$2,
   });
   window.custodianActor = custodianActor;
 
@@ -23280,7 +23285,7 @@ async function initAllWithPlug() {
   // Optional: create the High Score actor with Plug
   highScoreActor = await window.ic.plug.createActor({
     canisterId: canisterId$1,
-    interfaceFactory: highScoreIdlFactory,
+    interfaceFactory: idlFactory$1,
   });
   window.highScoreActor = highScoreActor;
 
@@ -23364,7 +23369,7 @@ async function icpTransfer_transfer(transferArg) {
 async function initHighScoreActorUnauthenticated() {
   if (!highScoreActor) {
     const agent = new HttpAgent({ host: "https://ic0.app", identity: undefined });
-    highScoreActor = Actor.createActor(highScoreIdlFactory, {
+    highScoreActor = Actor.createActor(idlFactory$1, {
       agent,
       canisterId: canisterId$1
     });
@@ -23389,9 +23394,19 @@ async function highScore_getHighScores() {
 }
 
 /** ========== CUSTODIAN CALLS ========== **/
-async function custodian_addHighScore(playerName, playerEmail, playerScore) {
+async function custodian_addHighScoreSecure(
+  playerName,
+  playerEmail,
+  playerScore,
+  roundToken
+) {
   checkCustodianActor();
-  return await custodianActor.addHighScore(playerName, playerEmail, playerScore);
+  return await custodianActor.addHighScoreSecure(
+    playerName,
+    playerEmail,
+    playerScore,
+    roundToken
+  );
 }
 
 async function custodian_getHighScores() {
@@ -23415,7 +23430,7 @@ let ledgerAgent = null;
 
 async function createLedgerActorAnonymous() {
   ledgerAgent = new HttpAgent({ host: "https://ic0.app", identity: undefined });
-  ledgerActor = Actor.createActor(idlFactory$2, {
+  ledgerActor = Actor.createActor(idlFactory$3, {
     agent: ledgerAgent,
     canisterId: canisterId$3,
   });
@@ -23437,7 +23452,7 @@ async function initLedgerActorWithInternetIdentity() {
   if (await authClient.isAuthenticated()) {
     const identity = authClient.getIdentity();
     ledgerAgent = new HttpAgent({ identity, host: "https://ic0.app" });
-    ledgerActor = Actor.createActor(idlFactory$2, {
+    ledgerActor = Actor.createActor(idlFactory$3, {
       agent: ledgerAgent,
       canisterId: canisterId$3,
     });
@@ -23450,7 +23465,7 @@ async function initLedgerActorWithInternetIdentity() {
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         ledgerAgent = new HttpAgent({ identity, host: "https://ic0.app" });
-        ledgerActor = Actor.createActor(idlFactory$2, {
+        ledgerActor = Actor.createActor(idlFactory$3, {
           agent: ledgerAgent,
           canisterId: canisterId$3,
         });
@@ -23593,8 +23608,8 @@ async function recordViewWithToken(tokenId) {
 
 //Beta Tester password check
 async function custodian_verifyPassword(inputPassword) {
-  checkCustodianActor(); 
+  checkCustodianActor();
   return await custodianActor.verify_password(inputPassword);
 }
 
-export { AuthClient, Principal$1 as Principal, cashOutAllProjects, cashOutProject, createAd, custodianActor, custodian_addHighScore, custodian_getHighScores, custodian_resetHighScores, custodian_transferTokens, custodian_verifyPassword, getAdById, getAllAds, getAllProjects, getCurrentIdentity, getMyAdsLite, getNextAd, getProjectById, getRemainingViewsForAd, getRemainingViewsForAllAds, getTotalActiveAds, getTotalViewsForAllProjects, getTotalViewsForProject, highScore_getHighScores, icpTransfer_getBalanceOf, icpTransfer_getMyBalance, icpTransfer_recordDeposit, icpTransfer_transfer, icpTransfer_withdraw, initActorUnauthenticated, initActorWithInternetIdentity, initActorWithPlug, initAllWithPlug, initCustodianActorUnauthenticated, initCustodianActorWithInternetIdentity, initCustodianActorWithPlug, initHighScoreActorUnauthenticated, initIcpTransferActorUnauthenticated, initIcpTransferActorWithInternetIdentity, initIcpTransferActorWithPlug, initLedgerActorUnauthenticated, initLedgerActorWithInternetIdentity, initLedgerActorWithPlug, ledger_balanceOf, ledger_transfer, purchaseViews, recordViewWithToken, registerProject, verifyPassword };
+export { AuthClient, Principal$1 as Principal, adNetworkActor, cashOutAllProjects, cashOutProject, createAd, custodianActor, custodian_addHighScoreSecure, custodian_getHighScores, custodian_resetHighScores, custodian_transferTokens, custodian_verifyPassword, getAdById, getAllAds, getAllProjects, getCurrentIdentity, getMyAdsLite, getNextAd, getProjectById, getRemainingViewsForAd, getRemainingViewsForAllAds, getTotalActiveAds, getTotalViewsForAllProjects, getTotalViewsForProject, highScoreActor, highScore_getHighScores, icpTransferActor, icpTransfer_getBalanceOf, icpTransfer_getMyBalance, icpTransfer_recordDeposit, icpTransfer_transfer, icpTransfer_withdraw, initActorUnauthenticated, initActorWithInternetIdentity, initActorWithPlug, initAllWithPlug, initCustodianActorUnauthenticated, initCustodianActorWithInternetIdentity, initCustodianActorWithPlug, initHighScoreActorUnauthenticated, initIcpTransferActorUnauthenticated, initIcpTransferActorWithInternetIdentity, initIcpTransferActorWithPlug, initLedgerActorUnauthenticated, initLedgerActorWithInternetIdentity, initLedgerActorWithPlug, ledgerActor, ledger_balanceOf, ledger_transfer, purchaseViews, recordViewWithToken, registerProject, verifyPassword };

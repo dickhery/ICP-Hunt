@@ -3,7 +3,6 @@
  *********************************/
 
 import {
-  // AD network calls:
   initActorUnauthenticated,
   initActorWithPlug,
   initActorWithInternetIdentity,
@@ -23,25 +22,22 @@ import {
   verifyPassword,
   getMyAdsLite,
   recordViewWithToken,
-  // ICP Ledger
   initLedgerActorUnauthenticated,
   initLedgerActorWithPlug,
   initLedgerActorWithInternetIdentity,
   ledger_balanceOf,
   ledger_transfer,
-  // === NEW: custodian calls we just defined ===
   custodian_verifyPassword,
   custodianActor,
   initCustodianActorUnauthenticated,
   initCustodianActorWithPlug,
   initCustodianActorWithInternetIdentity,
-  custodian_addHighScore,
+  custodian_addHighScoreSecure,
   custodian_getHighScores,
   custodian_resetHighScores,
   custodian_transferTokens,
   initHighScoreActorUnauthenticated,
   highScore_getHighScores,
-  // ICP Transfer
   initIcpTransferActorUnauthenticated,
   initIcpTransferActorWithPlug,
   initIcpTransferActorWithInternetIdentity,
@@ -49,7 +45,6 @@ import {
   icpTransfer_withdraw,
   icpTransfer_getBalanceOf,
   icpTransfer_getMyBalance,
-  // Principals
   AuthClient,
   Principal
 } from "./ic_ad_network_bundle.js";
@@ -59,10 +54,8 @@ let runtimeGlobal;
 let messageQueue = [];
 let isDisplayingMessage = false;
 
-// We assume 8 decimals for ICP
 const DECIMALS = 8;
 
-// ---- use the *global* Construct‑3 variable -----------------
 function paymentInProgress() {
   return runtimeGlobal?.globalVars.isPaymentInProgress === 1;
 }
@@ -70,7 +63,6 @@ function setPaymentFlag(on) {
   if (runtimeGlobal) runtimeGlobal.globalVars.isPaymentInProgress = on ? 1 : 0;
 }
 
-// We'll store the setTimeout ID in this variable
 let adViewTimeoutId = null;
 
 function stringifyWithBigInt(obj) {
@@ -95,7 +87,6 @@ async function displayNextMessage() {
   displayNextMessage();
 }
 
-/** ===== Sprite feedback on Pay Now / No Thanks ===== */
 function setPayButtonState(state /* "idle" | "processing" */) {
   if (!runtimeGlobal?.objects.Sprite_PayNow) return;
   const inst = runtimeGlobal.objects.Sprite_PayNow.getFirstInstance();
@@ -125,10 +116,8 @@ self.incRoundCounters = async function () {
     return;
   }
   try {
-    // canister mutates its internal counters
-    await window.custodianActor.incRoundCounters();
-
-    // pull the fresh numbers back into C3 globals
+    const tok = await window.custodianActor.incRoundCounters();
+    window.currentRoundToken = tok;
     await self.refreshWinStats();
   } catch (err) {
     console.error("incRoundCounters:", err);
@@ -137,54 +126,35 @@ self.incRoundCounters = async function () {
 };
 window.incRoundCounters = self.incRoundCounters;
 
-self.recordDuckWin = async function (duckType, amountIn) {
-  let e8s;                         // ── normalised Nat64 value (ICP × 1e8)
-
+self.recordDuckWin = async function (duckType) {
   try {
-    /* ── 1. direct bigint ─────────────────────────────────────────── */
-    if (typeof amountIn === "bigint") {
-      e8s = amountIn;
-
-      /* ── 2. top-level object {e8s}|{Ok}|{amount} ─────────────────── */
-    } else if (amountIn && typeof amountIn === "object") {
-      if ("e8s" in amountIn) e8s = BigInt(amountIn.e8s);
-      else if ("amount" in amountIn) e8s = BigInt(amountIn.amount);
-
-      /* 2b. nested { Ok : {e8s} } coming from candid variants */
-      else if ("Ok" in amountIn) {
-        const ok = amountIn.Ok;
-        if (typeof ok === "bigint") e8s = ok;
-        else if (ok && typeof ok === "object" && "e8s" in ok)
-          e8s = BigInt(ok.e8s);
-      }
+    if (!window.custodianActor) {
+      setStatusMessage("Custodian actor not initialized.");
+      return false;
     }
-
-    /* ── 3. fallback: boolean or unknown → read pot from globals ──── */
-    if (e8s === undefined && amountIn === true) {
-      const potVar = duckType === "Gold" ? "GoldPot" : "SilverPot";
-      const potIcp = runtimeGlobal?.globalVars?.[potVar];
-      if (typeof potIcp === "number" && potIcp > 0)
-        e8s = BigInt(Math.round(potIcp * 1e8));      // ICP → e8s
+    const result = await window.custodianActor.recordDuckWinSecure(
+      duckType,
+      true,
+      window.currentRoundToken
+    );
+    if (!result) {
+      setStatusMessage(`Failed to record ${duckType} duck win: Operation in progress or invalid token.`);
+      return false;
     }
-
-  } catch (parseErr) {
-    console.warn("recordDuckWin() parse error:", parseErr);
-  }
-
-  /* ── still nothing? abort with warning ─────────────────────────── */
-  if (e8s === undefined) {
-    console.warn("recordDuckWin → could not parse amount from", amountIn);
-    setStatusMessage("⚠️ Could not determine win amount – not recorded.");
-    return;
-  }
-
-  /* ── call canister ─────────────────────────────────────────────── */
-  try {
-    await window.custodianActor.recordDuckWin(duckType, e8s);
-    setStatusMessage(`${duckType} win (${Number(e8s) / 1e8} ICP) recorded!`);
+    // Award the pot
+    const awardOk = duckType === "Gold" 
+      ? await window.custodianActor.awardGoldPotToCaller()
+      : await window.custodianActor.awardSilverPotToCaller();
+    if (awardOk) {
+      setStatusMessage(`${duckType} pot awarded successfully!`);
+    } else {
+      setStatusMessage(`Failed to award ${duckType} pot.`);
+    }
+    return true;
   } catch (err) {
-    console.error("recordDuckWin:", err);
-    setStatusMessage("Could not record win: " + err.message);
+    console.error(`recordDuckWin (${duckType}):`, err);
+    setStatusMessage(`Error recording ${duckType} duck win: ${err.message}`);
+    return false;
   }
 };
 window.recordDuckWin = self.recordDuckWin;
@@ -194,22 +164,17 @@ self.refreshWinStats = async function () {
 
   try {
     const stats = await custodianActor.getWinStats();
+    const winsOriginal = await custodianActor.getRecentWins();
+    const wins = winsOriginal.slice().reverse();
 
-    /* ▶▶ NEW: reverse order so newest entry is first */
-    const winsOriginal = await custodianActor.getRecentWins();   // oldest→newest
-    const wins = winsOriginal.slice().reverse();                 // newest→oldest
-
-    /* push numeric stats straight through */
     const g = runtimeGlobal.globalVars;
     g.RoundsSinceGoldWin   = stats.roundsSinceGoldWin;
     g.RoundsSinceSilverWin = stats.roundsSinceSilverWin;
     g.LastGoldWinTs        = ns2DateString(stats.lastGoldWinTs);
     g.LastSilverWinTs      = ns2DateString(stats.lastSilverWinTs);
 
-    /* build printable log (top = newest) */
     g.RecentWinsJson = wins
       .map((w, i) => {
-        // normalise amount
         const raw   = typeof w.amount === "object" && "e8s" in w.amount
                     ? Number(w.amount.e8s)
                     : Number(w.amount);
@@ -217,14 +182,13 @@ self.refreshWinStats = async function () {
         const short = w.pid.toText().slice(0, 5) + "…" + w.pid.toText().slice(-5);
         return `${i + 1}. ${w.duckType.padEnd(6)} ${icp} ICP — ${short} @ ${ns2DateString(w.ts)}`;
       })
-      .join("\n");   // Construct 3 Text object understands “\n”
+      .join("\n");
   }
   catch (err) {
     console.error("refreshWinStats:", err);
     setStatusMessage("Stats refresh error: " + err.message);
   }
 };
-
 
 self.copyPrincipal = async function () {
   try {
@@ -240,22 +204,17 @@ self.copyPrincipal = async function () {
     setStatusMessage("Error copying to clipboard: " + err.message);
   }
 };
-
 window.copyPrincipalToClipboard = self.copyPrincipal;
 
-/** =========== LOGOUT FUNCTION =========== */
 self.logout = async function () {
   try {
-    // If using Internet Identity, remove the session
     if (authMethod === "InternetIdentity" && window.authClient) {
       await window.authClient.logout();
     }
-    // If using Plug, you can optionally do:
     if (authMethod === "Plug" && window.ic && window.ic.plug && window.ic.plug.requestDisconnect) {
       await window.ic.plug.requestDisconnect();
     }
 
-    // Now reset everything to "Unauthenticated"
     authMethod = null;
     runtimeGlobal.globalVars.AuthState = "Unauthenticated";
     runtimeGlobal.globalVars.Authenticated = 0;
@@ -268,10 +227,7 @@ self.logout = async function () {
   }
 };
 
-
-/** =========== Initialize ICP Transfer actor =========== */
 self.initIcpTransferActor = async function () {
-  // If you want an anonymous init at startup:
   try {
     await initIcpTransferActorUnauthenticated();
     setStatusMessage("ICP Transfer Actor initialized anonymously.");
@@ -280,7 +236,6 @@ self.initIcpTransferActor = async function () {
   }
 };
 
-/** If you want a Plug version: */
 self.initIcpTransferWithPlug = async function () {
   try {
     const ok = await initIcpTransferActorWithPlug();
@@ -294,7 +249,6 @@ self.initIcpTransferWithPlug = async function () {
   }
 };
 
-/** =========== Anonymous init at startup =========== */
 self.initAdNetworkActor = async function () {
   if (authMethod) {
     setStatusMessage(`Already authenticated with ${authMethod}.`);
@@ -314,18 +268,15 @@ self.initAdNetworkActor = async function () {
   }
 };
 
-/** =========== Connect with Plug =========== */
 self.initAdNetworkWithPlug = async function () {
   if (!runtimeGlobal) return;
 
-  // If user is currently Internet Identity, auto-logout first
   if (authMethod === "InternetIdentity") {
     setStatusMessage("Already authenticated with Internet Identity. Logging out first...");
     await self.logout();
   }
 
   try {
-    // Instead of multiple requestConnect calls, just do one:
     const ok = await window.initAllWithPlug();
     if (!ok) {
       runtimeGlobal.globalVars.AuthState = "Unauthenticated";
@@ -333,20 +284,16 @@ self.initAdNetworkWithPlug = async function () {
       return;
     }
 
-    // Now that all actors (adNetworkActor, ledgerActor, custodianActor, etc.)
-    // are created, we fetch the user’s principal from Plug:
     const plugPrincipal = await window.ic.plug.agent.getPrincipal();
     runtimeGlobal.globalVars.currentPrincipal = plugPrincipal.toText();
     runtimeGlobal.globalVars.AuthState = "Plug";
     authMethod = "Plug";
 
-    // Mark user as Authenticated
     runtimeGlobal.globalVars.Authenticated = 1;
 
     setStatusMessage("All canisters initialized via single Plug approval!");
     self.cancelAdViewTimeout();
 
-    // If you have some tracking data to fetch now that the user is authenticated:
     await self.fetchTrackingData();
 
   } catch (err) {
@@ -356,16 +303,12 @@ self.initAdNetworkWithPlug = async function () {
   }
 };
 
-
-/** =========== Connect with Internet Identity =========== */
 self.initAdNetworkWithII = async function () {
   if (!runtimeGlobal) return;
 
-  // If user is currently Plug, auto-logout first
   if (authMethod === "Plug") {
     setStatusMessage("Already authenticated with Plug. Logging out first...");
     await self.logout();
-    // Now proceed with Internet Identity
   }
 
   try {
@@ -381,7 +324,6 @@ self.initAdNetworkWithII = async function () {
       runtimeGlobal.globalVars.AuthState = "InternetIdentity";
       authMethod = "InternetIdentity";
 
-      // Mark user as Authenticated
       runtimeGlobal.globalVars.Authenticated = 1;
 
       setStatusMessage("AdNetwork + ICP Ledger + Custodian + ICP Transfer init via Internet Identity!");
@@ -398,14 +340,11 @@ self.initAdNetworkWithII = async function () {
   }
 };
 
-/* ───────────────────────────── */
-/*  PAYMENT FLOW                 */
-/* ───────────────────────────── */
 self.depositIcpForUser = async function () {
   if (!runtimeGlobal || paymentInProgress()) return;
 
-  if (!authMethod) {                // new guard
-    setStatusMessage("Please connect Plug or Internet Identity first!");
+  if (!authMethod) {
+    setStatusMessage("Please connect Plug or Internet Identity first!");
     return;
   }
 
@@ -413,13 +352,11 @@ self.depositIcpForUser = async function () {
   setPayButtonState("processing");
 
   try {
-    /* amount & principals */
-    const depositAmountE8s = 5_000_000n;  // 0.05 ICP
+    const depositAmountE8s = 5_000_000n; // 0.05 ICP
     const principalString = runtimeGlobal.globalVars.currentPrincipal;
     const user = Principal.fromText(principalString);
 
-    /* 1. Transfer over Ledger */
-    setStatusMessage("Requesting ledger transfer (0.05 ICP) …");
+    setStatusMessage("Requesting ledger transfer (0.05 ICP) …");
     const transferResult = await ledger_transfer({
       fromSubaccount: null,
       toPrincipal: Principal.fromText("sphs3-ayaaa-aaaah-arajq-cai"),
@@ -433,9 +370,8 @@ self.depositIcpForUser = async function () {
     }
 
     const blockIndex = transferResult.Ok;
-    setStatusMessage("Ledger transfer ✓ (block #" + blockIndex + "). Waiting for confirmation…");
+    setStatusMessage(`Ledger transfer ✓ (block #${blockIndex}). Confirming deposit…`);
 
-    /* 2. Retry recordDeposit for up to 5 × 3 s */
     const maxRetries = 10;
     let attempt = 0;
     let success = false;
@@ -443,8 +379,10 @@ self.depositIcpForUser = async function () {
     while (attempt < maxRetries && !success) {
       success = await icpTransfer_recordDeposit(user, depositAmountE8s, blockIndex);
       if (!success) {
-        await new Promise(r => setTimeout(r, 5000));
         attempt++;
+        const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
+        setStatusMessage(`Attempt ${attempt}/${maxRetries} failed. Retrying in ${delay/1000}s…`);
+        await new Promise(r => setTimeout(r, delay));
       }
     }
 
@@ -452,7 +390,7 @@ self.depositIcpForUser = async function () {
       setStatusMessage("Deposit confirmed – starting game!");
       runtimeGlobal.callFunction("OnPaymentSuccess");
     } else {
-      setStatusMessage("Couldn’t confirm deposit – please tap again.");
+      setStatusMessage(`Deposit failed after ${maxRetries} attempts. Please try again or contact support.`);
       setPayButtonState("idle");
     }
 
@@ -465,11 +403,9 @@ self.depositIcpForUser = async function () {
   setPaymentFlag(false);
 };
 
-/** =========== Withdraw from the canister =========== */
 self.withdrawIcp = async function () {
   if (!runtimeGlobal) return;
   try {
-    // Example: user withdraws 0.5 ICP => 50_000_000 e8s
     const withdrawE8s = 500_000n;
     setStatusMessage(`Withdrawing ${withdrawE8s} e8s from the canister...`);
     const result = await icpTransfer_withdraw(withdrawE8s);
@@ -485,7 +421,6 @@ self.withdrawIcp = async function () {
   }
 };
 
-/** =========== Check balances =========== */
 self.checkMyIcpTransferBalance = async function () {
   try {
     const bal = await icpTransfer_getMyBalance();
@@ -507,7 +442,6 @@ self.checkUserIcpTransferBalance = async function () {
   }
 };
 
-/** =========== FETCH NEXT AD =========== */
 self.fetchNextAd = async function () {
   if (!runtimeGlobal) return;
   try {
@@ -516,29 +450,19 @@ self.fetchNextAd = async function () {
 
     const result = await getNextAd(pid, adType);
     if (!result || result.length === 0) {
-      // 1) Show a message
       setStatusMessage("No ads available right now. Skipping ad...");
-      // 2) Reset your ad variables
       runtimeGlobal.globalVars.CurrentAdBase64 = "";
       runtimeGlobal.globalVars.CurrentAdClickUrl = "";
-      // 3) Return the game to "Play" or do your own logic
       runtimeGlobal.globalVars.Game_Status = "Play";
-
-      // Optionally call a Construct function or an event var
-      // to close the black overlay, hide the "Ad" group, etc.
-      // E.g.:
       runtime.callFunction("CloseAdLayer");
-
       return;
     }
 
-    // If we do have an ad:
     const [ad, tokenId] = result;
     runtimeGlobal.globalVars.CurrentAdBase64 = ad.imageBase64;
     runtimeGlobal.globalVars.CurrentAdClickUrl = ad.clickUrl;
     setStatusMessage(`Fetched Ad #${ad.id} (served: ${ad.viewsServed}), token: ${tokenId}`);
 
-    // (The rest of your existing code stays the same)
     if (adViewTimeoutId !== null) {
       clearTimeout(adViewTimeoutId);
       adViewTimeoutId = null;
@@ -562,15 +486,11 @@ self.fetchNextAd = async function () {
   } catch (err) {
     console.error(err);
     setStatusMessage("fetchNextAd error: " + err.message);
-
-    // If there's an error fetching the ad, skip or close the ad so user isn't stuck
     runtimeGlobal.globalVars.Game_Status = "Play";
     runtime.callFunction("CloseAdLayer");
   }
 };
 
-
-/** =========== Additional calls... =========== */
 self.fetchMyAds = async function () { /* ... */ };
 self.populateMyAdsList = function () { /* ... */ };
 self.topUpAdViews = async function () { /* ... */ };
@@ -603,7 +523,6 @@ self.transferTokens = async function () {
   }
 };
 
-/** =========== Show user’s ICP balance from the ledger =========== */
 self.checkTokenBalance = async function () {
   if (!runtimeGlobal) return;
   if (!authMethod) {
@@ -618,7 +537,6 @@ self.checkTokenBalance = async function () {
     }
     const principal = Principal.fromText(principalString);
 
-    // Query the ledger canister for the user's balance:
     const rawBal = await ledger_balanceOf(principal, null);
     const floatBal = Number(rawBal) / 10 ** DECIMALS;
     const displayBalance = floatBal.toLocaleString(undefined, {
@@ -626,10 +544,7 @@ self.checkTokenBalance = async function () {
       maximumFractionDigits: DECIMALS,
     });
 
-    // 1) Store in your Construct global var:
     runtimeGlobal.globalVars.TokenBalance = displayBalance;
-
-    // 2) Update the on-screen Text_Balance object immediately:
     runtimeGlobal.objects.Text_Balance.getFirstInstance().text = "Balance: " + displayBalance + " ICP";
 
     setStatusMessage(`Balance: ${displayBalance} ICP`);
@@ -639,16 +554,14 @@ self.checkTokenBalance = async function () {
   }
 };
 
-/****  Win-stat polling (throttled)  ****/
-const WIN_STATS_POLL_MS = 30_000;      // 30 s instead of 5 s
-let   winStatsIntervalId = null;
+const WIN_STATS_POLL_MS = 30_000;
+let winStatsIntervalId = null;
 
 function startWinStatsPolling() {
-  if (winStatsIntervalId) return;      // already running
+  if (winStatsIntervalId) return;
   winStatsIntervalId = setInterval(() => {
     if (!runtimeGlobal) return;
     const s = runtimeGlobal.globalVars.Game_Status;
-    // only poll while the round is actually running
     if (s === "Play" || s === "Ready") self.refreshWinStats();
   }, WIN_STATS_POLL_MS);
 }
@@ -661,75 +574,55 @@ function stopWinStatsPolling() {
 window.startWinStatsPolling = startWinStatsPolling;
 window.stopWinStatsPolling  = stopWinStatsPolling;
 
-
 self.cashOutProjectViews = async function (projectId) { /* ... */ };
 self.cashOutAllProjectsViews = async function () { /* ... */ };
 self.registerProjectInCanister = async function () { /* ... */ };
 self.handleImageSelection = async function (fileUrl, orientation = "") { /* ... */ };
 
-// Called automatically by Construct 3 after everything is loaded:
 runOnStartup(async (runtime) => {
-  // The Construct 3 runtime is passed in here:
   runtimeGlobal = runtime;
 
-  // We do an initial AdNetwork anonymous init so user can remain unauthed if they want:
   await self.initAdNetworkActor();
   await self.initIcpTransferActor();
   await initHighScoreActorUnauthenticated();
 
   setStatusMessage("Ad Network + ICP Ledger + HighScore main.js loaded successfully.");
 
-  // defer heavy polling – start a throttled loop instead
   startWinStatsPolling();
-
-  /**
-   * NOTE:
-   *  - You can call `initAdNetworkWithPlug()` or `initAdNetworkWithII()` from your
-   *    Construct 3 event sheet at any time to upgrade from anonymous to an authenticated session.
-   *  - `runtimeGlobal.globalVars.AuthState` is "Unauthenticated", "Plug", or "InternetIdentity".
-   */
 });
 
-/** =========== fetchTrackingData =========== */
 self.fetchTrackingData = async function () {
   // (unchanged code)
 };
 
-/** =========== Single-ad calls... =========== */
 self.fetchRemainingViewsForAd = async function (adId) { /* ... */ };
 self.fetchTotalViewsForProject = async function (projectId) { /* ... */ };
 
-/** =========== New: calls to the custodian canister =========== */
-
-// A function to submit the user’s high score
 self.submitHighScore = async function () {
   if (!runtimeGlobal) return;
   if (!authMethod) {
-    setStatusMessage("Please authenticate first, or remain anonymous if allowed!");
-    // If your custodian can be called anonymously for addHighScore, that’s fine;
-    // but if not, you must authenticate first.
+    setStatusMessage("Please authenticate first!");
     return;
   }
-  try {
-    const playerName = runtimeGlobal.globalVars.PlayerNameInput;
-    const playerEmail = runtimeGlobal.globalVars.PlayerEmailInput;
-    const playerScore = runtimeGlobal.globalVars.Score;
-    // or wherever you store the final score
 
-    setStatusMessage(`Submitting high score ${playerScore} for ${playerName}...`);
-    const success = await custodian_addHighScore(playerName, playerEmail, playerScore);
-    if (success) {
-      setStatusMessage("Successfully added high score!");
-    } else {
-      setStatusMessage("Failed to add high score (the canister returned false).");
-    }
+  try {
+    const name   = runtimeGlobal.globalVars.PlayerNameInput;
+    const email  = runtimeGlobal.globalVars.PlayerEmailInput;
+    const score  = runtimeGlobal.globalVars.Score;
+    const token  = window.currentRoundToken;
+
+    setStatusMessage(`Submitting secure high score ${score}…`);
+
+    const ok = await custodian_addHighScoreSecure(name, email, score, token);
+    if (ok) setStatusMessage("High score accepted!");
+    else    setStatusMessage("High score rejected (token or score invalid).");
+
   } catch (err) {
-    console.error("submitHighScore error:", err);
-    setStatusMessage("Error adding high score: " + err.message);
+    console.error("submitHighScore:", err);
+    setStatusMessage("Error submitting high score: " + err.message);
   }
 };
 
-// A function to load the high scores
 self.loadHighScores = async function () {
   if (!runtimeGlobal) return;
   try {
@@ -738,7 +631,6 @@ self.loadHighScores = async function () {
     const allScores = await highScore_getHighScores();
     console.log("loadHighScores(): direct getHighScores returned:", allScores);
 
-    // Store them in globalVars, just like before
     runtimeGlobal.globalVars.HighScoreArray = allScores;
     setStatusMessage("High scores loaded directly!");
 
@@ -748,7 +640,6 @@ self.loadHighScores = async function () {
   }
 };
 
-// A function to reset high scores
 self.resetHighScores = async function () {
   if (!runtimeGlobal) return;
   try {
@@ -761,36 +652,6 @@ self.resetHighScores = async function () {
   }
 };
 
-/** Example: a function to do a token transfer via custodian */
-self.transferViaCustodian = async function () {
-  if (!runtimeGlobal) return;
-  if (!authMethod) {
-    setStatusMessage("Please authenticate first.");
-    return;
-  }
-  try {
-    const toPrincipalStr = runtimeGlobal.globalVars.TokenRecipient;
-    const toPrincipal = Principal.fromText(toPrincipalStr);
-    const decimalAmount = parseFloat(runtimeGlobal.globalVars.TokenAmount) || 0;
-    const rawAmount = BigInt(Math.round(decimalAmount * 10 ** DECIMALS));
-
-    const arg = {
-      to_principal: toPrincipal,
-      to_subaccount: [],
-      amount: { e8s: Number(rawAmount) }
-    };
-    setStatusMessage(`Calling custodian_transferTokens with ${decimalAmount} ICP...`);
-
-    const result = await custodian_transferTokens(arg);
-    // result is an empty record per your canister IDL
-    setStatusMessage("Transfer request completed (no error returned).");
-  } catch (err) {
-    console.error("transferViaCustodian error:", err);
-    setStatusMessage("Error calling custodian transfer: " + err.message);
-  }
-};
-
-/** Cancel ad view if the user changes layouts, etc. */
 self.cancelAdViewTimeout = function () {
   if (adViewTimeoutId !== null) {
     clearTimeout(adViewTimeoutId);
@@ -798,7 +659,6 @@ self.cancelAdViewTimeout = function () {
     setStatusMessage("User left the layout before 5s. No recordView call will happen.");
   }
 };
-
 
 self.checkPassword = async function () {
   if (!runtimeGlobal) return;
@@ -814,47 +674,6 @@ self.checkPassword = async function () {
   } catch (err) {
     console.error("Error verifying password:", err);
     setStatusMessage("Error verifying password: " + err.message);
-  }
-};
-
-/////////////////////////////////////////////////
-//  POT & LOGS CALLS FOR token_transfer_from_backend_canister
-/////////////////////////////////////////////////
-
-self.addToSilverPot = async function (icpAmount) {
-  if (!runtimeGlobal) return;
-  try {
-    // Convert user’s typed amount into e8s
-    const rawAmount = BigInt(Math.round(icpAmount * 1e8));
-    setStatusMessage(`Adding ${icpAmount} ICP to the SILVER pot...`);
-    const result = await window.custodianActor.addToSilverPot(rawAmount);
-
-    if (!result) {
-      setStatusMessage("addToSilverPot returned false (not authorized or error).");
-    } else {
-      setStatusMessage(`Successfully added ${icpAmount} ICP to SILVER pot!`);
-    }
-  } catch (err) {
-    console.error("addToSilverPot error:", err);
-    setStatusMessage("Error adding to silver pot: " + err.message);
-  }
-};
-
-self.addToGoldPot = async function (icpAmount) {
-  if (!runtimeGlobal) return;
-  try {
-    const rawAmount = BigInt(Math.round(icpAmount * 1e8));
-    setStatusMessage(`Adding ${icpAmount} ICP to the GOLD pot...`);
-    const result = await window.custodianActor.addToGoldPot(rawAmount);
-
-    if (!result) {
-      setStatusMessage("addToGoldPot returned false (not authorized or error).");
-    } else {
-      setStatusMessage(`Successfully added ${icpAmount} ICP to GOLD pot!`);
-    }
-  } catch (err) {
-    console.error("addToGoldPot error:", err);
-    setStatusMessage("Error adding to gold pot: " + err.message);
   }
 };
 
@@ -896,13 +715,8 @@ self.getTotalPot = async function () {
   }
 };
 
-/**
- * Calls `custodianActor.oneIn50k()` to see if we should spawn
- * the golden duck. Returns a boolean: true if it should spawn.
- */
 self.checkGoldenDuck = async function () {
   try {
-    // custodianActor was stored in window.custodianActor, or simply custodianActor
     if (!window.custodianActor) {
       setStatusMessage("Custodian actor not initialized. No golden duck check.");
       return false;
@@ -920,10 +734,9 @@ self.checkGoldenDuck = async function () {
 self.checkSilverDuck = async function () {
   try {
     if (!window.custodianActor) {
-      setStatusMessage("Custodian actor not initialized. No golden duck check.");
+      setStatusMessage("Custodian actor not initialized. No silver duck check.");
       return false;
     }
-    // custodian canister already exposes oneIn100()
     const shouldSpawn = await window.custodianActor.oneIn100();
     console.log("Silver Spawn =>", shouldSpawn);
     return shouldSpawn;
@@ -937,7 +750,6 @@ self.checkSilverDuck = async function () {
 self.claimGoldPot = async function () {
   if (!runtimeGlobal) return;
   if (!authMethod) {
-    // If you prefer to only allow awarding to authenticated players:
     setStatusMessage("Please authenticate first to claim the gold pot!");
     return;
   }
@@ -974,4 +786,3 @@ self.resetGoldPotFromCustodian = async function () {
     setStatusMessage("Error calling resetGoldPotFromCustodian: " + err.message);
   }
 };
-
