@@ -56,7 +56,6 @@ export const idlFactory = ({ IDL }) => {
     'verify_password' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   });
 };
-export const init = ({ IDL }) => { return []; };
   
   // Export the canister ID as before:
   export const canisterId = "z5cfx-3yaaa-aaaam-aee3a-cai";
