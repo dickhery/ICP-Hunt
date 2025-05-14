@@ -141,15 +141,6 @@ self.recordDuckWin = async function (duckType) {
       setStatusMessage(`Failed to record ${duckType} duck win: Operation in progress or invalid token.`);
       return false;
     }
-    // Award the pot
-    const awardOk = duckType === "Gold" 
-      ? await window.custodianActor.awardGoldPotToCaller()
-      : await window.custodianActor.awardSilverPotToCaller();
-    if (awardOk) {
-      setStatusMessage(`${duckType} pot awarded successfully!`);
-    } else {
-      setStatusMessage(`Failed to award ${duckType} pot.`);
-    }
     return true;
   } catch (err) {
     console.error(`recordDuckWin (${duckType}):`, err);

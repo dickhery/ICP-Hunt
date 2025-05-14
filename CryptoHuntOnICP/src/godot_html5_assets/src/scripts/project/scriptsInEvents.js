@@ -57,7 +57,17 @@ const scriptsInEvents = {
 	async Game_event_Event184_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Gold");
-		if (!success) {
+		if (success) {
+		    runtime.globalVars.GoldWon = true;
+		    runtime.callFunction("ShowWinner", "Gold", runtime.globalVars.GoldPot);
+		    const ok = await window.custodianActor.awardGoldPotToCaller();
+		    console.log("awardGoldPotToCaller ->", ok);
+		    if (ok) {
+		        setStatusMessage("Gold pot awarded successfully!");
+		    } else {
+		        setStatusMessage("Failed to award Gold pot.");
+		    }
+		} else {
 		    runtime.globalVars.StatusMessage = "Cannot record Gold duck win: Operation in progress or invalid token.";
 		}
 	},
@@ -65,7 +75,17 @@ const scriptsInEvents = {
 	async Game_event_Event185_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Silver");
-		if (!success) {
+		if (success) {
+		    runtime.globalVars.SilverWon = true;
+		    runtime.callFunction("ShowWinner", "Silver", runtime.globalVars.SilverPot);
+		    const ok = await window.custodianActor.awardSilverPotToCaller();
+		    console.log("awardSilverPotToCaller ->", ok);
+		    if (ok) {
+		        setStatusMessage("Silver pot awarded successfully!");
+		    } else {
+		        setStatusMessage("Failed to award Silver pot.");
+		    }
+		} else {
 		    runtime.globalVars.StatusMessage = "Cannot record Silver duck win: Operation in progress or invalid token.";
 		}
 	},

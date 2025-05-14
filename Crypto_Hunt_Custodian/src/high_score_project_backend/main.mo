@@ -69,12 +69,17 @@ actor {
   stable var currentRoundToken : Nat = 1;
   // New stable variable for reentrancy guard
   stable var ongoingWins : [(Principal, Bool)] = [];
+  // New stable variable for nonces
+  stable var winNonces : [(Principal, Nat)] = [];
+  // New stable variable for last win timestamps
+  stable var lastWinTimestamps : [(Principal, Int)] = [];
 
   type WinLog = {
     pid : Principal;
     duckType : Text; // "Gold" | "Silver"
     amount : Nat; // in e8s
     ts : Int; // nanoseconds since epoch
+    nonce : Nat; // Unique nonce for the win
   };
 
   type PlayerRoundState = {
@@ -129,6 +134,49 @@ actor {
     );
     if (Array.find(ongoingWins, func((p, _) : (Principal, Bool)) : Bool { p == pid }) == null) {
       ongoingWins := Array.append(ongoingWins, [(pid, state)]);
+    };
+  };
+
+  // Helper to get/set nonce
+  private func getWinNonce(pid : Principal) : Nat {
+    switch (Array.find(winNonces, func((p, n) : (Principal, Nat)) : Bool { p == pid })) {
+      case (?(_, nonce)) { nonce };
+      case null { 0 };
+    };
+  };
+
+  private func incrementWinNonce(pid : Principal) : Nat {
+    let current = getWinNonce(pid);
+    let newNonce = current + 1;
+    winNonces := Array.map<(Principal, Nat), (Principal, Nat)>(
+      winNonces,
+      func((p, n)) : (Principal, Nat) {
+        if (p == pid) (p, newNonce) else (p, n);
+      },
+    );
+    if (Array.find(winNonces, func((p, _) : (Principal, Nat)) : Bool { p == pid }) == null) {
+      winNonces := Array.append(winNonces, [(pid, newNonce)]);
+    };
+    newNonce;
+  };
+
+  // Helper to get/set last win timestamp
+  private func getLastWinTimestamp(pid : Principal) : Int {
+    switch (Array.find(lastWinTimestamps, func((p, t) : (Principal, Int)) : Bool { p == pid })) {
+      case (?(_, ts)) { ts };
+      case null { 0 };
+    };
+  };
+
+  private func setLastWinTimestamp(pid : Principal, ts : Int) {
+    lastWinTimestamps := Array.map<(Principal, Int), (Principal, Int)>(
+      lastWinTimestamps,
+      func((p, t)) : (Principal, Int) {
+        if (p == pid) (p, ts) else (p, t);
+      },
+    );
+    if (Array.find(lastWinTimestamps, func((p, _) : (Principal, Int)) : Bool { p == pid }) == null) {
+      lastWinTimestamps := Array.append(lastWinTimestamps, [(pid, ts)]);
     };
   };
 
@@ -231,6 +279,14 @@ actor {
       return false;
     };
 
+    // Validate last win timestamp (cooldown of 10 seconds)
+    let now = Time.now();
+    let lastWinTs = getLastWinTimestamp(caller);
+    if (lastWinTs != 0 and now - lastWinTs < 10_000_000_000) { // 10 seconds in nanoseconds
+      setWinInProgress(caller, false);
+      return false;
+    };
+
     if (duckType == "Gold" and playerState.goldWinInRound == ?roundToken) {
       setWinInProgress(caller, false);
       return false;
@@ -248,12 +304,14 @@ actor {
         Nat64.toNat(await tokenTransferActor.getSilverPot());
       };
     };
-    let now = Time.now();
+
+    let nonce = incrementWinNonce(caller);
     let entry : WinLog = {
       pid = caller;
       duckType;
       amount = amountE8s;
       ts = now;
+      nonce;
     };
     winLogs := Array.append(winLogs, [entry]);
 
@@ -274,6 +332,7 @@ actor {
       lastSilverWinner := ?caller;
     };
 
+    setLastWinTimestamp(caller, now);
     setWinInProgress(caller, false);
     return true;
   };
@@ -302,7 +361,7 @@ actor {
   };
 
   public func oneIn50k() : async Bool { await oneInNSecure(1500) }; // 1 in 1,500 for gold duck
-  public func oneIn100() : async Bool { await oneInNSecure(1) }; // 1 in 150 for silver duck
+  public func oneIn100() : async Bool { await oneInNSecure(150) }; // 1 in 150 for silver duck
 
   public query func verify_password(inputPassword : Text) : async Bool {
     return inputPassword == storedPassword;
@@ -323,6 +382,14 @@ actor {
     // Reentrancy guard
     if (isWinInProgress(msg.caller)) return false;
     setWinInProgress(msg.caller, true);
+
+    // Validate last win timestamp (must be within 1 hour)
+    let now = Time.now();
+    let lastWinTs = getLastWinTimestamp(msg.caller);
+    if (lastWinTs == 0 or now - lastWinTs > 3_600_000_000_000) { // 1 hour in nanoseconds
+      setWinInProgress(msg.caller, false);
+      return false;
+    };
 
     switch (lastGoldWinner) {
       case null {
@@ -352,6 +419,7 @@ actor {
       case (#Ok _) {
         let _ = await tokenTransferActor.resetGoldPot();
         lastGoldWinner := null;
+        setLastWinTimestamp(msg.caller, 0); // Reset timestamp to prevent re-claiming
         setWinInProgress(msg.caller, false);
         true;
       };
@@ -366,6 +434,14 @@ actor {
     // Reentrancy guard
     if (isWinInProgress(msg.caller)) return false;
     setWinInProgress(msg.caller, true);
+
+    // Validate last win timestamp (must be within 1 hour)
+    let now = Time.now();
+    let lastWinTs = getLastWinTimestamp(msg.caller);
+    if (lastWinTs == 0 or now - lastWinTs > 3_600_000_000_000) { // 1 hour in nanoseconds
+      setWinInProgress(msg.caller, false);
+      return false;
+    };
 
     switch (lastSilverWinner) {
       case null {
@@ -395,6 +471,7 @@ actor {
       case (#Ok _) {
         let _ = await tokenTransferActor.resetSilverPot();
         lastSilverWinner := null;
+        setLastWinTimestamp(msg.caller, 0); // Reset timestamp to prevent re-claiming
         setWinInProgress(msg.caller, false);
         true;
       };
