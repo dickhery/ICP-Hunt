@@ -37,24 +37,39 @@ const scriptsInEvents = {
 
 	},
 
-	async Game_event_Event32_Act1(runtime, localVars)
-	{
-		const isGolden = await self.checkGoldenDuck();
-		runtime.globalVars.SpawnGoldenDuck = isGolden ? 1 : 0;
-		console.log("SpawnGoldenDuck set to", runtime.globalVars.SpawnGoldenDuck);
-		runtime.callFunction("OnCheckGoldenDuckComplete");
-		
-	},
-
 	async Game_event_Event33_Act1(runtime, localVars)
 	{
-		const isSilver = await self.checkSilverDuck();
-		runtime.globalVars.SpawnSilverDuck = isSilver ? 1 : 0;
-		console.log("SpawnSilverDuck set to", runtime.globalVars.SpawnSilverDuck);
-		        runtime.callFunction("OnCheckSilverDuckComplete");
+		try {
+		    const isGolden = await self.checkGoldenDuck();
+		    runtime.globalVars.SpawnGoldenDuck = isGolden ? 1 : 0;
+		    console.log("SpawnGoldenDuck set to", runtime.globalVars.SpawnGoldenDuck);
+		    runtime.globalVars.GoldenCheckDone = true;
+		    runtime.callFunction("OnCheckGoldenDuckComplete");
+		} catch (err) {
+		    runtime.globalVars.SpawnGoldenDuck = 0;
+		    runtime.globalVars.GoldenCheckDone = true;
+		    runtime.callFunction("OnCheckGoldenDuckComplete");
+		    console.error("Golden duck check failed:", err);
+		}
 	},
 
-	async Game_event_Event184_Act12(runtime, localVars)
+	async Game_event_Event34_Act1(runtime, localVars)
+	{
+		try {
+		    const isSilver = await self.checkSilverDuck();
+		    runtime.globalVars.SpawnSilverDuck = isSilver ? 1 : 0;
+		    console.log("SpawnSilverDuck set to", runtime.globalVars.SpawnSilverDuck);
+		    runtime.globalVars.SilverCheckDone = true;
+		    runtime.callFunction("OnCheckSilverDuckComplete");
+		} catch (err) {
+		    runtime.globalVars.SpawnSilverDuck = 0;
+		    runtime.globalVars.SilverCheckDone = true;
+		    runtime.callFunction("OnCheckSilverDuckComplete");
+		    console.error("Silver duck check failed:", err);
+		}
+	},
+
+	async Game_event_Event185_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Gold");
 		if (success) {
@@ -72,7 +87,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event185_Act12(runtime, localVars)
+	async Game_event_Event186_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Silver");
 		if (success) {
@@ -90,12 +105,12 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event214_Act7(runtime, localVars)
+	async Game_event_Event215_Act7(runtime, localVars)
 	{
 
 	},
 
-	async Game_event_Event214_Act9(runtime, localVars)
+	async Game_event_Event215_Act9(runtime, localVars)
 	{
 		self.fetchNextAd();
 		
@@ -158,7 +173,7 @@ const scriptsInEvents = {
 		
 	},
 
-	async Game_over_event_Event9_Act1(runtime, localVars)
+	async Game_over_event_Event10_Act1(runtime, localVars)
 	{
 		const nameBox  = runtime.objects.NameInputBox.getFirstInstance();
 		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();

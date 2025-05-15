@@ -712,7 +712,14 @@ self.checkGoldenDuck = async function () {
       setStatusMessage("Custodian actor not initialized. No golden duck check.");
       return false;
     }
-    const result = await window.custodianActor.oneIn50k();
+    // Add a 7-second timeout for the canister call
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Golden duck check timed out")), 7000);
+    });
+    const result = await Promise.race([
+      window.custodianActor.oneIn50k(),
+      timeoutPromise,
+    ]);
     console.log("oneIn50k returned =>", result);
     return result;
   } catch (err) {
@@ -728,7 +735,14 @@ self.checkSilverDuck = async function () {
       setStatusMessage("Custodian actor not initialized. No silver duck check.");
       return false;
     }
-    const shouldSpawn = await window.custodianActor.oneIn100();
+    // Add a 7-second timeout for the canister call
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Silver duck check timed out")), 7000);
+    });
+    const shouldSpawn = await Promise.race([
+      window.custodianActor.oneIn100(),
+      timeoutPromise,
+    ]);
     console.log("Silver Spawn =>", shouldSpawn);
     return shouldSpawn;
   } catch (err) {
