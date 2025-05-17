@@ -434,51 +434,30 @@ self.checkUserIcpTransferBalance = async function () {
 };
 
 self.fetchNextAd = async function () {
-  if (!runtimeGlobal) return;
   try {
-    const pid = runtimeGlobal.globalVars.projectId;
-    const adType = runtimeGlobal.globalVars.AdTypeInput || "";
-
-    const result = await getNextAd(pid, adType);
+    const fetchPromise = getNextAd(runtimeGlobal.globalVars.projectId, runtimeGlobal.globalVars.AdTypeInput || "");
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Ad fetch timed out")), 10000));
+    const result = await Promise.race([fetchPromise, timeoutPromise]);
+    
     if (!result || result.length === 0) {
-      setStatusMessage("No ads available right now. Skipping ad...");
+      setStatusMessage("No ads available. Skipping...");
       runtimeGlobal.globalVars.CurrentAdBase64 = "";
       runtimeGlobal.globalVars.CurrentAdClickUrl = "";
       runtimeGlobal.globalVars.Game_Status = "Play";
-      runtime.callFunction("CloseAdLayer");
+      runtimeGlobal.callFunction("CloseAdLayer");
       return;
     }
-
+    
     const [ad, tokenId] = result;
     runtimeGlobal.globalVars.CurrentAdBase64 = ad.imageBase64;
     runtimeGlobal.globalVars.CurrentAdClickUrl = ad.clickUrl;
     setStatusMessage(`Fetched Ad #${ad.id} (served: ${ad.viewsServed}), token: ${tokenId}`);
-
-    if (adViewTimeoutId !== null) {
-      clearTimeout(adViewTimeoutId);
-      adViewTimeoutId = null;
-    }
-
-    adViewTimeoutId = setTimeout(async () => {
-      try {
-        const success = await recordViewWithToken(tokenId);
-        if (success) {
-          setStatusMessage(`View for Ad #${ad.id} counted (token ${tokenId}).`);
-        } else {
-          setStatusMessage(`View for Ad #${ad.id} was NOT counted (too soon or invalid).`);
-        }
-      } catch (err) {
-        console.error("recordViewWithToken error:", err);
-        setStatusMessage("Error recording ad view: " + err.message);
-      }
-      adViewTimeoutId = null;
-    }, 5000);
-
   } catch (err) {
-    console.error(err);
-    setStatusMessage("fetchNextAd error: " + err.message);
+    console.error("fetchNextAd error:", err);
+    setStatusMessage("Error fetching ad: " + err.message);
+    runtimeGlobal.globalVars.CurrentAdBase64 = "";
     runtimeGlobal.globalVars.Game_Status = "Play";
-    runtime.callFunction("CloseAdLayer");
+    runtimeGlobal.callFunction("CloseAdLayer");
   }
 };
 

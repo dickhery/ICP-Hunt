@@ -142,20 +142,19 @@ async fn verify_block(user:Principal, amount_e8s:u64,
 #[update]
 async fn recordDeposit(user: Principal, amount_e8s: u64, block_index: u64) -> bool {
     let caller = api::caller();
-
     match verify_block(user, amount_e8s, block_index).await {
         Ok(()) => {
-            let to_pot = 400_000;  // 0.004 ICP in e8s
+            let silver_add = 1_500_000; // 0.015 ICP in e8s
+            let gold_add = 3_000_000;   // 0.03 ICP in e8s
             with_state_mut(|st| {
                 *st.balances.entry(user).or_default() += amount_e8s;
                 st.credited_blocks.insert(block_index);
-                // Automatically add to pots
-                st.silver_pot_e8s += to_pot;
-                st.gold_pot_e8s += to_pot;
+                st.silver_pot_e8s += silver_add;
+                st.gold_pot_e8s += gold_add;
             });
             add_log(caller, "recordDeposit", amount_e8s, Some(block_index));
-            add_log(caller, "autoAddSilver", to_pot, None);
-            add_log(caller, "autoAddGold", to_pot, None);
+            add_log(caller, "autoAddSilver", silver_add, None);
+            add_log(caller, "autoAddGold", gold_add, None);
             api::print(format!(
                 "[recordDeposit] {} +{} e8s (block {}) – ok",
                 user, amount_e8s, block_index

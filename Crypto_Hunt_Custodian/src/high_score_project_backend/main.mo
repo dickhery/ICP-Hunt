@@ -360,8 +360,8 @@ actor {
     go();
   };
 
-  public func oneIn50k() : async Bool { await oneInNSecure(1500) }; // 1 in 1,500 for gold duck
-  public func oneIn100() : async Bool { await oneInNSecure(150) }; // 1 in 150 for silver duck
+  public func oneIn50k() : async Bool { await oneInNSecure(6667) }; // 1 in 1,500 for gold duck
+  public func oneIn100() : async Bool { await oneInNSecure(667) }; // 1 in 150 for silver duck
 
   public query func verify_password(inputPassword : Text) : async Bool {
     return inputPassword == storedPassword;

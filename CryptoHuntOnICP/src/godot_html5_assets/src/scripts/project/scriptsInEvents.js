@@ -2,42 +2,42 @@
 
 const scriptsInEvents = {
 
-	async Game_event_Event2_Act19(runtime, localVars)
+	async Game_event_Event5_Act19(runtime, localVars)
 	{
 		self.getGoldPot();
 		
 	},
 
-	async Game_event_Event2_Act20(runtime, localVars)
+	async Game_event_Event5_Act20(runtime, localVars)
 	{
 		self.getSilverPot();
 		
 	},
 
-	async Game_event_Event12_Act1(runtime, localVars)
+	async Game_event_Event15_Act1(runtime, localVars)
 	{
 		self.getGoldPot();
 		
 	},
 
-	async Game_event_Event12_Act2(runtime, localVars)
+	async Game_event_Event15_Act2(runtime, localVars)
 	{
 		self.getSilverPot();
 		
 	},
 
-	async Game_event_Event29_Act1(runtime, localVars)
+	async Game_event_Event32_Act1(runtime, localVars)
 	{
 		await window.incRoundCounters();
 		
 	},
 
-	async Game_event_Event31_Act1(runtime, localVars)
+	async Game_event_Event34_Act1(runtime, localVars)
 	{
 
 	},
 
-	async Game_event_Event33_Act1(runtime, localVars)
+	async Game_event_Event36_Act1(runtime, localVars)
 	{
 		try {
 		    const isGolden = await self.checkGoldenDuck();
@@ -53,7 +53,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event34_Act1(runtime, localVars)
+	async Game_event_Event37_Act1(runtime, localVars)
 	{
 		try {
 		    const isSilver = await self.checkSilverDuck();
@@ -69,7 +69,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event185_Act12(runtime, localVars)
+	async Game_event_Event189_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Gold");
 		if (success) {
@@ -87,7 +87,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event186_Act12(runtime, localVars)
+	async Game_event_Event190_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Silver");
 		if (success) {
@@ -105,12 +105,12 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event215_Act7(runtime, localVars)
+	async Game_event_Event220_Act7(runtime, localVars)
 	{
 
 	},
 
-	async Game_event_Event215_Act9(runtime, localVars)
+	async Game_event_Event220_Act9(runtime, localVars)
 	{
 		self.fetchNextAd();
 		
