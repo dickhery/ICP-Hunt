@@ -2,42 +2,42 @@
 
 const scriptsInEvents = {
 
-	async Game_event_Event5_Act19(runtime, localVars)
+	async Game_event_Event7_Act19(runtime, localVars)
 	{
 		self.getGoldPot();
 		
 	},
 
-	async Game_event_Event5_Act20(runtime, localVars)
+	async Game_event_Event7_Act20(runtime, localVars)
 	{
 		self.getSilverPot();
 		
 	},
 
-	async Game_event_Event15_Act1(runtime, localVars)
+	async Game_event_Event17_Act1(runtime, localVars)
 	{
 		self.getGoldPot();
 		
 	},
 
-	async Game_event_Event15_Act2(runtime, localVars)
+	async Game_event_Event17_Act2(runtime, localVars)
 	{
 		self.getSilverPot();
-		
-	},
-
-	async Game_event_Event32_Act1(runtime, localVars)
-	{
-		await window.incRoundCounters();
 		
 	},
 
 	async Game_event_Event34_Act1(runtime, localVars)
 	{
-
+		await window.incRoundCounters();
+		
 	},
 
 	async Game_event_Event36_Act1(runtime, localVars)
+	{
+
+	},
+
+	async Game_event_Event38_Act1(runtime, localVars)
 	{
 		try {
 		    const isGolden = await self.checkGoldenDuck();
@@ -53,7 +53,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event37_Act1(runtime, localVars)
+	async Game_event_Event39_Act1(runtime, localVars)
 	{
 		try {
 		    const isSilver = await self.checkSilverDuck();
@@ -69,7 +69,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event190_Act12(runtime, localVars)
+	async Game_event_Event192_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Gold");
 		if (success) {
@@ -87,7 +87,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event191_Act12(runtime, localVars)
+	async Game_event_Event193_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Silver");
 		if (success) {
@@ -105,38 +105,38 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event221_Act7(runtime, localVars)
+	async Game_event_Event223_Act7(runtime, localVars)
 	{
 
 	},
 
-	async Game_event_Event221_Act9(runtime, localVars)
+	async Game_event_Event223_Act9(runtime, localVars)
 	{
 		self.fetchNextAd();
 		
 	},
 
-	async Menu_event_Event14_Act1(runtime, localVars)
+	async Menu_event_Event17_Act1(runtime, localVars)
 	{
 		window.depositIcpForUser();
 	},
 
-	async Menu_event_Event15_Act3(runtime, localVars)
+	async Menu_event_Event18_Act3(runtime, localVars)
 	{
 		window.depositIcpForUser();
 	},
 
-	async Menu_event_Event16_Act3(runtime, localVars)
+	async Menu_event_Event19_Act3(runtime, localVars)
 	{
 		window.depositIcpForUser();
 	},
 
-	async Menu_event_Event25_Act2(runtime, localVars)
+	async Menu_event_Event28_Act2(runtime, localVars)
 	{
 		window.logout();
 	},
 
-	async Game_over_event_Event7_Act1(runtime, localVars)
+	async Game_over_event_Event7_Act2(runtime, localVars)
 	{
 		(async function() {
 		  console.log("[GameOver] Checking if new high score?");
@@ -185,16 +185,6 @@ const scriptsInEvents = {
 		
 	},
 
-	async Auth_event_Event1_Act1(runtime, localVars)
-	{
-		window.logout();
-	},
-
-	async Auth_event_Event1_Act2(runtime, localVars)
-	{
-		window.initAdNetworkActor();
-	},
-
 	async Auth_event_Event2_Act1(runtime, localVars)
 	{
 		window.initAdNetworkWithPlug();
@@ -206,7 +196,7 @@ const scriptsInEvents = {
 		window.initAdNetworkWithII();
 	},
 
-	async Bounties_event_Event2_Act3(runtime, localVars)
+	async Bounties_event_Event2_Act7(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
 		
@@ -220,14 +210,14 @@ const scriptsInEvents = {
 		
 	},
 
-	async Bounties_event_Event2_Act5(runtime, localVars)
+	async Bounties_event_Event2_Act9(runtime, localVars)
 	{
 		// call your main.js function
 		window.checkTokenBalance();
 		
 	},
 
-	async Bounties_event_Event2_Act6(runtime, localVars)
+	async Bounties_event_Event2_Act10(runtime, localVars)
 	{
 		window.refreshWinStats();
 	},
@@ -520,6 +510,127 @@ const scriptsInEvents = {
 	},
 
 	async Wallet_event_Event18_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
+	},
+
+	async Auth_event_Event1_Act3(runtime, localVars)
+	{
+		self.getGoldPot();
+		
+	},
+
+	async Auth_event_Event1_Act4(runtime, localVars)
+	{
+		self.getSilverPot();
+		
+	},
+
+	async Auth_event_Event1_Act1(runtime, localVars)
+	{
+		window.logout();
+	},
+
+	async Auth_event_Event1_Act2(runtime, localVars)
+	{
+		window.initAdNetworkActor();
+	},
+
+	async Bounties_event_Event2_Act1(runtime, localVars)
+	{
+		self.getGoldPot();
+		
+	},
+
+	async Bounties_event_Event2_Act2(runtime, localVars)
+	{
+		self.getSilverPot();
+		
+	},
+
+	async Menu_event_Event2_Act1(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event3_Act3(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Game_over_event_Event5_Act1(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Game_over_event_Event12_Act1(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event3_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Game_over_event_Event2_Act1(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event2_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Game_over_event_Event13_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
+	},
+
+	async Game_over_event_Event14_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event5_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event4_Act1(runtime, localVars)
 	{
 		window.copyPrincipalToClipboard();
 		

@@ -1307,8 +1307,8 @@ function or(l, r)
 }
 
 self.C3_ExpressionFuncs = [
-		() => "Game_Settings",
 		() => 1,
+		() => "Game_Settings",
 		() => 0,
 		() => 5,
 		() => "Play",
@@ -1706,6 +1706,7 @@ self.C3_ExpressionFuncs = [
 			return () => C3.lerp(f0("Gui"), 1, 0.25);
 		},
 		() => "Shoot_Settings",
+		() => "150,50,100",
 		p => {
 			const n0 = p._GetNode(0);
 			const n1 = p._GetNode(1);
@@ -1946,7 +1947,18 @@ self.C3_ExpressionFuncs = [
 		},
 		() => "Shadow_Out",
 		() => "Menu_Settings",
+		() => 1421,
+		() => 773,
+		() => 552,
+		() => 598,
+		() => 594,
 		() => 4,
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => ("Your PID: " + v0.GetValue());
+		},
+		() => 0.5,
+		() => "Principal ID Copied to Clipboard",
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => (f0(0) + 300);
@@ -1962,6 +1974,7 @@ self.C3_ExpressionFuncs = [
 		() => "Button_Play",
 		() => "Sleep",
 		() => "Wake",
+		() => 1200,
 		() => "Payment_Popup",
 		() => "Button_Exit",
 		() => "Pressed",
@@ -1988,12 +2001,12 @@ self.C3_ExpressionFuncs = [
 		() => "Button_Restart",
 		() => "Payment",
 		() => "Button Submit Score",
-		() => 1796,
-		() => 115,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
-			return () => ("Your PID: " + v0.GetValue());
+			return () => and(v0.GetValue(), " ICP");
 		},
+		() => 1796,
+		() => 115,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => and(v0.GetValue(), " Rounds since last Gold bounty");
@@ -2011,10 +2024,6 @@ self.C3_ExpressionFuncs = [
 			return () => ("Last Silver win: " + v0.GetValue());
 		},
 		() => 0.2,
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			return () => and(v0.GetValue(), " ICP");
-		},
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => and(v0.GetValue(), " Rounds since Gold");

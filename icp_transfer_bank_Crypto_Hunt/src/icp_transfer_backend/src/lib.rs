@@ -1,6 +1,3 @@
-//! ICP-transfer backend – jackpots survive upgrades
-//! April 2025
-
 use candid::{CandidType, Principal};
 use ic_cdk::api;
 use ic_cdk_macros::{init, pre_upgrade, post_upgrade, query, update};
@@ -16,7 +13,10 @@ use std::{
 };
 
 /* ───────────── constants ───────────── */
-const ALLOWED_CALLER: &str = "z5cfx-3yaaa-aaaam-aee3a-cai";
+const ALLOWED_CALLER: [&str; 2] = [
+    "z5cfx-3yaaa-aaaam-aee3a-cai",
+    "fa5ig-bkalm-nw7nw-k6i37-uowjc-7mcwv-3pcvm-5dm7z-5va6r-v7scb-hqe",
+];
 const STATE_VERSION:  u8   = 1;             // bump on breaking State changes
 
 /* ───────────── data types ──────────── */
@@ -48,6 +48,7 @@ struct State {
     logs            : Vec<LogEntry>,
     silver_pot_e8s  : u64,
     gold_pot_e8s    : u64,
+    high_score_pot_e8s : u64,
 }
 
 /* ─── legacy State (v0: *no* pot fields) ── */
@@ -59,8 +60,14 @@ struct StateV0 {
 }
 impl From<StateV0> for State {
     fn from(v0: StateV0) -> Self {
-        State { silver_pot_e8s: 0, gold_pot_e8s: 0, balances: v0.balances,
-                credited_blocks: v0.credited_blocks, logs: v0.logs }
+        State {
+            silver_pot_e8s: 0,
+            gold_pot_e8s: 0,
+            high_score_pot_e8s: 0,
+            balances: v0.balances,
+            credited_blocks: v0.credited_blocks,
+            logs: v0.logs,
+        }
     }
 }
 
@@ -145,16 +152,19 @@ async fn recordDeposit(user: Principal, amount_e8s: u64, block_index: u64) -> bo
     match verify_block(user, amount_e8s, block_index).await {
         Ok(()) => {
             let silver_add = 1_500_000; // 0.015 ICP in e8s
-            let gold_add = 3_000_000;   // 0.03 ICP in e8s
+            let gold_add = 2_000_000;   // 0.02 ICP in e8s
+            let high_score_add = 1_000_000; // 0.01 ICP in e8s
             with_state_mut(|st| {
                 *st.balances.entry(user).or_default() += amount_e8s;
                 st.credited_blocks.insert(block_index);
                 st.silver_pot_e8s += silver_add;
                 st.gold_pot_e8s += gold_add;
+                st.high_score_pot_e8s += high_score_add;
             });
             add_log(caller, "recordDeposit", amount_e8s, Some(block_index));
             add_log(caller, "autoAddSilver", silver_add, None);
             add_log(caller, "autoAddGold", gold_add, None);
+            add_log(caller, "autoAddHighScore", high_score_add, None);
             api::print(format!(
                 "[recordDeposit] {} +{} e8s (block {}) – ok",
                 user, amount_e8s, block_index
@@ -209,11 +219,16 @@ fn getMyBalance() -> u64 {
     with_state(|st| st.balances.get(&caller).copied().unwrap_or(0))
 }
 
+fn is_allowed_caller(caller: &Principal) -> bool {
+    ALLOWED_CALLER.contains(&caller.to_text().as_str())
+}
+
+
 /// Custodian-only ICP transfer
 #[update]
 async fn transfer(args: TransferArgs) -> Result<BlockIndex, String> {
     let caller = api::caller();
-    if caller.to_text() != ALLOWED_CALLER {
+    if !is_allowed_caller(&caller) {
         return Err("not authorised".into());
     }
 
@@ -226,7 +241,6 @@ async fn transfer(args: TransferArgs) -> Result<BlockIndex, String> {
         to: AccountIdentifier::new(&args.to_principal, &to_sub),
         created_at_time: None,
     };
-
     match ledger_transfer(MAINNET_LEDGER_CANISTER_ID, ledger_args).await {
         Ok(Ok(idx)) => {
             add_log(caller, "transfer", args.amount.e8s(), Some(idx));
@@ -260,8 +274,7 @@ async fn resetGoldPot() -> bool               { pot_reset(250_000_000, false) }
 // internal helpers for pots
 fn pot_add(amount: u64, silver: bool) -> bool {
     let caller = api::caller();
-    if caller.to_text() != ALLOWED_CALLER { return false; }
-
+    if !is_allowed_caller(&caller) { return false; }
     with_state_mut(|st| {
         if silver { st.silver_pot_e8s += amount; } else { st.gold_pot_e8s += amount; }
     });
@@ -270,12 +283,32 @@ fn pot_add(amount: u64, silver: bool) -> bool {
 }
 fn pot_reset(amount: u64, silver: bool) -> bool {
     let caller = api::caller();
-    if caller.to_text() != ALLOWED_CALLER { return false; }
-
+    if !is_allowed_caller(&caller) { return false; }
     with_state_mut(|st| {
         if silver { st.silver_pot_e8s = amount; } else { st.gold_pot_e8s = amount; }
     });
     add_log(caller, if silver { "resetSilver" } else { "resetGold" }, amount, None);
+    true
+}
+
+#[query]
+fn getHighScorePot() -> u64 { with_state(|st| st.high_score_pot_e8s) }
+
+#[update]
+fn addToHighScorePot(amount_e8s: u64) -> bool {
+    let caller = api::caller();
+    if !is_allowed_caller(&caller) { return false; }
+    with_state_mut(|st| st.high_score_pot_e8s += amount_e8s);
+    add_log(caller, "addHighScorePot", amount_e8s, None);
+    true
+}
+
+#[update]
+fn resetHighScorePot() -> bool {
+    let caller = api::caller();
+    if !is_allowed_caller(&caller) { return false; }
+    with_state_mut(|st| st.high_score_pot_e8s = 0);
+    add_log(caller, "resetHighScorePot", 0, None);
     true
 }
 

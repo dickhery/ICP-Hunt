@@ -42,11 +42,14 @@ actor {
     transfer : (TransferArgs) -> async TransferResult;
     addToSilverPot : (Nat64) -> async Bool;
     addToGoldPot : (Nat64) -> async Bool;
+    addToHighScorePot : (Nat64) -> async Bool;
     getSilverPot : () -> async Nat64;
     getGoldPot : () -> async Nat64;
+    getHighScorePot : () -> async Nat64;
     getTotalPot : () -> async Nat64;
     resetGoldPot : () -> async Bool;
     resetSilverPot : () -> async Bool;
+    resetHighScorePot : () -> async Bool;
   };
 
   //////////////////////////////////////////////////////////////////////////
@@ -494,5 +497,53 @@ actor {
     if (msg.caller != custodianPrincipal) return false;
     let result = await tokenTransferActor.resetSilverPot();
     return result;
+  };
+
+  var lastHighScoreAwardTs : ?Time.Time = null;
+
+  private func canAwardHighScorePot() : Bool {
+    let now = Time.now();
+    let oneMonthInNs = 30 * 24 * 60 * 60 * 1_000_000_000; // ~30 days in nanoseconds
+    switch (lastHighScoreAwardTs) {
+      case (null) { true }; // Never awarded, so allow it
+      case (?ts) { (now - ts) >= oneMonthInNs };
+    }
+  };
+
+  public shared ({ caller }) func awardHighScorePot() : async Bool {
+    if (not canAwardHighScorePot()) {
+      return false;
+    };
+    let scores = await highScoreActor.getHighScores();
+    if (scores.size() == 0) {
+      return false;
+    };
+    var topScore : (Principal, Text, Text, Int) = scores[0];
+    for (score in scores.vals()) {
+      if (score.3 > topScore.3) {
+        topScore := score;
+      }
+    };
+    let winnerPrincipal = topScore.0;
+    let amountE8s = await tokenTransferActor.getHighScorePot();
+    if (amountE8s == 0) {
+      return false;
+    };
+    let result = await tokenTransferActor.transfer({
+      to_principal = winnerPrincipal;
+      to_subaccount = null;
+      amount = { e8s = amountE8s };
+    });
+    switch (result) {
+      case (#Ok _) {
+        let _ = await tokenTransferActor.resetHighScorePot();
+        lastHighScoreAwardTs := ?Time.now();
+        await highScoreActor.resetHighScores();
+        return true;
+      };
+      case (#Err _) {
+        return false;
+      };
+    };
   };
 };

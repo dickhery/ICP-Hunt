@@ -22925,6 +22925,7 @@ const idlFactory$2 = ({ IDL }) => {
   const WinLog = IDL.Record({
     'ts' : IDL.Int,
     'pid' : IDL.Principal,
+    'nonce' : IDL.Nat,
     'duckType' : IDL.Text,
     'amount' : IDL.Nat,
   });
@@ -22936,6 +22937,7 @@ const idlFactory$2 = ({ IDL }) => {
         [],
       ),
     'awardGoldPotToCaller' : IDL.Func([], [IDL.Bool], []),
+    'awardHighScorePot' : IDL.Func([], [IDL.Bool], []),
     'awardSilverPotToCaller' : IDL.Func([], [IDL.Bool], []),
     'getGoldPot' : IDL.Func([], [IDL.Nat64], []),
     'getHighScores' : IDL.Func(
@@ -23017,9 +23019,11 @@ const idlFactory = ({ IDL }) => {
   const TransferResult = IDL.Variant({ 'Ok' : IDL.Nat64, 'Err' : IDL.Text });
   return IDL.Service({
     'addToGoldPot' : IDL.Func([IDL.Nat64], [IDL.Bool], []),
+    'addToHighScorePot' : IDL.Func([IDL.Nat64], [IDL.Bool], []),
     'addToSilverPot' : IDL.Func([IDL.Nat64], [IDL.Bool], []),
     'getBalanceOf' : IDL.Func([IDL.Principal], [IDL.Nat64], ['query']),
     'getGoldPot' : IDL.Func([], [IDL.Nat64], ['query']),
+    'getHighScorePot' : IDL.Func([], [IDL.Nat64], ['query']),
     'getLogs' : IDL.Func([], [IDL.Vec(LogEntry)], ['query']),
     'getMyBalance' : IDL.Func([], [IDL.Nat64], ['query']),
     'getSilverPot' : IDL.Func([], [IDL.Nat64], ['query']),
@@ -23030,6 +23034,7 @@ const idlFactory = ({ IDL }) => {
         [],
       ),
     'resetGoldPot' : IDL.Func([], [IDL.Bool], []),
+    'resetHighScorePot' : IDL.Func([], [IDL.Bool], []),
     'resetSilverPot' : IDL.Func([], [IDL.Bool], []),
     'transfer' : IDL.Func([TransferArgs], [Result], []),
     'withdraw' : IDL.Func([IDL.Nat64], [TransferResult], []),

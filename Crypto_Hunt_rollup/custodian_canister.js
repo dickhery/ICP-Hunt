@@ -7,6 +7,7 @@ export const idlFactory = ({ IDL }) => {
   const WinLog = IDL.Record({
     'ts' : IDL.Int,
     'pid' : IDL.Principal,
+    'nonce' : IDL.Nat,
     'duckType' : IDL.Text,
     'amount' : IDL.Nat,
   });
@@ -18,6 +19,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'awardGoldPotToCaller' : IDL.Func([], [IDL.Bool], []),
+    'awardHighScorePot' : IDL.Func([], [IDL.Bool], []),
     'awardSilverPotToCaller' : IDL.Func([], [IDL.Bool], []),
     'getGoldPot' : IDL.Func([], [IDL.Nat64], []),
     'getHighScores' : IDL.Func(
