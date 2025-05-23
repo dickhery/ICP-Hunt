@@ -159,17 +159,17 @@ self.refreshWinStats = async function () {
     const wins = winsOriginal.slice().reverse();
 
     const g = runtimeGlobal.globalVars;
-    g.RoundsSinceGoldWin   = stats.roundsSinceGoldWin;
+    g.RoundsSinceGoldWin = stats.roundsSinceGoldWin;
     g.RoundsSinceSilverWin = stats.roundsSinceSilverWin;
-    g.LastGoldWinTs        = ns2DateString(stats.lastGoldWinTs);
-    g.LastSilverWinTs      = ns2DateString(stats.lastSilverWinTs);
+    g.LastGoldWinTs = ns2DateString(stats.lastGoldWinTs);
+    g.LastSilverWinTs = ns2DateString(stats.lastSilverWinTs);
 
     g.RecentWinsJson = wins
       .map((w, i) => {
-        const raw   = typeof w.amount === "object" && "e8s" in w.amount
-                    ? Number(w.amount.e8s)
-                    : Number(w.amount);
-        const icp   = (raw / 1e8).toFixed(2);
+        const raw = typeof w.amount === "object" && "e8s" in w.amount
+          ? Number(w.amount.e8s)
+          : Number(w.amount);
+        const icp = (raw / 1e8).toFixed(2);
         const short = w.pid.toText().slice(0, 5) + "…" + w.pid.toText().slice(-5);
         return `${i + 1}. ${w.duckType.padEnd(6)} ${icp} ICP — ${short} @ ${ns2DateString(w.ts)}`;
       })
@@ -372,7 +372,7 @@ self.depositIcpForUser = async function () {
       if (!success) {
         attempt++;
         const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
-        setStatusMessage(`Attempt ${attempt}/${maxRetries} failed. Retrying in ${delay/1000}s…`);
+        setStatusMessage(`Attempt ${attempt}/${maxRetries} failed. Retrying in ${delay / 1000}s…`);
         await new Promise(r => setTimeout(r, delay));
       }
     }
@@ -438,7 +438,7 @@ self.fetchNextAd = async function () {
     const fetchPromise = getNextAd(runtimeGlobal.globalVars.projectId, runtimeGlobal.globalVars.AdTypeInput || "");
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Ad fetch timed out")), 10000));
     const result = await Promise.race([fetchPromise, timeoutPromise]);
-    
+
     if (!result || result.length === 0) {
       setStatusMessage("No ads available. Skipping...");
       runtimeGlobal.globalVars.CurrentAdBase64 = "";
@@ -447,7 +447,7 @@ self.fetchNextAd = async function () {
       runtimeGlobal.callFunction("CloseAdLayer");
       return;
     }
-    
+
     const [ad, tokenId] = result;
     runtimeGlobal.globalVars.CurrentAdBase64 = ad.imageBase64;
     runtimeGlobal.globalVars.CurrentAdClickUrl = ad.clickUrl;
@@ -515,7 +515,13 @@ self.checkTokenBalance = async function () {
     });
 
     runtimeGlobal.globalVars.TokenBalance = displayBalance;
-    runtimeGlobal.objects.Text_Balance.getFirstInstance().text = "Balance: " + displayBalance + " ICP";
+
+    const textInstance = runtimeGlobal.objects.Text_Balance.getFirstInstance();
+    if (textInstance) {
+      textInstance.text = "Balance: " + displayBalance + " ICP";
+    } else {
+      console.warn("Text_Balance instance not found on current layout.");
+    }
 
     setStatusMessage(`Balance: ${displayBalance} ICP`);
   } catch (err) {
@@ -523,6 +529,50 @@ self.checkTokenBalance = async function () {
     setStatusMessage("Error checking token balance: " + err.message);
   }
 };
+
+self.addToGoldPot = async function (amountIcp) {
+  if (!runtimeGlobal || !window.icpTransferActor) return;
+  if (!authMethod) {
+    setStatusMessage("Please authenticate first to add to Gold Pot.");
+    return;
+  }
+  try {
+    const amountE8s = BigInt(Math.round(amountIcp * 1e8));
+    const success = await window.icpTransferActor.addToGoldPot(amountE8s);
+    if (success) {
+      setStatusMessage(`Added ${amountIcp} ICP to Gold Pot.`);
+      await self.getGoldPot(); // Refresh displayed value
+    } else {
+      setStatusMessage("Failed to add to Gold Pot. Possibly not authorized.");
+    }
+  } catch (err) {
+    console.error("addToGoldPot error:", err);
+    setStatusMessage("Error adding to Gold Pot: " + err.message);
+  }
+};
+window.addToGoldPot = self.addToGoldPot;
+
+self.addToSilverPot = async function (amountIcp) {
+  if (!runtimeGlobal || !window.icpTransferActor) return;
+  if (!authMethod) {
+    setStatusMessage("Please authenticate first to add to Silver Pot.");
+    return;
+  }
+  try {
+    const amountE8s = BigInt(Math.round(amountIcp * 1e8));
+    const success = await window.icpTransferActor.addToSilverPot(amountE8s);
+    if (success) {
+      setStatusMessage(`Added ${amountIcp} ICP to Silver Pot.`);
+      await self.getSilverPot(); // Refresh displayed value
+    } else {
+      setStatusMessage("Failed to add to Silver Pot. Possibly not authorized.");
+    }
+  } catch (err) {
+    console.error("addToSilverPot error:", err);
+    setStatusMessage("Error adding to Silver Pot: " + err.message);
+  }
+};
+window.addToSilverPot = self.addToSilverPot;
 
 const WIN_STATS_POLL_MS = 30_000;
 let winStatsIntervalId = null;
@@ -542,7 +592,7 @@ function stopWinStatsPolling() {
   }
 }
 window.startWinStatsPolling = startWinStatsPolling;
-window.stopWinStatsPolling  = stopWinStatsPolling;
+window.stopWinStatsPolling = stopWinStatsPolling;
 
 self.cashOutProjectViews = async function (projectId) { /* ... */ };
 self.cashOutAllProjectsViews = async function () { /* ... */ };
@@ -576,16 +626,16 @@ self.submitHighScore = async function () {
   }
 
   try {
-    const name   = runtimeGlobal.globalVars.PlayerNameInput;
-    const email  = runtimeGlobal.globalVars.PlayerEmailInput;
-    const score  = runtimeGlobal.globalVars.Score;
-    const token  = window.currentRoundToken;
+    const name = runtimeGlobal.globalVars.PlayerNameInput;
+    const email = runtimeGlobal.globalVars.PlayerEmailInput;
+    const score = runtimeGlobal.globalVars.Score;
+    const token = window.currentRoundToken;
 
     setStatusMessage(`Submitting secure high score ${score}…`);
 
     const ok = await custodian_addHighScoreSecure(name, email, score, token);
     if (ok) setStatusMessage("High score accepted!");
-    else    setStatusMessage("High score rejected (token or score invalid).");
+    else setStatusMessage("High score rejected (token or score invalid).");
 
   } catch (err) {
     console.error("submitHighScore:", err);
@@ -685,13 +735,43 @@ self.getTotalPot = async function () {
   }
 };
 
+self.checkLastAwardTs = async function () {
+  if (!runtimeGlobal || !window.custodianActor) return;
+  try {
+    const success = await window.custodianActor.awardHighScorePot();
+    if (success) {
+      setStatusMessage("High score pot awarded successfully!");
+      await self.getHighScorePot(); // Refresh pot value
+    } else {
+      setStatusMessage("High score pot not due for award yet.");
+    }
+  } catch (err) {
+    console.error("checkLastAwardTs error:", err);
+    setStatusMessage("Error awarding high score pot: " + err.message);
+  }
+};
+window.checkLastAwardTs = self.checkLastAwardTs;
+
+self.getHighScorePot = async function () {
+  if (!runtimeGlobal || !window.icpTransferActor) return;
+  try {
+    const e8s = await window.icpTransferActor.getHighScorePot();
+    const asIcp = Number(e8s) / 1e8;
+    runtimeGlobal.globalVars.HighScorePot = asIcp;
+    setStatusMessage(`High Score Pot: ${asIcp} ICP`);
+  } catch (err) {
+    console.error("getHighScorePot error:", err);
+    setStatusMessage("Error fetching High Score Pot: " + err.message);
+  }
+};
+window.getHighScorePot = self.getHighScorePot;
+
 self.checkGoldenDuck = async function () {
   try {
     if (!window.custodianActor) {
       setStatusMessage("Custodian actor not initialized. No golden duck check.");
       return false;
     }
-    // Add a 7-second timeout for the canister call
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error("Golden duck check timed out")), 7000);
     });
@@ -714,7 +794,6 @@ self.checkSilverDuck = async function () {
       setStatusMessage("Custodian actor not initialized. No silver duck check.");
       return false;
     }
-    // Add a 7-second timeout for the canister call
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error("Silver duck check timed out")), 7000);
     });
@@ -769,4 +848,19 @@ self.resetGoldPotFromCustodian = async function () {
     console.error("resetGoldPotFromCustodian error:", err);
     setStatusMessage("Error calling resetGoldPotFromCustodian: " + err.message);
   }
+
+  self.getTimeUntilNextAward = async function () {
+    if (!runtimeGlobal || !window.custodianActor) return;
+    try {
+      const timeLeftNs = await window.custodianActor.getTimeUntilNextAward();
+      const timeLeftSeconds = Number(timeLeftNs) / 1_000_000_000;
+      runtimeGlobal.globalVars.TimeLeftSeconds = timeLeftSeconds;
+      setStatusMessage(`Time until next award: ${Math.floor(timeLeftSeconds / 86400)} days remaining`);
+    } catch (err) {
+      console.error("getTimeUntilNextAward error:", err);
+      setStatusMessage("Error fetching time until next award: " + err.message);
+    }
+  };
+  window.getTimeUntilNextAward = self.getTimeUntilNextAward;
+
 };

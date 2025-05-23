@@ -285,7 +285,8 @@ actor {
     // Validate last win timestamp (cooldown of 10 seconds)
     let now = Time.now();
     let lastWinTs = getLastWinTimestamp(caller);
-    if (lastWinTs != 0 and now - lastWinTs < 10_000_000_000) { // 10 seconds in nanoseconds
+    if (lastWinTs != 0 and now - lastWinTs < 10_000_000_000) {
+      // 10 seconds in nanoseconds
       setWinInProgress(caller, false);
       return false;
     };
@@ -389,7 +390,8 @@ actor {
     // Validate last win timestamp (must be within 1 hour)
     let now = Time.now();
     let lastWinTs = getLastWinTimestamp(msg.caller);
-    if (lastWinTs == 0 or now - lastWinTs > 3_600_000_000_000) { // 1 hour in nanoseconds
+    if (lastWinTs == 0 or now - lastWinTs > 3_600_000_000_000) {
+      // 1 hour in nanoseconds
       setWinInProgress(msg.caller, false);
       return false;
     };
@@ -441,7 +443,8 @@ actor {
     // Validate last win timestamp (must be within 1 hour)
     let now = Time.now();
     let lastWinTs = getLastWinTimestamp(msg.caller);
-    if (lastWinTs == 0 or now - lastWinTs > 3_600_000_000_000) { // 1 hour in nanoseconds
+    if (lastWinTs == 0 or now - lastWinTs > 3_600_000_000_000) {
+      // 1 hour in nanoseconds
       setWinInProgress(msg.caller, false);
       return false;
     };
@@ -503,11 +506,11 @@ actor {
 
   private func canAwardHighScorePot() : Bool {
     let now = Time.now();
-    let oneMonthInNs = 30 * 24 * 60 * 60 * 1_000_000_000; // ~30 days in nanoseconds
+    let oneMonthInNs = 7 * 24 * 60 * 60 * 1_000_000_000; // ~30 days in nanoseconds = 30 * 24 * 60 * 60 * 1_000_000_000;
     switch (lastHighScoreAwardTs) {
       case (null) { true }; // Never awarded, so allow it
       case (?ts) { (now - ts) >= oneMonthInNs };
-    }
+    };
   };
 
   public shared ({ caller }) func awardHighScorePot() : async Bool {
@@ -522,7 +525,7 @@ actor {
     for (score in scores.vals()) {
       if (score.3 > topScore.3) {
         topScore := score;
-      }
+      };
     };
     let winnerPrincipal = topScore.0;
     let amountE8s = await tokenTransferActor.getHighScorePot();
@@ -545,5 +548,14 @@ actor {
         return false;
       };
     };
+  };
+
+  public query func getTimeUntilNextAward() : async Int {
+    let period_ns : Int = 7 * 24 * 3600 * 1_000_000_000; // 7 days in nanoseconds
+    let now = Time.now();
+    let periods_passed = now / period_ns;
+    let next_award_time = (periods_passed + 1) * period_ns;
+    let time_left = next_award_time - now;
+    return time_left;
   };
 };

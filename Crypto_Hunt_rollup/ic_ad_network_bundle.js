@@ -22947,6 +22947,7 @@ const idlFactory$2 = ({ IDL }) => {
       ),
     'getRecentWins' : IDL.Func([], [IDL.Vec(WinLog)], ['query']),
     'getSilverPot' : IDL.Func([], [IDL.Nat64], []),
+    'getTimeUntilNextAward' : IDL.Func([], [IDL.Int], ['query']),
     'getTotalPot' : IDL.Func([], [IDL.Nat64], []),
     'getWinStats' : IDL.Func(
         [],
