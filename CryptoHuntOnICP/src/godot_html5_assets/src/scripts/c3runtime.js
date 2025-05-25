@@ -2033,6 +2033,16 @@ self.C3_ExpressionFuncs = [
 			const v0 = p._GetNode(0).GetVar();
 			return () => ("Last Silver win: " + v0.GetValue());
 		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			const v1 = p._GetNode(1).GetVar();
+			return () => ("Gold Duck Odds: " + ((((v0.GetValue()) > (0) ? 1 : 0)) ? (and("1 in ", Math.round((1 / v1.GetValue())))) : ("Calculating...")));
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			const v1 = p._GetNode(1).GetVar();
+			return () => ("Silver Duck Odds: " + ((((v0.GetValue()) > (0) ? 1 : 0)) ? (and("1 in ", Math.round((1 / v1.GetValue())))) : ("Calculating...")));
+		},
 		() => 0.2,
 		p => {
 			const v0 = p._GetNode(0).GetVar();

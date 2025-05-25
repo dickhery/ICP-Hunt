@@ -22939,6 +22939,7 @@ const idlFactory$2 = ({ IDL }) => {
     'awardGoldPotToCaller' : IDL.Func([], [IDL.Bool], []),
     'awardHighScorePot' : IDL.Func([], [IDL.Bool], []),
     'awardSilverPotToCaller' : IDL.Func([], [IDL.Bool], []),
+    'getGoldDuckOdds' : IDL.Func([], [IDL.Float64], ['query']),
     'getGoldPot' : IDL.Func([], [IDL.Nat64], []),
     'getHighScores' : IDL.Func(
         [],
@@ -22946,6 +22947,7 @@ const idlFactory$2 = ({ IDL }) => {
         [],
       ),
     'getRecentWins' : IDL.Func([], [IDL.Vec(WinLog)], ['query']),
+    'getSilverDuckOdds' : IDL.Func([], [IDL.Float64], ['query']),
     'getSilverPot' : IDL.Func([], [IDL.Nat64], []),
     'getTimeUntilNextAward' : IDL.Func([], [IDL.Int], ['query']),
     'getTotalPot' : IDL.Func([], [IDL.Nat64], []),
@@ -22970,6 +22972,7 @@ const idlFactory$2 = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'recordGameEnd' : IDL.Func([], [], []),
     'resetGoldPotFromCustodian' : IDL.Func([], [IDL.Bool], []),
     'resetHighScores' : IDL.Func([], [], []),
     'resetSilverPotFromCustodian' : IDL.Func([], [IDL.Bool], []),

@@ -663,6 +663,21 @@ const scriptsInEvents = {
 		    runtime.globalVars.StatusMessage = "Error fetching time until next award.";
 		  }
 		})();
+	},
+
+	async Game_event_Event149_Act3(runtime, localVars)
+	{
+		await window.custodianActor.recordGameEnd();
+	},
+
+	async Game_event_Event163_Act2(runtime, localVars)
+	{
+		await window.custodianActor.recordGameEnd();
+	},
+
+	async Bounties_event_Event2_Act11(runtime, localVars)
+	{
+		await window.updateDuckOdds();
 	}
 };
 

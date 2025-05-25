@@ -150,6 +150,56 @@ self.recordDuckWin = async function (duckType) {
 };
 window.recordDuckWin = self.recordDuckWin;
 
+self.getGoldDuckOdds = async function () {
+  if (!window.custodianActor) {
+    setStatusMessage("Custodian actor not initialized.");
+    return 0;
+  }
+  try {
+    const odds = await window.custodianActor.getGoldDuckOdds();
+    return parseFloat(odds);
+  } catch (err) {
+    console.error("getGoldDuckOdds error:", err);
+    setStatusMessage("Error fetching gold duck odds: " + err.message);
+    return 0;
+  }
+};
+
+self.getSilverDuckOdds = async function () {
+  if (!window.custodianActor) {
+    setStatusMessage("Custodian actor not initialized.");
+    return 0;
+  }
+  try {
+    const odds = await window.custodianActor.getSilverDuckOdds();
+    return parseFloat(odds);
+  } catch (err) {
+    console.error("getSilverDuckOdds error:", err);
+    setStatusMessage("Error fetching silver duck odds: " + err.message);
+    return 0;
+  }
+};
+
+self.updateDuckOdds = async function () {
+  const goldOdds = await self.getGoldDuckOdds();
+  const silverOdds = await self.getSilverDuckOdds();
+  runtimeGlobal.globalVars.GoldDuckOdds = goldOdds;
+  runtimeGlobal.globalVars.SilverDuckOdds = silverOdds;
+};
+
+self.recordGameEnd = async function () {
+  if (!runtimeGlobal || !window.custodianActor) return;
+  try {
+    await window.custodianActor.recordGameEnd();
+    console.log("Game end recorded successfully.");
+    await self.updateDuckOdds(); // Refresh odds after game ends
+  } catch (err) {
+    console.error("recordGameEnd error:", err);
+    setStatusMessage("Error recording game end: " + err.message);
+  }
+};
+window.recordGameEnd = self.recordGameEnd;
+
 self.refreshWinStats = async function () {
   if (!runtimeGlobal || !window.custodianActor) return;
 
