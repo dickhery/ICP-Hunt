@@ -437,6 +437,19 @@ actor {
   public func oneIn50k() : async Bool { await oneInNSecure(getNGold()) };
   public func oneIn100() : async Bool { await oneInNSecure(getNSilver()) };
 
+  //Testing setup
+  // Function to determine if a gold duck spawns (originally 1 in 50,000 chance)
+//    public shared func oneIn50k() : async Bool {
+        // Temporarily set to always return true for testing
+//        return true;
+//    };
+
+    // Function to determine if a silver duck spawns (originally 1 in 100 chance)
+//    public shared func oneIn100() : async Bool {
+        // Temporarily set to always return true for testing
+//        return true;
+//    };
+
   public query func getGoldDuckOdds() : async Float {
     let avg = getAverageRounds();
     if (avg == 0.0) {
