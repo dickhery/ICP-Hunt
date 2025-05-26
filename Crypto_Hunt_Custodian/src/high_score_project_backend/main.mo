@@ -3,6 +3,7 @@
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
 import Time "mo:base/Time";
+import Nat "mo:base/Nat";
 import Nat8 "mo:base/Nat8";
 import Nat64 "mo:base/Nat64";
 import Int "mo:base/Int";
@@ -12,6 +13,7 @@ import Blob "mo:base/Blob";
 import Hash "mo:base/Hash";
 import Nat32 "mo:base/Nat32";
 import Debug "mo:base/Debug";
+import Float "mo:base/Float";
 
 actor {
 
@@ -61,7 +63,7 @@ actor {
   let highScoreActor : HighScore = actor (Principal.toText(highScoreCanisterId));
   let tokenTransferActor : TokenTransfer = actor (Principal.toText(tokenTransferCanisterId));
 
-  stable var storedPassword : Text = "Paytoplay";
+  stable var storedPassword : Text = "";
 
   stable var roundsSinceGoldWin : Nat = 0;
   stable var roundsSinceSilverWin : Nat = 0;
@@ -89,20 +91,26 @@ actor {
     lastRoundToken : Nat;
     goldWinInRound : ?Nat;
     silverWinInRound : ?Nat;
+    currentGameRounds : Nat;
   };
 
   stable var winLogs : [WinLog] = [];
 
   stable var playerStates : [(Principal, PlayerRoundState)] = [];
 
+  stable var gameRounds : [var Nat] = Array.init<Nat>(100, 0);
+  stable var gameRoundsCount : Nat = 0;
+  stable var gameRoundsIndex : Nat = 0;
+
   private func getPlayerState(pid : Principal) : PlayerRoundState {
     switch (Array.find(playerStates, func((p : Principal, _) : (Principal, PlayerRoundState)) : Bool { p == pid })) {
       case (?(_, state)) { state };
       case null {
-        let newState = {
+        let newState : PlayerRoundState = {
           lastRoundToken = 0;
           goldWinInRound = null;
           silverWinInRound = null;
+          currentGameRounds = 0;
         };
         playerStates := Array.append(playerStates, [(pid, newState)]);
         newState;
@@ -183,21 +191,82 @@ actor {
     };
   };
 
+  // Add rounds to circular buffer
+  private func addGameRounds(rounds : Nat) {
+    if (gameRoundsCount < 100) {
+      gameRounds[gameRoundsIndex] := rounds;
+      gameRoundsIndex := (gameRoundsIndex + 1) % 100;
+      gameRoundsCount += 1;
+    } else {
+      gameRounds[gameRoundsIndex] := rounds;
+      gameRoundsIndex := (gameRoundsIndex + 1) % 100;
+    };
+  };
+
+  // Calculate average rounds per game
+  private func getAverageRounds() : Float {
+    if (gameRoundsCount == 0) return 0.0;
+    var sum : Nat = 0;
+    let count = if (gameRoundsCount < 100) gameRoundsCount else 100;
+    for (i in Iter.range(0, count - 1)) {
+      let idx = (gameRoundsIndex - 1 - i + 100) % 100;
+      sum += gameRounds[idx];
+    };
+    Float.fromInt(sum) / Float.fromInt(count);
+  };
+
+  // Calculate dynamic n for gold and silver ducks
+  private func getNGold() : Nat {
+    let avg = getAverageRounds();
+    let intVal = Float.toInt(Float.nearest(avg));
+    let R = if (avg > 0.0) {
+      if (intVal >= 0) { Int.abs(intVal) : Nat } else { 10 };
+    } else { 10 };
+    if (R < 1) { 1 } else { R * 100 };
+  };
+
+  private func getNSilver() : Nat {
+    let avg = getAverageRounds();
+    let intVal = Float.toInt(Float.nearest(avg));
+    let R = if (avg > 0.0) {
+      if (intVal >= 0) { Int.abs(intVal) : Nat } else { 10 };
+    } else { 10 };
+    if (R < 1) { 1 } else { R * 10 };
+  };
+
   public shared ({ caller }) func incRoundCounters() : async Nat {
     let playerState = getPlayerState(caller);
     let newToken = playerState.lastRoundToken + 1;
+    let newCurrentGameRounds = playerState.currentGameRounds + 1;
     updatePlayerState(
       caller,
       {
         lastRoundToken = newToken;
         goldWinInRound = playerState.goldWinInRound;
         silverWinInRound = playerState.silverWinInRound;
+        currentGameRounds = newCurrentGameRounds;
       },
     );
     roundsSinceGoldWin += 1;
     roundsSinceSilverWin += 1;
-    currentRoundToken += 1; // Keep for compatibility
+    currentRoundToken += 1;
     return newToken;
+  };
+
+  // New function to record game end
+  public shared ({ caller }) func recordGameEnd() : async () {
+    let playerState = getPlayerState(caller);
+    let rounds = playerState.currentGameRounds;
+    addGameRounds(rounds);
+    updatePlayerState(
+      caller,
+      {
+        lastRoundToken = playerState.lastRoundToken;
+        goldWinInRound = playerState.goldWinInRound;
+        silverWinInRound = playerState.silverWinInRound;
+        currentGameRounds = 0;
+      },
+    );
   };
 
   public query func getWinStats() : async {
@@ -320,6 +389,7 @@ actor {
     winLogs := Array.append(winLogs, [entry]);
 
     let updatedState = {
+      currentGameRounds = playerState.currentGameRounds;
       lastRoundToken = playerState.lastRoundToken;
       goldWinInRound = if (duckType == "Gold") ?roundToken else playerState.goldWinInRound;
       silverWinInRound = if (duckType == "Silver") ?roundToken else playerState.silverWinInRound;
@@ -364,11 +434,40 @@ actor {
     go();
   };
 
-  public func oneIn50k() : async Bool { await oneInNSecure(6667) }; // 1 in 1,500 for gold duck
-  public func oneIn100() : async Bool { await oneInNSecure(667) }; // 1 in 150 for silver duck
+  public func oneIn50k() : async Bool { await oneInNSecure(getNGold()) };
+  public func oneIn100() : async Bool { await oneInNSecure(getNSilver()) };
+
+  public query func getGoldDuckOdds() : async Float {
+    let avg = getAverageRounds();
+    if (avg == 0.0) {
+      return 0.0;
+    };
+    let R = if (avg > 0.0) { Float.toInt(Float.nearest(avg)) } else { 10 };
+    if (R < 1) { return 0.0 };
+    let n = R * 100; // Matches getNGold()
+    1.0 / Float.fromInt(n);
+  };
+
+  public query func getSilverDuckOdds() : async Float {
+    let avg = getAverageRounds();
+    if (avg == 0.0) {
+      return 0.0;
+    };
+    let R = if (avg > 0.0) { Float.toInt(Float.nearest(avg)) } else { 10 };
+    if (R < 1) { return 0.0 };
+    let n = R * 10; // Matches getNSilver()
+    1.0 / Float.fromInt(n);
+  };
 
   public query func verify_password(inputPassword : Text) : async Bool {
+    if (storedPassword == "") {
+      return false; // Password not set
+    };
     return inputPassword == storedPassword;
+  };
+
+  public query func isPasswordSet() : async Bool {
+    return storedPassword != "";
   };
 
   public shared (msg) func updatePassword(newPassword : Text) : async Bool {
