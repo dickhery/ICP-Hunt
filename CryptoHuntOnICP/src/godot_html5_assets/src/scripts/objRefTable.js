@@ -426,6 +426,7 @@ self.C3_JsPropNameTable = [
 	{Sprite_Price: 0},
 	{GoldOddsText: 0},
 	{SilverOddsText: 0},
+	{Sprite_MenuBG: 0},
 	{Buttons: 0},
 	{Texts: 0},
 	{Spawn_Duck: 0},
@@ -465,6 +466,8 @@ self.C3_JsPropNameTable = [
 	{SilverCheckDone: 0},
 	{RoundCounted: 0},
 	{ActiveDucks: 0},
+	{GoldWinDisplayed: 0},
+	{SilverWinDisplayed: 0},
 	{TouchID: 0},
 	{Dist: 0},
 	{Cangle: 0},
@@ -657,6 +660,7 @@ self.InstanceType = {
 	Sprite_Price: class extends self.ISpriteInstance {},
 	GoldOddsText: class extends self.ITextInstance {},
 	SilverOddsText: class extends self.ITextInstance {},
+	Sprite_MenuBG: class extends self.ISpriteInstance {},
 	Buttons: class extends self.ISpriteInstance {},
 	Texts: class extends self.ISpriteInstance {}
 }

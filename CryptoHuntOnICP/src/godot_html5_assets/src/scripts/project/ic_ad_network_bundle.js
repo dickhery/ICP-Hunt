@@ -22922,6 +22922,7 @@ const idlFactory$3 = ({ IDL }) => {
 // because we're defining the IDL inline below.
 
 const idlFactory$2 = ({ IDL }) => {
+  const Time = IDL.Int;
   const WinLog = IDL.Record({
     'ts' : IDL.Int,
     'pid' : IDL.Principal,
@@ -22946,6 +22947,7 @@ const idlFactory$2 = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Text, IDL.Text, IDL.Int))],
         [],
       ),
+    'getLastHighScoreAwardTs' : IDL.Func([], [IDL.Opt(Time)], ['query']),
     'getRecentWins' : IDL.Func([], [IDL.Vec(WinLog)], ['query']),
     'getSilverDuckOdds' : IDL.Func([], [IDL.Float64], ['query']),
     'getSilverPot' : IDL.Func([], [IDL.Nat64], []),
@@ -22964,6 +22966,7 @@ const idlFactory$2 = ({ IDL }) => {
         ['query'],
       ),
     'incRoundCounters' : IDL.Func([], [IDL.Nat], []),
+    'isPasswordSet' : IDL.Func([], [IDL.Bool], ['query']),
     'oneIn100' : IDL.Func([], [IDL.Bool], []),
     'oneIn50k' : IDL.Func([], [IDL.Bool], []),
     'oneInNSecure' : IDL.Func([IDL.Nat], [IDL.Bool], []),

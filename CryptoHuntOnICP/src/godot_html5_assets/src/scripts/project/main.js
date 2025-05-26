@@ -104,8 +104,36 @@ function setPayButtonState(state /* "idle" | "processing" */) {
 }
 window.setPayButtonState = setPayButtonState;
 
-function ns2DateString(ns) {
-  if (!ns) return "—";
+function ns2DateString(input) {
+  let ns;
+
+  // Case 1: Input is a direct BigInt
+  if (typeof input === "bigint") {
+    ns = input;
+  }
+  // Case 2: Input is an array (for optional timestamps)
+  else if (Array.isArray(input)) {
+    if (input.length === 0) {
+      return "—"; // Empty array means no timestamp
+    } else if (input.length === 1 && typeof input[0] === "bigint") {
+      ns = input[0]; // Extract the BigInt from the array
+    } else {
+      console.error("ns2DateString: Invalid array input:", input);
+      return "Invalid timestamp";
+    }
+  }
+  // Case 3: Input is neither a BigInt nor an array
+  else {
+    console.error("ns2DateString: Expected BigInt or array, got:", input);
+    return "Invalid timestamp";
+  }
+
+  // If the timestamp is 0, treat it as no timestamp
+  if (ns === 0n) {
+    return "—";
+  }
+
+  // Convert nanoseconds to milliseconds and format as a date string
   const ms = Number(ns / 1_000_000n);
   return new Date(ms).toLocaleString();
 }
@@ -730,10 +758,28 @@ self.cancelAdViewTimeout = function () {
   }
 };
 
+self.isPasswordSet = async function () {
+  if (!runtimeGlobal || !window.custodianActor) return false;
+  try {
+    const isSet = await window.custodianActor.isPasswordSet();
+    return isSet;
+  } catch (err) {
+    console.error("isPasswordSet error:", err);
+    setStatusMessage("Error checking if password is set: " + err.message);
+    return false;
+  }
+};
+window.isPasswordSet = self.isPasswordSet;
+
 self.checkPassword = async function () {
   if (!runtimeGlobal) return;
   try {
     const input = runtimeGlobal.globalVars.UserInputPassword;
+    const isSet = await self.isPasswordSet();
+    if (!isSet) {
+      setStatusMessage("Beta tester password not set. Contact the administrator.");
+      return;
+    }
     const ok = await custodian_verifyPassword(input);
     if (ok) {
       runtimeGlobal.globalVars.isBetaTester = true;
@@ -788,10 +834,16 @@ self.getTotalPot = async function () {
 self.checkLastAwardTs = async function () {
   if (!runtimeGlobal || !window.custodianActor) return;
   try {
+    const currentTs = await window.custodianActor.getLastHighScoreAwardTs();
+    console.log(`Current lastHighScoreAwardTs: ${ns2DateString(currentTs)}`);
+    setStatusMessage(`Last award timestamp: ${ns2DateString(currentTs)}`);
+
     const success = await window.custodianActor.awardHighScorePot();
     if (success) {
       setStatusMessage("High score pot awarded successfully!");
-      await self.getHighScorePot(); // Refresh pot value
+      const updatedTs = await window.custodianActor.getLastHighScoreAwardTs();
+      console.log(`Updated lastHighScoreAwardTs: ${ns2DateString(updatedTs)}`);
+      await self.getHighScorePot();
     } else {
       setStatusMessage("High score pot not due for award yet.");
     }
@@ -898,19 +950,18 @@ self.resetGoldPotFromCustodian = async function () {
     console.error("resetGoldPotFromCustodian error:", err);
     setStatusMessage("Error calling resetGoldPotFromCustodian: " + err.message);
   }
-
-  self.getTimeUntilNextAward = async function () {
-    if (!runtimeGlobal || !window.custodianActor) return;
-    try {
-      const timeLeftNs = await window.custodianActor.getTimeUntilNextAward();
-      const timeLeftSeconds = Number(timeLeftNs) / 1_000_000_000;
-      runtimeGlobal.globalVars.TimeLeftSeconds = timeLeftSeconds;
-      setStatusMessage(`Time until next award: ${Math.floor(timeLeftSeconds / 86400)} days remaining`);
-    } catch (err) {
-      console.error("getTimeUntilNextAward error:", err);
-      setStatusMessage("Error fetching time until next award: " + err.message);
-    }
-  };
-  window.getTimeUntilNextAward = self.getTimeUntilNextAward;
-
 };
+
+self.getTimeUntilNextAward = async function () {
+  if (!runtimeGlobal || !window.custodianActor) return;
+  try {
+    const timeLeftNs = await window.custodianActor.getTimeUntilNextAward();
+    const timeLeftSeconds = Number(timeLeftNs) / 1_000_000_000;
+    runtimeGlobal.globalVars.TimeLeftSeconds = timeLeftSeconds;
+    setStatusMessage(`Time until next award: ${Math.floor(timeLeftSeconds / 86400)} days remaining`);
+  } catch (err) {
+    console.error("getTimeUntilNextAward error:", err);
+    setStatusMessage("Error fetching time until next award: " + err.message);
+  }
+};
+window.getTimeUntilNextAward = self.getTimeUntilNextAward;

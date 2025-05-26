@@ -69,6 +69,16 @@ const scriptsInEvents = {
 		}
 	},
 
+	async Game_event_Event149_Act3(runtime, localVars)
+	{
+		await window.custodianActor.recordGameEnd();
+	},
+
+	async Game_event_Event163_Act2(runtime, localVars)
+	{
+		await window.custodianActor.recordGameEnd();
+	},
+
 	async Game_event_Event192_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Gold");
@@ -353,6 +363,11 @@ const scriptsInEvents = {
 		window.refreshWinStats();
 	},
 
+	async Bounties_event_Event2_Act11(runtime, localVars)
+	{
+		await window.updateDuckOdds();
+	},
+
 	async Bounties_event_Event5_Act1(runtime, localVars)
 	{
 		// call your main.js function
@@ -525,6 +540,20 @@ const scriptsInEvents = {
 })();
 	},
 
+	async Leaderboard_event_Event7_Act1(runtime, localVars)
+	{
+		(async () => {
+		  try {
+		    const timeLeftNs = await window.custodianActor.getTimeUntilNextAward();
+		    const timeLeftSeconds = Number(timeLeftNs) / 1_000_000_000;
+		    runtime.globalVars.TimeLeftSeconds = timeLeftSeconds;
+		  } catch (err) {
+		    console.error("Error getting time until next award:", err);
+		    runtime.globalVars.StatusMessage = "Error fetching time until next award.";
+		  }
+		})();
+	},
+
 	async Beta_event_Event1_Act1(runtime, localVars)
 	{
 		window.checkPassword();
@@ -649,35 +678,6 @@ const scriptsInEvents = {
 	{
 		window.copyPrincipalToClipboard();
 		
-	},
-
-	async Leaderboard_event_Event7_Act1(runtime, localVars)
-	{
-		(async () => {
-		  try {
-		    const timeLeftNs = await window.custodianActor.getTimeUntilNextAward();
-		    const timeLeftSeconds = Number(timeLeftNs) / 1_000_000_000;
-		    runtime.globalVars.TimeLeftSeconds = timeLeftSeconds;
-		  } catch (err) {
-		    console.error("Error getting time until next award:", err);
-		    runtime.globalVars.StatusMessage = "Error fetching time until next award.";
-		  }
-		})();
-	},
-
-	async Game_event_Event149_Act3(runtime, localVars)
-	{
-		await window.custodianActor.recordGameEnd();
-	},
-
-	async Game_event_Event163_Act2(runtime, localVars)
-	{
-		await window.custodianActor.recordGameEnd();
-	},
-
-	async Bounties_event_Event2_Act11(runtime, localVars)
-	{
-		await window.updateDuckOdds();
 	}
 };
 
