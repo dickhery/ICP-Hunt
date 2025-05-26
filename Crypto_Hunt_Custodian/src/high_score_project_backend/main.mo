@@ -603,6 +603,10 @@ actor {
 
   var lastHighScoreAwardTs : ?Time.Time = null;
 
+  public query func getLastHighScoreAwardTs() : async ?Time.Time {
+  lastHighScoreAwardTs;
+};
+
   private func canAwardHighScorePot() : Bool {
     let now = Time.now();
     let oneMonthInNs = 7 * 24 * 60 * 60 * 1_000_000_000; // ~30 days in nanoseconds = 30 * 24 * 60 * 60 * 1_000_000_000;
@@ -650,11 +654,16 @@ actor {
   };
 
   public query func getTimeUntilNextAward() : async Int {
-    let period_ns : Int = 7 * 24 * 3600 * 1_000_000_000; // 7 days in nanoseconds
+    let oneWeekInNs : Int = 7 * 24 * 3600 * 1_000_000_000; // 7 days in nanoseconds
     let now = Time.now();
-    let periods_passed = now / period_ns;
-    let next_award_time = (periods_passed + 1) * period_ns;
-    let time_left = next_award_time - now;
-    return time_left;
+    switch (lastHighScoreAwardTs) {
+      case (null) { 0 }; // Can be awarded immediately
+      case (?ts) {
+        let next_award_time = ts + oneWeekInNs;
+        let time_left = next_award_time - now;
+        if (time_left < 0) { 0 } else { time_left };
+      };
+    };
   };
+
 };

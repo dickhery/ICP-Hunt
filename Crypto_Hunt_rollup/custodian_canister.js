@@ -4,6 +4,7 @@
 // because we're defining the IDL inline below.
 
 export const idlFactory = ({ IDL }) => {
+  const Time = IDL.Int;
   const WinLog = IDL.Record({
     'ts' : IDL.Int,
     'pid' : IDL.Principal,
@@ -28,6 +29,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Text, IDL.Text, IDL.Int))],
         [],
       ),
+    'getLastHighScoreAwardTs' : IDL.Func([], [IDL.Opt(Time)], ['query']),
     'getRecentWins' : IDL.Func([], [IDL.Vec(WinLog)], ['query']),
     'getSilverDuckOdds' : IDL.Func([], [IDL.Float64], ['query']),
     'getSilverPot' : IDL.Func([], [IDL.Nat64], []),
