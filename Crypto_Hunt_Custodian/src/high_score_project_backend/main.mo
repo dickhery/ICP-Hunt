@@ -435,20 +435,20 @@ actor {
   };
 
   public func oneIn50k() : async Bool { await oneInNSecure(getNGold()) };
-  public func oneIn100() : async Bool { await oneInNSecure(getNSilver()) };
+  // public func oneIn100() : async Bool { await oneInNSecure(getNSilver()) };
 
   //Testing setup
   // Function to determine if a gold duck spawns (originally 1 in 50,000 chance)
-//    public shared func oneIn50k() : async Bool {
-        // Temporarily set to always return true for testing
-//        return true;
-//    };
+  //    public shared func oneIn50k() : async Bool {
+  // Temporarily set to always return true for testing
+  //        return true;
+  //    };
 
-    // Function to determine if a silver duck spawns (originally 1 in 100 chance)
-//    public shared func oneIn100() : async Bool {
-        // Temporarily set to always return true for testing
-//        return true;
-//    };
+  // Function to determine if a silver duck spawns (originally 1 in 100 chance)
+  // Temporarily set to always return true for testing
+      public shared func oneIn100() : async Bool {
+          return true;
+      };
 
   public query func getGoldDuckOdds() : async Float {
     let avg = getAverageRounds();
@@ -614,11 +614,12 @@ actor {
     return result;
   };
 
-  var lastHighScoreAwardTs : ?Time.Time = null;
+  stable var lastHighScoreAwardTs : ?Time.Time = null;
+  stable var isAwardingHighScorePot : Bool = false;
 
   public query func getLastHighScoreAwardTs() : async ?Time.Time {
-  lastHighScoreAwardTs;
-};
+    lastHighScoreAwardTs;
+  };
 
   private func canAwardHighScorePot() : Bool {
     let now = Time.now();
@@ -630,11 +631,14 @@ actor {
   };
 
   public shared ({ caller }) func awardHighScorePot() : async Bool {
-    if (not canAwardHighScorePot()) {
-      return false;
-    };
+  if (isAwardingHighScorePot or not canAwardHighScorePot()) {
+    return false;
+  };
+  isAwardingHighScorePot := true;
+  try {
     let scores = await highScoreActor.getHighScores();
     if (scores.size() == 0) {
+      isAwardingHighScorePot := false;
       return false;
     };
     var topScore : (Principal, Text, Text, Int) = scores[0];
@@ -646,6 +650,7 @@ actor {
     let winnerPrincipal = topScore.0;
     let amountE8s = await tokenTransferActor.getHighScorePot();
     if (amountE8s == 0) {
+      isAwardingHighScorePot := false;
       return false;
     };
     let result = await tokenTransferActor.transfer({
@@ -658,13 +663,19 @@ actor {
         let _ = await tokenTransferActor.resetHighScorePot();
         lastHighScoreAwardTs := ?Time.now();
         await highScoreActor.resetHighScores();
+        isAwardingHighScorePot := false;
         return true;
       };
       case (#Err _) {
+        isAwardingHighScorePot := false;
         return false;
       };
     };
+  } catch (e) {
+    isAwardingHighScorePot := false;
+    return false;
   };
+};
 
   public query func getTimeUntilNextAward() : async Int {
     let oneWeekInNs : Int = 7 * 24 * 3600 * 1_000_000_000; // 7 days in nanoseconds
