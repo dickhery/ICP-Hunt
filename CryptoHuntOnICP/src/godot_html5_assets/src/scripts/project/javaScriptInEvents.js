@@ -200,39 +200,6 @@ const scriptsInEvents = {
 		window.logout();
 	},
 
-	async Auth_event_Event1_Act1(runtime, localVars)
-	{
-		window.logout();
-	},
-
-	async Auth_event_Event1_Act2(runtime, localVars)
-	{
-		window.initAdNetworkActor();
-	},
-
-	async Auth_event_Event1_Act3(runtime, localVars)
-	{
-		self.getGoldPot();
-		
-	},
-
-	async Auth_event_Event1_Act4(runtime, localVars)
-	{
-		self.getSilverPot();
-		
-	},
-
-	async Auth_event_Event2_Act1(runtime, localVars)
-	{
-		window.initAdNetworkWithPlug();
-		
-	},
-
-	async Auth_event_Event3_Act1(runtime, localVars)
-	{
-		window.initAdNetworkWithII();
-	},
-
 	async Game_over_event_Event2_Act1(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
@@ -318,6 +285,39 @@ const scriptsInEvents = {
 		} else {
 		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
 		}
+	},
+
+	async Auth_event_Event1_Act1(runtime, localVars)
+	{
+		window.logout();
+	},
+
+	async Auth_event_Event1_Act2(runtime, localVars)
+	{
+		window.initAdNetworkActor();
+	},
+
+	async Auth_event_Event1_Act3(runtime, localVars)
+	{
+		self.getGoldPot();
+		
+	},
+
+	async Auth_event_Event1_Act4(runtime, localVars)
+	{
+		self.getSilverPot();
+		
+	},
+
+	async Auth_event_Event2_Act1(runtime, localVars)
+	{
+		window.initAdNetworkWithPlug();
+		
+	},
+
+	async Auth_event_Event3_Act1(runtime, localVars)
+	{
+		window.initAdNetworkWithII();
 	},
 
 	async Bounties_event_Event2_Act1(runtime, localVars)
@@ -443,6 +443,12 @@ const scriptsInEvents = {
 	async Bounties_event_Event17_Act1(runtime, localVars)
 	{
 		window.resetGoldPotFromCustodian();
+	},
+
+	async Bounties_event_Event18_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
 	},
 
 	async Leaderboard_event_Event1_Act1(runtime, localVars)
@@ -677,12 +683,6 @@ const scriptsInEvents = {
 	},
 
 	async Wallet_event_Event18_Act1(runtime, localVars)
-	{
-		window.copyPrincipalToClipboard();
-		
-	},
-
-	async Bounties_event_Event18_Act1(runtime, localVars)
 	{
 		window.copyPrincipalToClipboard();
 		
