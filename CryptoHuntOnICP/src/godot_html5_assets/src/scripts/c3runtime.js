@@ -1425,7 +1425,7 @@ self.C3_ExpressionFuncs = [
 			const v1 = p._GetNode(1).GetVar();
 			return () => f0(0, v1.GetValue());
 		},
-		() => 784,
+		() => 789,
 		() => 857,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
@@ -1828,14 +1828,18 @@ self.C3_ExpressionFuncs = [
 		() => -157,
 		() => "Ad",
 		() => 100,
+		() => 1801,
+		() => 83,
+		p => {
+			const n0 = p._GetNode(0);
+			return () => (5 - n0.ExpInstVar());
+		},
 		() => 540,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => ("data:image/png;base64," + v0.GetValue());
 		},
-		() => 5.01,
-		() => 1801,
-		() => 83,
+		() => "countdown",
 		() => "Gameplay",
 		() => "Pause",
 		() => "Show_Pause_Settings",
@@ -2011,6 +2015,17 @@ self.C3_ExpressionFuncs = [
 		() => "Button_Restart",
 		() => "Payment",
 		() => "Button Submit Score",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			const n1 = p._GetNode(1);
+			return () => f0(n1.ExpObject());
+		},
+		() => 16,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			const n1 = p._GetNode(1);
+			return () => f0(n1.ExpObject(), 16);
+		},
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => and(v0.GetValue(), " ICP");

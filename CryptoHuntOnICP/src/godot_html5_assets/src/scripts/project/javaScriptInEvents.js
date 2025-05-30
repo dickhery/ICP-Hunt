@@ -200,6 +200,39 @@ const scriptsInEvents = {
 		window.logout();
 	},
 
+	async Auth_event_Event1_Act1(runtime, localVars)
+	{
+		window.logout();
+	},
+
+	async Auth_event_Event1_Act2(runtime, localVars)
+	{
+		window.initAdNetworkActor();
+	},
+
+	async Auth_event_Event1_Act3(runtime, localVars)
+	{
+		self.getGoldPot();
+		
+	},
+
+	async Auth_event_Event1_Act4(runtime, localVars)
+	{
+		self.getSilverPot();
+		
+	},
+
+	async Auth_event_Event2_Act1(runtime, localVars)
+	{
+		window.initAdNetworkWithPlug();
+		
+	},
+
+	async Auth_event_Event3_Act1(runtime, localVars)
+	{
+		window.initAdNetworkWithII();
+	},
+
 	async Game_over_event_Event2_Act1(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
@@ -216,7 +249,7 @@ const scriptsInEvents = {
 		window.checkTokenBalance();
 	},
 
-	async Game_over_event_Event7_Act2(runtime, localVars)
+	async Game_over_event_Event7_Act1(runtime, localVars)
 	{
 		(async function() {
 		  console.log("[GameOver] Checking if new high score?");
@@ -285,39 +318,6 @@ const scriptsInEvents = {
 		} else {
 		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
 		}
-	},
-
-	async Auth_event_Event1_Act1(runtime, localVars)
-	{
-		window.logout();
-	},
-
-	async Auth_event_Event1_Act2(runtime, localVars)
-	{
-		window.initAdNetworkActor();
-	},
-
-	async Auth_event_Event1_Act3(runtime, localVars)
-	{
-		self.getGoldPot();
-		
-	},
-
-	async Auth_event_Event1_Act4(runtime, localVars)
-	{
-		self.getSilverPot();
-		
-	},
-
-	async Auth_event_Event2_Act1(runtime, localVars)
-	{
-		window.initAdNetworkWithPlug();
-		
-	},
-
-	async Auth_event_Event3_Act1(runtime, localVars)
-	{
-		window.initAdNetworkWithII();
 	},
 
 	async Bounties_event_Event2_Act1(runtime, localVars)
@@ -445,12 +445,6 @@ const scriptsInEvents = {
 		window.resetGoldPotFromCustodian();
 	},
 
-	async Bounties_event_Event18_Act1(runtime, localVars)
-	{
-		window.copyPrincipalToClipboard();
-		
-	},
-
 	async Leaderboard_event_Event1_Act1(runtime, localVars)
 	{
 // A single async script to fetch and display high scores
@@ -459,36 +453,40 @@ const scriptsInEvents = {
   console.log('[Leaderboard] On start of layout -> begin fetching scores');
 
   // 2) Call the function that fetches from your custodian canister
-  //    This must be an async function in your main.js
   await self.loadHighScores();
 
   // 3) Retrieve the scores array from globalVars
   let arr = runtime.globalVars.HighScoreArray || [];
   console.log('[Leaderboard] High scores array loaded:', arr);
 
-  // 4) Build a scoreboard string
-  let str = '=== HIGH SCORES ===\n';
-
+  // 4) Build names and scores strings
+  let namesStr = '';
+  let scoresStr = '';
   // Sort by score descending (the 4th element in each [principal, name, email, score])
   arr = arr.slice().sort((a,b) => Number(b[3]) - Number(a[3]));
-
-  // 5) Loop through results, build text line by line
+  // Take top 10
+  arr = arr.slice(0, 10);
   for (let i = 0; i < arr.length; i++) {
     let [principal, name, email, score] = arr[i];
-    str += `${i+1}) ${name} (${score} pts)\n`;
+    namesStr += `${i+1}) ${name}\n`;
+    scoresStr += `(${score} pts)\n`;
   }
 
-  console.log('[Leaderboard] Final scoreboard string:\n' + str);
+  console.log('[Leaderboard] Names string:\n' + namesStr);
+  console.log('[Leaderboard] Scores string:\n' + scoresStr);
 
-  // 6) Assign the string to globalVars (if you want to store it) and set the text object
-  runtime.globalVars.LeaderboardString = str;
-
-  // 7) Actually set the text in your text object named 'LeaderboardText'
-  const textObj = runtime.objects.LeaderboardText.getFirstInstance();
-  if (textObj) {
-    textObj.text = str;
+  // 5) Set the text objects
+  const namesTextObj = runtime.objects.LeaderboardText.getFirstInstance();
+  const scoresTextObj = runtime.objects.LeaderboardScores.getFirstInstance();
+  if (namesTextObj) {
+    namesTextObj.text = namesStr;
   } else {
     console.warn('No LeaderboardText object found!');
+  }
+  if (scoresTextObj) {
+    scoresTextObj.text = scoresStr;
+  } else {
+    console.warn('No LeaderboardScores object found!');
   }
 })();
 	},
@@ -506,36 +504,40 @@ const scriptsInEvents = {
   console.log('[Leaderboard] On start of layout -> begin fetching scores');
 
   // 2) Call the function that fetches from your custodian canister
-  //    This must be an async function in your main.js
   await self.loadHighScores();
 
   // 3) Retrieve the scores array from globalVars
   let arr = runtime.globalVars.HighScoreArray || [];
   console.log('[Leaderboard] High scores array loaded:', arr);
 
-  // 4) Build a scoreboard string
-  let str = '=== HIGH SCORES ===\n';
-
+  // 4) Build names and scores strings
+  let namesStr = '';
+  let scoresStr = '';
   // Sort by score descending (the 4th element in each [principal, name, email, score])
   arr = arr.slice().sort((a,b) => Number(b[3]) - Number(a[3]));
-
-  // 5) Loop through results, build text line by line
+  // Take top 10
+  arr = arr.slice(0, 10);
   for (let i = 0; i < arr.length; i++) {
     let [principal, name, email, score] = arr[i];
-    str += `${i+1}) ${name} (${score} pts)\n`;
+    namesStr += `${i+1}) ${name}\n`;
+    scoresStr += `(${score} pts)\n`;
   }
 
-  console.log('[Leaderboard] Final scoreboard string:\n' + str);
+  console.log('[Leaderboard] Names string:\n' + namesStr);
+  console.log('[Leaderboard] Scores string:\n' + scoresStr);
 
-  // 6) Assign the string to globalVars (if you want to store it) and set the text object
-  runtime.globalVars.LeaderboardString = str;
-
-  // 7) Actually set the text in your text object named 'LeaderboardText'
-  const textObj = runtime.objects.LeaderboardText.getFirstInstance();
-  if (textObj) {
-    textObj.text = str;
+  // 5) Set the text objects
+  const namesTextObj = runtime.objects.LeaderboardText.getFirstInstance();
+  const scoresTextObj = runtime.objects.LeaderboardScores.getFirstInstance();
+  if (namesTextObj) {
+    namesTextObj.text = namesStr;
   } else {
     console.warn('No LeaderboardText object found!');
+  }
+  if (scoresTextObj) {
+    scoresTextObj.text = scoresStr;
+  } else {
+    console.warn('No LeaderboardScores object found!');
   }
 })();
 	},
@@ -678,6 +680,28 @@ const scriptsInEvents = {
 	{
 		window.copyPrincipalToClipboard();
 		
+	},
+
+	async Bounties_event_Event18_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
+	},
+
+	async Wallet_event_Event19_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Wallet_event_Event19_Act3(runtime, localVars)
+	{
+		window.checkTokenBalance();
 	}
 };
 
