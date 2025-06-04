@@ -24,6 +24,7 @@ service : () -> {
   getMyBalance : () -> (nat64) query;
   getSilverPot : () -> (nat64) query;
   getTotalPot : () -> (nat64) query;
+  getUserLogs : (principal) -> (vec LogEntry) query;
   recordDeposit : (principal, nat64, nat64) -> (bool);
   resetGoldPot : () -> (bool);
   resetHighScorePot : () -> (bool);

@@ -579,7 +579,7 @@ const scriptsInEvents = {
 		
 	},
 
-	async Wallet_event_Event2_Act3(runtime, localVars)
+	async Wallet_event_Event4_Act3(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
 		
@@ -593,26 +593,26 @@ const scriptsInEvents = {
 		
 	},
 
-	async Wallet_event_Event2_Act5(runtime, localVars)
+	async Wallet_event_Event4_Act5(runtime, localVars)
 	{
 		// call your main.js function
 		window.checkTokenBalance();
 		
 	},
 
-	async Wallet_event_Event2_Act6(runtime, localVars)
+	async Wallet_event_Event4_Act8(runtime, localVars)
 	{
 		window.refreshWinStats();
 	},
 
-	async Wallet_event_Event5_Act1(runtime, localVars)
+	async Wallet_event_Event7_Act1(runtime, localVars)
 	{
 		// call your main.js function
 		window.checkTokenBalance();
 		
 	},
 
-	async Wallet_event_Event7_Act1(runtime, localVars)
+	async Wallet_event_Event9_Act1(runtime, localVars)
 	{
 		// 1) Capture the user input from your text inputs into the global vars:
 		runtime.globalVars.TokenRecipient = runtime.objects.TextInput_Recipient.getFirstInstance().text;
@@ -623,30 +623,30 @@ const scriptsInEvents = {
 		
 	},
 
-	async Wallet_event_Event8_Act1(runtime, localVars)
+	async Wallet_event_Event13_Act1(runtime, localVars)
 	{
 		window.depositIcpForUser();
 		
 	},
 
-	async Wallet_event_Event9_Act1(runtime, localVars)
+	async Wallet_event_Event14_Act1(runtime, localVars)
 	{
 		window.withdrawIcp();
 		
 	},
 
-	async Wallet_event_Event10_Act1(runtime, localVars)
+	async Wallet_event_Event15_Act1(runtime, localVars)
 	{
 		window.checkMyIcpTransferBalance();
 		
 	},
 
-	async Wallet_event_Event11_Act2(runtime, localVars)
+	async Wallet_event_Event16_Act2(runtime, localVars)
 	{
 		window.checkUserIcpTransferBalance();
 	},
 
-	async Wallet_event_Event12_Act1(runtime, localVars)
+	async Wallet_event_Event17_Act1(runtime, localVars)
 	{
 		let typed = runtime.objects.TextInput_PotAmount.getFirstInstance().text;
 		let potNum = parseFloat(typed) || 0;
@@ -654,7 +654,7 @@ const scriptsInEvents = {
 		
 	},
 
-	async Wallet_event_Event13_Act1(runtime, localVars)
+	async Wallet_event_Event18_Act1(runtime, localVars)
 	{
 		let typed = runtime.objects.TextInput_PotAmount.getFirstInstance().text;
 		let potNum = parseFloat(typed) || 0;
@@ -662,33 +662,33 @@ const scriptsInEvents = {
 		
 	},
 
-	async Wallet_event_Event14_Act1(runtime, localVars)
+	async Wallet_event_Event19_Act1(runtime, localVars)
 	{
 		window.getGoldPot();
 	},
 
-	async Wallet_event_Event15_Act1(runtime, localVars)
+	async Wallet_event_Event20_Act1(runtime, localVars)
 	{
 		window.getSilverPot();
 	},
 
-	async Wallet_event_Event16_Act1(runtime, localVars)
+	async Wallet_event_Event21_Act1(runtime, localVars)
 	{
 		window.getTotalPot();
 	},
 
-	async Wallet_event_Event17_Act1(runtime, localVars)
+	async Wallet_event_Event22_Act1(runtime, localVars)
 	{
 		window.resetGoldPotFromCustodian();
 	},
 
-	async Wallet_event_Event18_Act1(runtime, localVars)
+	async Wallet_event_Event23_Act1(runtime, localVars)
 	{
 		window.copyPrincipalToClipboard();
 		
 	},
 
-	async Wallet_event_Event19_Act2(runtime, localVars)
+	async Wallet_event_Event24_Act2(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
 		
@@ -699,9 +699,46 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Wallet_event_Event19_Act3(runtime, localVars)
+	async Wallet_event_Event24_Act3(runtime, localVars)
 	{
 		window.checkTokenBalance();
+	},
+
+	async Wallet_event_Event2_Act1(runtime, localVars)
+	{
+		window.refreshTransactionLogs();
+	},
+
+	async Wallet_event_Event4_Act9(runtime, localVars)
+	{
+		window.refreshTransactionLogs();
+	},
+
+	async Wallet_event_Event4_Act7(runtime, localVars)
+	{
+		console.log("On start of layout: About to call refreshTransactionLogs");
+	},
+
+	async Wallet_event_Event2_Act2(runtime, localVars)
+	{
+		console.log("Every 10 seconds: Calling refreshTransactionLogs");
+	},
+
+	async Wallet_event_Event3_Act1(runtime, localVars)
+	{
+		console.log("Manual trigger: Calling refreshTransactionLogs");
+		window.refreshTransactionLogs();
+	},
+
+	async Wallet_event_Event10_Act2(runtime, localVars)
+	{
+		// 1) Capture the user input from your text inputs into the global vars:
+		runtime.globalVars.TokenRecipient = runtime.objects.TextInput_Recipient.getFirstInstance().text;
+		runtime.globalVars.TokenAmount = runtime.objects.TextInput_Amount.getFirstInstance().text;
+		
+		// 2) Call the main.js function to do the transfer:
+		window.transferTokens();
+		
 	}
 };
 

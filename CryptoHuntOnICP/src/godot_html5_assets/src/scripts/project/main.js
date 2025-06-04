@@ -299,8 +299,10 @@ self.logout = async function () {
 self.initIcpTransferActor = async function () {
   try {
     await initIcpTransferActorUnauthenticated();
+    console.log("icpTransferActor initialized:", window.icpTransferActor); // Add this
     setStatusMessage("ICP Transfer Actor initialized anonymously.");
   } catch (err) {
+    console.error("initIcpTransferActor error:", err); // Add this
     setStatusMessage("Error initializing ICP Transfer: " + err.message);
   }
 };
@@ -357,6 +359,7 @@ self.initAdNetworkWithPlug = async function () {
     runtimeGlobal.globalVars.currentPrincipal = plugPrincipal.toText();
     runtimeGlobal.globalVars.AuthState = "Plug";
     authMethod = "Plug";
+    console.log("authMethod set to:", authMethod);
 
     runtimeGlobal.globalVars.Authenticated = 1;
 
@@ -911,6 +914,123 @@ self.checkSilverDuck = async function () {
     return false;
   }
 };
+
+async function fetchUserLogsSafe(userPrincipal) {
+  if (!window.icpTransferActor) throw new Error("ICP-Transfer actor missing");
+
+  // Preferred, if the stub exists
+  if (typeof window.icpTransferActor.getUserLogs === "function") {
+    return await window.icpTransferActor.getUserLogs(userPrincipal);
+  }
+
+  // Fallback – use getLogs() and filter client-side
+  if (typeof window.icpTransferActor.getLogs === "function") {
+    const all = await window.icpTransferActor.getLogs();
+    return all.filter(l =>
+      l.caller?.toText && l.caller.toText() === userPrincipal.toText()
+    );
+  }
+
+  throw new Error("Neither getUserLogs nor getLogs is exposed on the actor");
+}
+
+self.getMyTransactionLogs = async function () {
+  if (!runtimeGlobal) return [];
+  if (!authMethod) {
+    setStatusMessage("Please authenticate first to view transaction logs.");
+    return [];
+  }
+
+  try {
+    const principalString = runtimeGlobal.globalVars.currentPrincipal;
+    if (!principalString) return [];
+    const userPrincipal = Principal.fromText(principalString);
+
+    const logs = await fetchUserLogsSafe(userPrincipal);
+    const newest10 = logs
+      .slice()                               // copy so we don’t mutate the original
+      .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))  // newest first
+      .slice(0, 10);
+    return newest10;          // 10 most-recent only
+  } catch (err) {
+    console.error("getMyTransactionLogs error:", err);
+    setStatusMessage("Error fetching transaction logs: " + err.message);
+    return [];
+  }
+};
+
+self.refreshTransactionLogs = async function () {
+  if (!authMethod) {
+    setStatusMessage("Please authenticate first to view transaction logs.");
+    return;
+  }
+  if (!window.icpTransferActor || !window.custodianActor) {
+    setStatusMessage("Transaction service not ready.");
+    return;
+  }
+
+  try {
+    const principalString = runtimeGlobal.globalVars.currentPrincipal;
+    if (!principalString) return;
+
+    const userPrincipal = Principal.fromText(principalString);
+
+    // Fetch deposit logs
+    const depositLogs = await fetchUserLogsSafe(userPrincipal);
+    const filteredDepositLogs = depositLogs.filter(log => log.action === "recordDeposit");
+
+    // Fetch win logs
+    const allWinLogs = await window.custodianActor.getRecentWins();
+    const userWinLogs = allWinLogs.filter(win => win.pid.toText() === principalString);
+
+    // Combine logs
+    const combinedLogs = [
+      ...filteredDepositLogs.map(log => ({ type: 'deposit', log })),
+      ...userWinLogs.map(win => ({ type: 'win', win }))
+    ];
+
+    // Sort by timestamp descending
+    combinedLogs.sort((a, b) => {
+      const tsA = a.type === 'deposit' ? Number(a.log.timestamp) : Number(a.win.ts);
+      const tsB = b.type === 'deposit' ? Number(b.log.timestamp) : Number(b.win.ts);
+      return tsB - tsA;
+    });
+
+    // Format all logs (no limit)
+    const logText = combinedLogs.map(entry => {
+      if (entry.type === 'deposit') {
+        const log = entry.log;
+        const ts = new Date(Number(log.timestamp) / 1e6).toLocaleString();
+        const amt = (Number(log.amount_e8s) / 1e8).toFixed(4);
+        return `${ts}: Purchased Play ${amt} ICP`;
+      } else if (entry.type === 'win') {
+        const win = entry.win;
+        const ts = new Date(Number(win.ts) / 1e6).toLocaleString();
+        const amt = (Number(win.amount) / 1e8).toFixed(4);
+        const duckType = win.duckType;
+        return `${ts}: ${duckType} Duck Win ${amt} ICP`;
+      }
+    }).join("\n");
+
+    runtimeGlobal.globalVars.TransactionLogsText = logText || "— No transactions —";
+
+    // Update the HTML element
+    updateTransactionLogs(logText);
+  } catch (err) {
+    console.error("refreshTransactionLogs error:", err);
+    setStatusMessage("Error fetching transaction logs: " + err.message);
+  }
+};
+window.refreshTransactionLogs = self.refreshTransactionLogs;
+
+function updateTransactionLogs(logText) {
+  const logsDiv = document.getElementById("transaction-logs");
+  if (logsDiv) {
+    logsDiv.innerText = (logText || "— No recent transactions —");
+  } else {
+    console.warn("Could not find 'transaction-logs' div.");
+  }
+}
 
 self.claimGoldPot = async function () {
   if (!runtimeGlobal) return;

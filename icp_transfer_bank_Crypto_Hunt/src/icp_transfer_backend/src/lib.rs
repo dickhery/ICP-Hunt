@@ -312,5 +312,12 @@ fn resetHighScorePot() -> bool {
     true
 }
 
+#[query]
+fn getUserLogs(user: Principal) -> Vec<LogEntry> {
+    with_state(|st| {
+        st.logs.iter().filter(|log| log.caller == user).cloned().collect()
+    })
+}
+
 // ───────── export candid ─────────
 ic_cdk::export_candid!();

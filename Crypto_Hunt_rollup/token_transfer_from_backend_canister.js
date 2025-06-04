@@ -26,6 +26,7 @@ export const idlFactory = ({ IDL }) => {
     'getMyBalance' : IDL.Func([], [IDL.Nat64], ['query']),
     'getSilverPot' : IDL.Func([], [IDL.Nat64], ['query']),
     'getTotalPot' : IDL.Func([], [IDL.Nat64], ['query']),
+    'getUserLogs' : IDL.Func([IDL.Principal], [IDL.Vec(LogEntry)], ['query']),
     'recordDeposit' : IDL.Func(
         [IDL.Principal, IDL.Nat64, IDL.Nat64],
         [IDL.Bool],
