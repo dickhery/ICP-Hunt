@@ -515,31 +515,72 @@ self.checkUserIcpTransferBalance = async function () {
 };
 
 self.fetchNextAd = async function () {
-  try {
-    const fetchPromise = getNextAd(runtimeGlobal.globalVars.projectId, runtimeGlobal.globalVars.AdTypeInput || "");
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Ad fetch timed out")), 10000));
-    const result = await Promise.race([fetchPromise, timeoutPromise]);
+  if (!runtimeGlobal) return;
 
-    if (!result || result.length === 0) {
-      setStatusMessage("No ads available. Skipping...");
-      runtimeGlobal.globalVars.CurrentAdBase64 = "";
-      runtimeGlobal.globalVars.CurrentAdClickUrl = "";
-      runtimeGlobal.globalVars.Game_Status = "Play";
-      runtimeGlobal.callFunction("CloseAdLayer");
+  let attempts = 0;
+  const maxAttempts = 3;
+  let lastAdId = null;
+
+  while (attempts < maxAttempts) {
+    try {
+      const fetchPromise = getNextAd(runtimeGlobal.globalVars.projectId, runtimeGlobal.globalVars.AdTypeInput || "");
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Ad fetch timed out")), 10000));
+      const result = await Promise.race([fetchPromise, timeoutPromise]);
+
+      if (!result || result.length === 0) {
+        setStatusMessage(`Attempt ${attempts + 1}: No ads available. Retrying...`);
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        continue;
+      }
+
+      const [ad, tokenId] = result;
+
+      if (lastAdId === ad.id && attempts < maxAttempts - 1) {
+        setStatusMessage(`Attempt ${attempts + 1}: Repeated Ad #${ad.id}. Retrying...`);
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        continue;
+      }
+
+      runtimeGlobal.globalVars.CurrentAdBase64 = ad.imageBase64;
+      runtimeGlobal.globalVars.CurrentAdClickUrl = ad.clickUrl;
+      setStatusMessage(`Fetched Ad #${ad.id} (served: ${ad.viewsServed}), token: ${tokenId}`);
+
+      if (adViewTimeoutId !== null) {
+        clearTimeout(adViewTimeoutId);
+      }
+
+      adViewTimeoutId = setTimeout(async () => {
+        try {
+          const success = await recordViewWithToken(tokenId);
+          if (success) {
+            setStatusMessage(`View for Ad #${ad.id} counted (token ${tokenId}).`);
+          } else {
+            setStatusMessage(`View for Ad #${ad.id} NOT counted (invalid token or timing).`);
+          }
+        } catch (err) {
+          console.error("recordViewWithToken error:", err);
+          setStatusMessage("Error recording ad view: " + err.message);
+        }
+        adViewTimeoutId = null;
+      }, 5000);
+
+      lastAdId = ad.id;
       return;
-    }
 
-    const [ad, tokenId] = result;
-    runtimeGlobal.globalVars.CurrentAdBase64 = ad.imageBase64;
-    runtimeGlobal.globalVars.CurrentAdClickUrl = ad.clickUrl;
-    setStatusMessage(`Fetched Ad #${ad.id} (served: ${ad.viewsServed}), token: ${tokenId}`);
-  } catch (err) {
-    console.error("fetchNextAd error:", err);
-    setStatusMessage("Error fetching ad: " + err.message);
-    runtimeGlobal.globalVars.CurrentAdBase64 = "";
-    runtimeGlobal.globalVars.Game_Status = "Play";
-    runtimeGlobal.callFunction("CloseAdLayer");
+    } catch (err) {
+      console.error("fetchNextAd error (attempt " + (attempts + 1) + "):", err);
+      setStatusMessage(`Attempt ${attempts + 1} failed: ${err.message}. Retrying...`);
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
   }
+
+  setStatusMessage("Max retries reached. No new ad available.");
+  runtimeGlobal.globalVars.CurrentAdBase64 = "";
+  runtimeGlobal.globalVars.Game_Status = "Play";
+  runtimeGlobal.callFunction("CloseAdLayer");
 };
 
 self.fetchMyAds = async function () { /* ... */ };
@@ -599,7 +640,7 @@ self.checkTokenBalance = async function () {
 
     const textInstance = runtimeGlobal.objects.Text_Balance.getFirstInstance();
     if (textInstance) {
-      textInstance.text = "Balance: " + displayBalance + " ICP";
+      textInstance.text = displayBalance + " ICP";
     } else {
       console.warn("Text_Balance instance not found on current layout.");
     }
