@@ -267,9 +267,9 @@ fn addToSilverPot(amount_e8s: u64) -> bool    { pot_add(amount_e8s, true) }
 fn addToGoldPot(amount_e8s: u64)   -> bool    { pot_add(amount_e8s, false) }
 
 #[update]
-async fn resetSilverPot() -> bool             { pot_reset(25_000_000, true) }
+async fn resetSilverPot() -> bool             { pot_reset(15_000_000, true) }
 #[update]
-async fn resetGoldPot() -> bool               { pot_reset(250_000_000, false) }
+async fn resetGoldPot() -> bool               { pot_reset(150_000_000, false) }
 
 // internal helpers for pots
 fn pot_add(amount: u64, silver: bool) -> bool {
@@ -285,7 +285,8 @@ fn pot_reset(amount: u64, silver: bool) -> bool {
     let caller = api::caller();
     if !is_allowed_caller(&caller) { return false; }
     with_state_mut(|st| {
-        if silver { st.silver_pot_e8s = amount; } else { st.gold_pot_e8s = amount; }
+        if silver { st.silver_pot_e8s = 15_000_000; } // Changed from 25_000_000
+        else { st.gold_pot_e8s = 150_000_000; }      // Changed from 250_000_000
     });
     add_log(caller, if silver { "resetSilver" } else { "resetGold" }, amount, None);
     true

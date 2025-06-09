@@ -222,7 +222,7 @@ actor {
     let R = if (avg > 0.0) {
       if (intVal >= 0) { Int.abs(intVal) : Nat } else { 10 };
     } else { 10 };
-    if (R < 1) { 1 } else { R * 100 };
+    if (R < 1) { 1 } else { R * 300 }; //(R * 300) = 1 in 3000 rounds ~300 games
   };
 
   private func getNSilver() : Nat {
@@ -231,7 +231,7 @@ actor {
     let R = if (avg > 0.0) {
       if (intVal >= 0) { Int.abs(intVal) : Nat } else { 10 };
     } else { 10 };
-    if (R < 1) { 1 } else { R * 10 };
+    if (R < 1) { 1 } else { R * 20 }; //(R * 20) = 1 in 200 rounds ~20 games
   };
 
   public shared ({ caller }) func incRoundCounters() : async Nat {
@@ -451,26 +451,26 @@ actor {
   //    };
 
   public query func getGoldDuckOdds() : async Float {
-    let avg = getAverageRounds();
-    if (avg == 0.0) {
-      return 0.0;
-    };
-    let R = if (avg > 0.0) { Float.toInt(Float.nearest(avg)) } else { 10 };
-    if (R < 1) { return 0.0 };
-    let n = R * 100; // Matches getNGold()
-    1.0 / Float.fromInt(n);
+  let avg = getAverageRounds();
+  if (avg == 0.0) {
+    return 0.0;
   };
+  let intVal = Float.toInt(Float.nearest(avg));
+  let R = if (intVal >= 0) { Int.abs(intVal) : Nat } else { 10 };
+  let n = if (R < 1) { 1 } else { R * 300 }; // Matches getNGold()
+  1.0 / Float.fromInt(n);
+};
 
   public query func getSilverDuckOdds() : async Float {
-    let avg = getAverageRounds();
-    if (avg == 0.0) {
-      return 0.0;
-    };
-    let R = if (avg > 0.0) { Float.toInt(Float.nearest(avg)) } else { 10 };
-    if (R < 1) { return 0.0 };
-    let n = R * 10; // Matches getNSilver()
-    1.0 / Float.fromInt(n);
+  let avg = getAverageRounds();
+  if (avg == 0.0) {
+    return 0.0;
   };
+  let intVal = Float.toInt(Float.nearest(avg));
+  let R = if (intVal >= 0) { Int.abs(intVal) : Nat } else { 10 };
+  let n = if (R < 1) { 1 } else { R * 20 }; // Matches getNSilver()
+  1.0 / Float.fromInt(n);
+};
 
   public query func verify_password(inputPassword : Text) : async Bool {
     if (storedPassword == "") {
