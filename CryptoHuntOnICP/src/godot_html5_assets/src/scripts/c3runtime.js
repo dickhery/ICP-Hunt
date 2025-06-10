@@ -1324,6 +1324,7 @@ function or(l, r)
 self.C3_ExpressionFuncs = [
 		() => 1,
 		() => "Game_Settings",
+		() => "destroy",
 		() => 0,
 		() => 5,
 		() => "Play",
@@ -1624,7 +1625,6 @@ self.C3_ExpressionFuncs = [
 			return () => (f0() - 100);
 		},
 		() => 1.5,
-		() => "destroy",
 		() => "Lose",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
@@ -1768,19 +1768,15 @@ self.C3_ExpressionFuncs = [
 			const n0 = p._GetNode(0);
 			const n1 = p._GetNode(1);
 			const f2 = p._GetNode(2).GetBoundMethod();
-			const v3 = p._GetNode(3).GetVar();
-			const f4 = p._GetNode(4).GetBoundMethod();
-			const v5 = p._GetNode(5).GetVar();
-			return () => C3.distanceTo(n0.ExpObject(), n1.ExpObject(), f2("ScaleX", v3.GetValue()), f4("ScaleY", v5.GetValue()));
+			const f3 = p._GetNode(3).GetBoundMethod();
+			return () => C3.distanceTo(n0.ExpObject(), n1.ExpObject(), f2(), f3());
 		},
 		p => {
 			const n0 = p._GetNode(0);
 			const n1 = p._GetNode(1);
 			const f2 = p._GetNode(2).GetBoundMethod();
-			const v3 = p._GetNode(3).GetVar();
-			const f4 = p._GetNode(4).GetBoundMethod();
-			const v5 = p._GetNode(5).GetVar();
-			return () => C3.toDegrees(C3.angleTo(n0.ExpObject(), n1.ExpObject(), f2("ScaleX", v3.GetValue()), f4("ScaleY", v5.GetValue())));
+			const f3 = p._GetNode(3).GetBoundMethod();
+			return () => C3.toDegrees(C3.angleTo(n0.ExpObject(), n1.ExpObject(), f2(), f3()));
 		},
 		p => {
 			const v0 = p._GetNode(0).GetVar();
@@ -1805,11 +1801,6 @@ self.C3_ExpressionFuncs = [
 			const n1 = p._GetNode(1);
 			const v2 = p._GetNode(2).GetVar();
 			return () => (((n0.ExpObject() - n1.ExpObject()) / v2.GetValue()) * 100);
-		},
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			return () => (f0(1) + (f1() / 2));
 		},
 		() => -1,
 		() => "Move_Aim",
