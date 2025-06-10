@@ -2058,12 +2058,16 @@ self.C3_ExpressionFuncs = [
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			const v1 = p._GetNode(1).GetVar();
-			return () => ("Gold Duck Odds: " + ((((v0.GetValue()) > (0) ? 1 : 0)) ? (and("1 in ", Math.round((1 / v1.GetValue())))) : ("Calculating...")));
+			return () => ("Gold Duck Odds: " + ((((v0.GetValue()) > (0) ? 1 : 0)) ? ((and("1 in ", Math.round((1 / v1.GetValue()))) + " Rounds*")) : ("Calculating...")));
 		},
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			const v1 = p._GetNode(1).GetVar();
-			return () => ("Silver Duck Odds: " + ((((v0.GetValue()) > (0) ? 1 : 0)) ? (and("1 in ", Math.round((1 / v1.GetValue())))) : ("Calculating...")));
+			return () => ("Silver Duck Odds: " + ((((v0.GetValue()) > (0) ? 1 : 0)) ? ((and("1 in ", Math.round((1 / v1.GetValue()))) + " Rounds*")) : ("Calculating...")));
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => (and("Players are currently playing an average of ", (Math.round((v0.GetValue() * 10)) / 10)) + " rounds in each game.");
 		},
 		() => 0.2,
 		p => {

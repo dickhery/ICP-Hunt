@@ -368,14 +368,14 @@ const scriptsInEvents = {
 		await window.updateDuckOdds();
 	},
 
-	async Bounties_event_Event5_Act1(runtime, localVars)
+	async Bounties_event_Event6_Act1(runtime, localVars)
 	{
 		// call your main.js function
 		window.checkTokenBalance();
 		
 	},
 
-	async Bounties_event_Event7_Act1(runtime, localVars)
+	async Bounties_event_Event8_Act1(runtime, localVars)
 	{
 		// 1) Capture the user input from your text inputs into the global vars:
 		runtime.globalVars.TokenRecipient = runtime.objects.TextInput_Recipient.getFirstInstance().text;
@@ -386,30 +386,30 @@ const scriptsInEvents = {
 		
 	},
 
-	async Bounties_event_Event8_Act1(runtime, localVars)
+	async Bounties_event_Event9_Act1(runtime, localVars)
 	{
 		window.depositIcpForUser();
 		
 	},
 
-	async Bounties_event_Event9_Act1(runtime, localVars)
+	async Bounties_event_Event10_Act1(runtime, localVars)
 	{
 		window.withdrawIcp();
 		
 	},
 
-	async Bounties_event_Event10_Act1(runtime, localVars)
+	async Bounties_event_Event11_Act1(runtime, localVars)
 	{
 		window.checkMyIcpTransferBalance();
 		
 	},
 
-	async Bounties_event_Event11_Act2(runtime, localVars)
+	async Bounties_event_Event12_Act2(runtime, localVars)
 	{
 		window.checkUserIcpTransferBalance();
 	},
 
-	async Bounties_event_Event12_Act1(runtime, localVars)
+	async Bounties_event_Event13_Act1(runtime, localVars)
 	{
 		let typed = runtime.objects.TextInput_PotAmount.getFirstInstance().text;
 		let potNum = parseFloat(typed) || 0;
@@ -417,7 +417,7 @@ const scriptsInEvents = {
 		
 	},
 
-	async Bounties_event_Event13_Act1(runtime, localVars)
+	async Bounties_event_Event14_Act1(runtime, localVars)
 	{
 		let typed = runtime.objects.TextInput_PotAmount.getFirstInstance().text;
 		let potNum = parseFloat(typed) || 0;
@@ -425,27 +425,27 @@ const scriptsInEvents = {
 		
 	},
 
-	async Bounties_event_Event14_Act1(runtime, localVars)
+	async Bounties_event_Event15_Act1(runtime, localVars)
 	{
 		window.getGoldPot();
 	},
 
-	async Bounties_event_Event15_Act1(runtime, localVars)
+	async Bounties_event_Event16_Act1(runtime, localVars)
 	{
 		window.getSilverPot();
 	},
 
-	async Bounties_event_Event16_Act1(runtime, localVars)
+	async Bounties_event_Event17_Act1(runtime, localVars)
 	{
 		window.getTotalPot();
 	},
 
-	async Bounties_event_Event17_Act1(runtime, localVars)
+	async Bounties_event_Event18_Act1(runtime, localVars)
 	{
 		window.resetGoldPotFromCustodian();
 	},
 
-	async Bounties_event_Event18_Act1(runtime, localVars)
+	async Bounties_event_Event19_Act1(runtime, localVars)
 	{
 		window.copyPrincipalToClipboard();
 		
@@ -739,6 +739,11 @@ const scriptsInEvents = {
 		// 2) Call the main.js function to do the transfer:
 		window.transferTokens();
 		
+	},
+
+	async Bounties_event_Event3_Act1(runtime, localVars)
+	{
+		await window.updateDuckOdds();
 	}
 };
 

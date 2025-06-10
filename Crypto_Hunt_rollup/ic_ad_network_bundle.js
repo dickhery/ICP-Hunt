@@ -22940,6 +22940,7 @@ const idlFactory$2 = ({ IDL }) => {
     'awardGoldPotToCaller' : IDL.Func([], [IDL.Bool], []),
     'awardHighScorePot' : IDL.Func([], [IDL.Bool], []),
     'awardSilverPotToCaller' : IDL.Func([], [IDL.Bool], []),
+    'getCurrentAverageRounds' : IDL.Func([], [IDL.Float64], ['query']),
     'getGoldDuckOdds' : IDL.Func([], [IDL.Float64], ['query']),
     'getGoldPot' : IDL.Func([], [IDL.Nat64], []),
     'getHighScores' : IDL.Func(

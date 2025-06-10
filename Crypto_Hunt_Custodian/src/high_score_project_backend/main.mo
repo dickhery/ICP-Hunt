@@ -253,6 +253,10 @@ actor {
     return newToken;
   };
 
+  public query func getCurrentAverageRounds() : async Float {
+    getAverageRounds();
+  };
+
   // New function to record game end
   public shared ({ caller }) func recordGameEnd() : async () {
     let playerState = getPlayerState(caller);
@@ -451,26 +455,26 @@ actor {
   //    };
 
   public query func getGoldDuckOdds() : async Float {
-  let avg = getAverageRounds();
-  if (avg == 0.0) {
-    return 0.0;
+    let avg = getAverageRounds();
+    if (avg == 0.0) {
+      return 0.0;
+    };
+    let intVal = Float.toInt(Float.nearest(avg));
+    let R = if (intVal >= 0) { Int.abs(intVal) : Nat } else { 10 };
+    let n = if (R < 1) { 1 } else { R * 300 }; // Matches getNGold()
+    1.0 / Float.fromInt(n);
   };
-  let intVal = Float.toInt(Float.nearest(avg));
-  let R = if (intVal >= 0) { Int.abs(intVal) : Nat } else { 10 };
-  let n = if (R < 1) { 1 } else { R * 300 }; // Matches getNGold()
-  1.0 / Float.fromInt(n);
-};
 
   public query func getSilverDuckOdds() : async Float {
-  let avg = getAverageRounds();
-  if (avg == 0.0) {
-    return 0.0;
+    let avg = getAverageRounds();
+    if (avg == 0.0) {
+      return 0.0;
+    };
+    let intVal = Float.toInt(Float.nearest(avg));
+    let R = if (intVal >= 0) { Int.abs(intVal) : Nat } else { 10 };
+    let n = if (R < 1) { 1 } else { R * 20 }; // Matches getNSilver()
+    1.0 / Float.fromInt(n);
   };
-  let intVal = Float.toInt(Float.nearest(avg));
-  let R = if (intVal >= 0) { Int.abs(intVal) : Nat } else { 10 };
-  let n = if (R < 1) { 1 } else { R * 20 }; // Matches getNSilver()
-  1.0 / Float.fromInt(n);
-};
 
   public query func verify_password(inputPassword : Text) : async Bool {
     if (storedPassword == "") {

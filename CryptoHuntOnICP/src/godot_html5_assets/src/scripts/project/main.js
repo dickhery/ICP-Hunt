@@ -208,11 +208,27 @@ self.getSilverDuckOdds = async function () {
   }
 };
 
+self.getCurrentAverageRounds = async function () {
+  if (!runtimeGlobal || !window.custodianActor) return 0;
+  try {
+    const avg = await window.custodianActor.getCurrentAverageRounds();
+    runtimeGlobal.globalVars.AverageRounds = parseFloat(avg);
+    return parseFloat(avg);
+  } catch (err) {
+    console.error("getCurrentAverageRounds error:", err);
+    setStatusMessage("Error fetching average rounds: " + err.message);
+    return 0;
+  }
+};
+
 self.updateDuckOdds = async function () {
   const goldOdds = await self.getGoldDuckOdds();
   const silverOdds = await self.getSilverDuckOdds();
+  const avgRounds = await self.getCurrentAverageRounds();
+  console.log("Updated odds - Gold:", goldOdds, "Silver:", silverOdds, "Avg Rounds:", avgRounds);
   runtimeGlobal.globalVars.GoldDuckOdds = goldOdds;
   runtimeGlobal.globalVars.SilverDuckOdds = silverOdds;
+  runtimeGlobal.globalVars.AverageRounds = avgRounds;
 };
 
 self.recordGameEnd = async function () {
