@@ -2,42 +2,37 @@
 
 const scriptsInEvents = {
 
-	async Game_event_Event8_Act19(runtime, localVars)
+	async Game_event_Event9_Act19(runtime, localVars)
 	{
 		self.getGoldPot();
 		
 	},
 
-	async Game_event_Event8_Act20(runtime, localVars)
+	async Game_event_Event9_Act20(runtime, localVars)
 	{
 		self.getSilverPot();
 		
 	},
 
-	async Game_event_Event18_Act1(runtime, localVars)
+	async Game_event_Event19_Act1(runtime, localVars)
 	{
 		self.getGoldPot();
 		
 	},
 
-	async Game_event_Event18_Act2(runtime, localVars)
+	async Game_event_Event19_Act2(runtime, localVars)
 	{
 		self.getSilverPot();
 		
 	},
 
-	async Game_event_Event35_Act1(runtime, localVars)
+	async Game_event_Event36_Act1(runtime, localVars)
 	{
 		await window.incRoundCounters();
 		
 	},
 
-	async Game_event_Event37_Act1(runtime, localVars)
-	{
-
-	},
-
-	async Game_event_Event39_Act1(runtime, localVars)
+	async Game_event_Event40_Act1(runtime, localVars)
 	{
 		try {
 		    const isGolden = await self.checkGoldenDuck();
@@ -53,7 +48,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event40_Act1(runtime, localVars)
+	async Game_event_Event41_Act1(runtime, localVars)
 	{
 		try {
 		    const isSilver = await self.checkSilverDuck();
@@ -69,17 +64,17 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event150_Act3(runtime, localVars)
+	async Game_event_Event151_Act3(runtime, localVars)
 	{
 		await window.custodianActor.recordGameEnd();
 	},
 
-	async Game_event_Event164_Act2(runtime, localVars)
+	async Game_event_Event165_Act2(runtime, localVars)
 	{
 		await window.custodianActor.recordGameEnd();
 	},
 
-	async Game_event_Event193_Act12(runtime, localVars)
+	async Game_event_Event194_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Gold");
 		if (success) {
@@ -97,7 +92,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event194_Act12(runtime, localVars)
+	async Game_event_Event195_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Silver");
 		if (success) {
@@ -115,12 +110,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event221_Act7(runtime, localVars)
-	{
-
-	},
-
-	async Game_event_Event221_Act9(runtime, localVars)
+	async Game_event_Event222_Act8(runtime, localVars)
 	{
 		self.fetchNextAd();
 		

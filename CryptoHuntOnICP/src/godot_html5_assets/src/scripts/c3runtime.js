@@ -1322,6 +1322,7 @@ function or(l, r)
 }
 
 self.C3_ExpressionFuncs = [
+		() => 10000,
 		() => 1,
 		() => "Game_Settings",
 		() => "destroy",
@@ -1431,7 +1432,7 @@ self.C3_ExpressionFuncs = [
 			const v1 = p._GetNode(1).GetVar();
 			return () => f0(0, v1.GetValue());
 		},
-		() => 784,
+		() => 794,
 		() => 857,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
@@ -1485,8 +1486,8 @@ self.C3_ExpressionFuncs = [
 			const n0 = p._GetNode(0);
 			return () => (n0.ExpObject() + 130);
 		},
-		() => 789,
-		() => 825,
+		() => 779,
+		() => 830,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => and("SCORE:", v0.GetValue());
@@ -1657,7 +1658,6 @@ self.C3_ExpressionFuncs = [
 			const n1 = p._GetNode(1);
 			return () => (f0(0) - (n1.ExpObject() / 2));
 		},
-		() => 830,
 		p => {
 			const n0 = p._GetNode(0);
 			return () => (n0.ExpObject() - 8);
@@ -1819,23 +1819,26 @@ self.C3_ExpressionFuncs = [
 			return () => f0("Gui", f1(f2(0)), f3(f4(0)));
 		},
 		() => "ScaleY",
-		() => 15,
+		() => 8,
+		() => "Ad",
+		() => 915,
+		() => -752,
 		() => 959.5,
 		() => -653,
 		() => -193,
 		() => -157,
-		() => "Ad",
 		() => 100,
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => ("data:image/png;base64," + v0.GetValue());
+		},
+		() => 0.15,
+		() => 540,
 		() => 1801,
 		() => 83,
 		p => {
 			const n0 = p._GetNode(0);
 			return () => (5 - n0.ExpInstVar());
-		},
-		() => 540,
-		p => {
-			const v0 = p._GetNode(0).GetVar();
-			return () => ("data:image/png;base64," + v0.GetValue());
 		},
 		() => "countdown",
 		() => "Gameplay",
