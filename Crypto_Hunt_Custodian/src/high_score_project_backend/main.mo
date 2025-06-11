@@ -92,6 +92,7 @@ actor {
     goldWinInRound : ?Nat;
     silverWinInRound : ?Nat;
     currentGameRounds : Nat;
+    maxAllowedScore : Int;
   };
 
   stable var winLogs : [WinLog] = [];
@@ -111,6 +112,7 @@ actor {
           goldWinInRound = null;
           silverWinInRound = null;
           currentGameRounds = 0;
+          maxAllowedScore = 0;
         };
         playerStates := Array.append(playerStates, [(pid, newState)]);
         newState;
@@ -245,6 +247,7 @@ actor {
         goldWinInRound = playerState.goldWinInRound;
         silverWinInRound = playerState.silverWinInRound;
         currentGameRounds = newCurrentGameRounds;
+        maxAllowedScore = playerState.maxAllowedScore;
       },
     );
     roundsSinceGoldWin += 1;
@@ -259,19 +262,21 @@ actor {
 
   // New function to record game end
   public shared ({ caller }) func recordGameEnd() : async () {
-    let playerState = getPlayerState(caller);
-    let rounds = playerState.currentGameRounds;
-    addGameRounds(rounds);
-    updatePlayerState(
-      caller,
-      {
-        lastRoundToken = playerState.lastRoundToken;
-        goldWinInRound = playerState.goldWinInRound;
-        silverWinInRound = playerState.silverWinInRound;
-        currentGameRounds = 0;
-      },
-    );
-  };
+  let playerState = getPlayerState(caller);
+  let rounds = playerState.currentGameRounds;
+  addGameRounds(rounds);
+  let maxScore = rounds * 16_000;
+  updatePlayerState(
+    caller,
+    {
+      lastRoundToken = playerState.lastRoundToken;
+      goldWinInRound = playerState.goldWinInRound;
+      silverWinInRound = playerState.silverWinInRound;
+      currentGameRounds = 0;
+      maxAllowedScore = maxScore;
+    },
+  );
+};
 
   public query func getWinStats() : async {
     roundsSinceGoldWin : Nat;
@@ -308,18 +313,31 @@ actor {
   let MAX_SCORE_PER_ROUND : Int = 1_000_000;
 
   public shared ({ caller }) func addHighScoreSecure(
-    name : Text,
-    email : Text,
-    score : Int,
-    roundToken : Nat,
-  ) : async Bool {
-    let playerState = getPlayerState(caller);
-    if (roundToken != playerState.lastRoundToken) { return false };
+  name : Text,
+  email : Text,
+  score : Int,
+  roundToken : Nat,
+) : async Bool {
+  let playerState = getPlayerState(caller);
+  if (roundToken != playerState.lastRoundToken) { return false };
 
-    if (score < 0 or score > MAX_SCORE_PER_ROUND) { return false };
+  if (score < 0 or score > playerState.maxAllowedScore) { return false };
 
-    await highScoreActor.addHighScore(caller, name, email, score);
+  let result = await highScoreActor.addHighScore(caller, name, email, score);
+  if (result) {
+    updatePlayerState(
+      caller,
+      {
+        lastRoundToken = playerState.lastRoundToken;
+        goldWinInRound = playerState.goldWinInRound;
+        silverWinInRound = playerState.silverWinInRound;
+        currentGameRounds = playerState.currentGameRounds;
+        maxAllowedScore = 0;
+      },
+    );
   };
+  result;
+};
 
   public shared (msg) func addHighScore(
     name : Text,
@@ -397,6 +415,7 @@ actor {
       lastRoundToken = playerState.lastRoundToken;
       goldWinInRound = if (duckType == "Gold") ?roundToken else playerState.goldWinInRound;
       silverWinInRound = if (duckType == "Silver") ?roundToken else playerState.silverWinInRound;
+      maxAllowedScore = playerState.maxAllowedScore;
     };
     updatePlayerState(caller, updatedState);
 
