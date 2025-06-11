@@ -151,9 +151,9 @@ async fn recordDeposit(user: Principal, amount_e8s: u64, block_index: u64) -> bo
     let caller = api::caller();
     match verify_block(user, amount_e8s, block_index).await {
         Ok(()) => {
-            let silver_add = 1_500_000; // 0.015 ICP in e8s
-            let gold_add = 2_000_000;   // 0.02 ICP in e8s
-            let high_score_add = 1_000_000; // 0.01 ICP in e8s
+            let silver_add = 1_167_000; // 0.01167 ICP in e8s
+            let gold_add = 1_556_000;   // 0.01556 ICP ICP in e8s
+            let high_score_add = 778_000; // 0.00778 ICP in e8s
             with_state_mut(|st| {
                 *st.balances.entry(user).or_default() += amount_e8s;
                 st.credited_blocks.insert(block_index);
@@ -285,8 +285,8 @@ fn pot_reset(amount: u64, silver: bool) -> bool {
     let caller = api::caller();
     if !is_allowed_caller(&caller) { return false; }
     with_state_mut(|st| {
-        if silver { st.silver_pot_e8s = 15_000_000; } // Changed from 25_000_000
-        else { st.gold_pot_e8s = 150_000_000; }      // Changed from 250_000_000
+        if silver { st.silver_pot_e8s = 15_000_000; } // Changed from 25_000_000 - 0.15 ICP
+        else { st.gold_pot_e8s = 150_000_000; }      // Changed from 250_000_000 - 1.5 ICP
     });
     add_log(caller, if silver { "resetSilver" } else { "resetGold" }, amount, None);
     true
