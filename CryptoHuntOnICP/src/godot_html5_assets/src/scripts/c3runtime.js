@@ -2066,6 +2066,10 @@ self.C3_ExpressionFuncs = [
 		() => 0.2,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
+			return () => (v0.GetValue() + " ICP");
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
 			return () => (and("High Score Award: ", v0.GetValue()) + " ICP");
 		},
 		p => {

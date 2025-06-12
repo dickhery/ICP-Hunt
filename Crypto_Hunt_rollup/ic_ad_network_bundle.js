@@ -22949,6 +22949,19 @@ const idlFactory$2 = ({ IDL }) => {
         [],
       ),
     'getLastHighScoreAwardTs' : IDL.Func([], [IDL.Opt(Time)], ['query']),
+    'getLastWinnerDetails' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'winner' : IDL.Opt(
+              IDL.Tuple(IDL.Principal, IDL.Text, IDL.Text, IDL.Int)
+            ),
+            'timestamp' : IDL.Opt(Time),
+            'amount' : IDL.Nat64,
+          }),
+        ],
+        ['query'],
+      ),
     'getRecentWins' : IDL.Func([], [IDL.Vec(WinLog)], ['query']),
     'getSilverDuckOdds' : IDL.Func([], [IDL.Float64], ['query']),
     'getSilverPot' : IDL.Func([], [IDL.Nat64], []),

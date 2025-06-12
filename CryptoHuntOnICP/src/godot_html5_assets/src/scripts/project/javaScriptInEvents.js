@@ -64,17 +64,17 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event151_Act3(runtime, localVars)
+	async Game_event_Event152_Act3(runtime, localVars)
 	{
 		await window.custodianActor.recordGameEnd();
 	},
 
-	async Game_event_Event165_Act2(runtime, localVars)
+	async Game_event_Event166_Act2(runtime, localVars)
 	{
 		await window.custodianActor.recordGameEnd();
 	},
 
-	async Game_event_Event194_Act12(runtime, localVars)
+	async Game_event_Event195_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Gold");
 		if (success) {
@@ -92,7 +92,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event195_Act12(runtime, localVars)
+	async Game_event_Event196_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Silver");
 		if (success) {
@@ -110,84 +110,10 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event222_Act8(runtime, localVars)
+	async Game_event_Event223_Act8(runtime, localVars)
 	{
 		self.fetchNextAd();
 		
-	},
-
-	async Menu_event_Event2_Act1(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Menu_event_Event2_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event2_Act9(runtime, localVars)
-	{
-		window.checkLastAwardTs();
-	},
-
-	async Menu_event_Event3_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event3_Act3(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Menu_event_Event4_Act1(runtime, localVars)
-	{
-		window.copyPrincipalToClipboard();
-		
-	},
-
-	async Menu_event_Event5_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event17_Act1(runtime, localVars)
-	{
-		window.depositIcpForUser();
-	},
-
-	async Menu_event_Event18_Act3(runtime, localVars)
-	{
-		window.depositIcpForUser();
-	},
-
-	async Menu_event_Event19_Act3(runtime, localVars)
-	{
-		window.depositIcpForUser();
-	},
-
-	async Menu_event_Event28_Act2(runtime, localVars)
-	{
-		window.logout();
 	},
 
 	async Game_over_event_Event2_Act1(runtime, localVars)
@@ -277,6 +203,80 @@ const scriptsInEvents = {
 		}
 	},
 
+	async Menu_event_Event2_Act1(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event2_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event2_Act9(runtime, localVars)
+	{
+		window.checkLastAwardTs();
+	},
+
+	async Menu_event_Event3_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event3_Act3(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event4_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
+	},
+
+	async Menu_event_Event5_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event17_Act1(runtime, localVars)
+	{
+		window.depositIcpForUser();
+	},
+
+	async Menu_event_Event18_Act3(runtime, localVars)
+	{
+		window.depositIcpForUser();
+	},
+
+	async Menu_event_Event19_Act3(runtime, localVars)
+	{
+		window.depositIcpForUser();
+	},
+
+	async Menu_event_Event28_Act2(runtime, localVars)
+	{
+		window.logout();
+	},
+
 	async Auth_event_Event1_Act1(runtime, localVars)
 	{
 		window.logout();
@@ -354,6 +354,11 @@ const scriptsInEvents = {
 	},
 
 	async Bounties_event_Event2_Act11(runtime, localVars)
+	{
+		await window.updateDuckOdds();
+	},
+
+	async Bounties_event_Event3_Act1(runtime, localVars)
 	{
 		await window.updateDuckOdds();
 	},
@@ -487,12 +492,12 @@ const scriptsInEvents = {
 })();
 	},
 
-	async Leaderboard_event_Event3_Act1(runtime, localVars)
+	async Leaderboard_event_Event4_Act1(runtime, localVars)
 	{
 		self.getHighScorePot();
 	},
 
-	async Leaderboard_event_Event4_Act1(runtime, localVars)
+	async Leaderboard_event_Event5_Act1(runtime, localVars)
 	{
 // A single async script to fetch and display high scores
 (async () => {
@@ -538,7 +543,7 @@ const scriptsInEvents = {
 })();
 	},
 
-	async Leaderboard_event_Event7_Act1(runtime, localVars)
+	async Leaderboard_event_Event8_Act1(runtime, localVars)
 	{
 		(async () => {
 		  try {
@@ -731,9 +736,14 @@ const scriptsInEvents = {
 		
 	},
 
-	async Bounties_event_Event3_Act1(runtime, localVars)
+	async Leaderboard_event_Event1_Act4(runtime, localVars)
 	{
-		await window.updateDuckOdds();
+		await self.getLastWinnerDetails();
+	},
+
+	async Leaderboard_event_Event3_Act2(runtime, localVars)
+	{
+		await self.getLastWinnerDetails();
 	}
 };
 

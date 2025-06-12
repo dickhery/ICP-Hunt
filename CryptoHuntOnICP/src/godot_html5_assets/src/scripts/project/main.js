@@ -1142,3 +1142,34 @@ self.getTimeUntilNextAward = async function () {
   }
 };
 window.getTimeUntilNextAward = self.getTimeUntilNextAward;
+
+self.getLastWinnerDetails = async function() {
+  if (!runtimeGlobal || !window.custodianActor) return null;
+  try {
+    const details = await window.custodianActor.getLastWinnerDetails();
+    console.log("Last winner details:", details);
+
+    if (details.winner && details.winner.length > 0) {
+      const [principal, name, email, score] = details.winner[0];
+      const amountIcp = Number(details.amount) / 1e8;
+      const timestamp = details.timestamp ? ns2DateString(details.timestamp) : "N/A";
+
+      runtimeGlobal.globalVars.LastWinnerName = name;
+      runtimeGlobal.globalVars.LastWinnerScore = score;
+      runtimeGlobal.globalVars.LastWinnerAmount = amountIcp.toFixed(8);
+      runtimeGlobal.globalVars.LastWinnerTimestamp = timestamp;
+    } else {
+      runtimeGlobal.globalVars.LastWinnerName = "No winner yet";
+      runtimeGlobal.globalVars.LastWinnerScore = 0;
+      runtimeGlobal.globalVars.LastWinnerAmount = "0.00000000";
+      runtimeGlobal.globalVars.LastWinnerTimestamp = "N/A";
+    }
+
+    return details;
+  } catch (err) {
+    console.error("getLastWinnerDetails error:", err);
+    setStatusMessage("Error fetching last winner details: " + err.message);
+    return null;
+  }
+};
+window.getLastWinnerDetails = self.getLastWinnerDetails;

@@ -262,21 +262,21 @@ actor {
 
   // New function to record game end
   public shared ({ caller }) func recordGameEnd() : async () {
-  let playerState = getPlayerState(caller);
-  let rounds = playerState.currentGameRounds;
-  addGameRounds(rounds);
-  let maxScore = rounds * 16_000;
-  updatePlayerState(
-    caller,
-    {
-      lastRoundToken = playerState.lastRoundToken;
-      goldWinInRound = playerState.goldWinInRound;
-      silverWinInRound = playerState.silverWinInRound;
-      currentGameRounds = 0;
-      maxAllowedScore = maxScore;
-    },
-  );
-};
+    let playerState = getPlayerState(caller);
+    let rounds = playerState.currentGameRounds;
+    addGameRounds(rounds);
+    let maxScore = rounds * 16_000;
+    updatePlayerState(
+      caller,
+      {
+        lastRoundToken = playerState.lastRoundToken;
+        goldWinInRound = playerState.goldWinInRound;
+        silverWinInRound = playerState.silverWinInRound;
+        currentGameRounds = 0;
+        maxAllowedScore = maxScore;
+      },
+    );
+  };
 
   public query func getWinStats() : async {
     roundsSinceGoldWin : Nat;
@@ -313,31 +313,31 @@ actor {
   let MAX_SCORE_PER_ROUND : Int = 1_000_000;
 
   public shared ({ caller }) func addHighScoreSecure(
-  name : Text,
-  email : Text,
-  score : Int,
-  roundToken : Nat,
-) : async Bool {
-  let playerState = getPlayerState(caller);
-  if (roundToken != playerState.lastRoundToken) { return false };
+    name : Text,
+    email : Text,
+    score : Int,
+    roundToken : Nat,
+  ) : async Bool {
+    let playerState = getPlayerState(caller);
+    if (roundToken != playerState.lastRoundToken) { return false };
 
-  if (score < 0 or score > playerState.maxAllowedScore) { return false };
+    if (score < 0 or score > playerState.maxAllowedScore) { return false };
 
-  let result = await highScoreActor.addHighScore(caller, name, email, score);
-  if (result) {
-    updatePlayerState(
-      caller,
-      {
-        lastRoundToken = playerState.lastRoundToken;
-        goldWinInRound = playerState.goldWinInRound;
-        silverWinInRound = playerState.silverWinInRound;
-        currentGameRounds = playerState.currentGameRounds;
-        maxAllowedScore = 0;
-      },
-    );
+    let result = await highScoreActor.addHighScore(caller, name, email, score);
+    if (result) {
+      updatePlayerState(
+        caller,
+        {
+          lastRoundToken = playerState.lastRoundToken;
+          goldWinInRound = playerState.goldWinInRound;
+          silverWinInRound = playerState.silverWinInRound;
+          currentGameRounds = playerState.currentGameRounds;
+          maxAllowedScore = 0;
+        },
+      );
+    };
+    result;
   };
-  result;
-};
 
   public shared (msg) func addHighScore(
     name : Text,
@@ -639,6 +639,8 @@ actor {
 
   stable var lastHighScoreAwardTs : ?Time.Time = null;
   stable var isAwardingHighScorePot : Bool = false;
+  stable var lastWinner : ?(Principal, Text, Text, Int) = null; // Stores (principal, name, email, score)
+  stable var lastWinnerAmount : Nat64 = 0; // Stores the awarded amount in e8s
 
   public query func getLastHighScoreAwardTs() : async ?Time.Time {
     lastHighScoreAwardTs;
@@ -646,7 +648,8 @@ actor {
 
   private func canAwardHighScorePot() : Bool {
     let now = Time.now();
-    let oneMonthInNs = 7 * 24 * 60 * 60 * 1_000_000_000; // ~30 days in nanoseconds = 30 * 24 * 60 * 60 * 1_000_000_000;
+  //  let oneMonthInNs = 60 * 60 * 1_000_000_000;  // Test case 1 houur
+    let oneMonthInNs = 7 * 24 * 60 * 60 * 1_000_000_000; // ~7 days in nanoseconds = 30 * 24 * 60 * 60 * 1_000_000_000;
     switch (lastHighScoreAwardTs) {
       case (null) { true }; // Never awarded, so allow it
       case (?ts) { (now - ts) >= oneMonthInNs };
@@ -684,7 +687,9 @@ actor {
       switch (result) {
         case (#Ok _) {
           let _ = await tokenTransferActor.resetHighScorePot();
-          lastHighScoreAwardTs := ?Time.now();
+          lastWinner := ?topScore; // Save the entire topScore tuple
+          lastWinnerAmount := amountE8s; // Save the awarded amount
+          lastHighScoreAwardTs := ?Time.now(); // Already present
           await highScoreActor.resetHighScores();
           isAwardingHighScorePot := false;
           return true;
@@ -700,7 +705,21 @@ actor {
     };
   };
 
+  public query func getLastWinnerDetails() : async {
+    winner : ?(Principal, Text, Text, Int);
+    amount : Nat64;
+    timestamp : ?Time.Time;
+  } {
+    return {
+      winner = lastWinner;
+      amount = lastWinnerAmount;
+      timestamp = lastHighScoreAwardTs;
+    };
+  };
+
   public query func getTimeUntilNextAward() : async Int {
+
+  //  let oneWeekInNs : Int = 60 * 60 * 1_000_000_000;  // test case 1 hour
     let oneWeekInNs : Int = 7 * 24 * 3600 * 1_000_000_000; // 7 days in nanoseconds
     let now = Time.now();
     switch (lastHighScoreAwardTs) {
