@@ -1819,7 +1819,6 @@ self.C3_ExpressionFuncs = [
 			return () => f0("Gui", f1(f2(0)), f3(f4(0)));
 		},
 		() => "ScaleY",
-		() => 8,
 		() => "Ad",
 		() => 915,
 		() => -752,
@@ -1828,6 +1827,11 @@ self.C3_ExpressionFuncs = [
 		() => -193,
 		() => -157,
 		() => 100,
+		() => "countdown",
+		p => {
+			const n0 = p._GetNode(0);
+			return () => (5 - n0.ExpInstVar());
+		},
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => ("data:image/png;base64," + v0.GetValue());
@@ -1836,11 +1840,6 @@ self.C3_ExpressionFuncs = [
 		() => 540,
 		() => 1801,
 		() => 83,
-		p => {
-			const n0 = p._GetNode(0);
-			return () => (5 - n0.ExpInstVar());
-		},
-		() => "countdown",
 		() => "Gameplay",
 		() => "Pause",
 		() => "Show_Pause_Settings",
@@ -1968,6 +1967,7 @@ self.C3_ExpressionFuncs = [
 		() => 598,
 		() => 594,
 		() => 4,
+		() => "PaymentConfirmation",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => ("Your PID: " + v0.GetValue());
@@ -1993,6 +1993,7 @@ self.C3_ExpressionFuncs = [
 		() => "Payment_Popup",
 		() => "Button_Exit",
 		() => "Pressed",
+		() => "PaymentPopupLayer",
 		() => "Button Leaderboard",
 		() => "Button My Tokens",
 		() => "Button Logout",
@@ -2083,6 +2084,7 @@ self.C3_ExpressionFuncs = [
 			const v7 = p._GetNode(7).GetVar();
 			return () => (and((and((and(and(Math.floor((f0(0, v1.GetValue()) / 86400)), " days, "), Math.floor(((f2(0, v3.GetValue()) % 86400) / 3600))) + " hours, "), Math.floor(((f4(0, v5.GetValue()) % 3600) / 60))) + " minutes, "), Math.floor((f6(0, v7.GetValue()) % 60))) + " seconds");
 		},
+		() => "ConfirmationPopup",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => and(v0.GetValue(), " Rounds since Gold");
@@ -2112,7 +2114,18 @@ self.C3_ExpressionFuncs = [
 		() => 1277,
 		() => 1330,
 		() => 1931,
-		() => 1216
+		() => 1216,
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => (("Are you sure you want to transfer " + v0.GetValue()) + " ICP to");
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => (v0.GetValue() + "?");
+		},
+		() => 1300,
+		() => "Processing",
+		() => "Idle"
 ];
 
 

@@ -534,13 +534,13 @@ self.fetchNextAd = async function () {
   if (!runtimeGlobal) return;
 
   let attempts = 0;
-  const maxAttempts = 3;
+  const maxAttempts = 2; // Reduced from 3
   let lastAdId = null;
 
   while (attempts < maxAttempts) {
     try {
       const fetchPromise = getNextAd(runtimeGlobal.globalVars.projectId, runtimeGlobal.globalVars.AdTypeInput || "");
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Ad fetch timed out")), 10000));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Ad fetch timed out")), 5000)); // Reduced to 5s
       const result = await Promise.race([fetchPromise, timeoutPromise]);
 
       if (!result || result.length === 0) {
@@ -562,6 +562,9 @@ self.fetchNextAd = async function () {
       runtimeGlobal.globalVars.CurrentAdBase64 = ad.imageBase64;
       runtimeGlobal.globalVars.CurrentAdClickUrl = ad.clickUrl;
       setStatusMessage(`Fetched Ad #${ad.id} (served: ${ad.viewsServed}), token: ${tokenId}`);
+
+      // Call Construct 3 function to display the ad
+      runtimeGlobal.callFunction("DisplayAd");
 
       if (adViewTimeoutId !== null) {
         clearTimeout(adViewTimeoutId);
@@ -593,21 +596,23 @@ self.fetchNextAd = async function () {
     }
   }
 
-  setStatusMessage("Max retries reached. No new ad available.");
+  // If all attempts fail
+  setStatusMessage("No ad available after retries. Continuing game...");
   runtimeGlobal.globalVars.CurrentAdBase64 = "";
-  runtimeGlobal.globalVars.Game_Status = "Play";
   runtimeGlobal.callFunction("CloseAdLayer");
 };
 
 self.fetchMyAds = async function () { /* ... */ };
 self.populateMyAdsList = function () { /* ... */ };
 self.topUpAdViews = async function () { /* ... */ };
+
 self.transferTokens = async function () {
   if (!runtimeGlobal) return;
   if (!authMethod) {
     setStatusMessage("Please authenticate first.");
     return;
   }
+  setStatusMessage("Processing transfer...");
   try {
     const toPrincipalStr = runtimeGlobal.globalVars.TokenRecipient;
     const toPrincipal = Principal.fromText(toPrincipalStr);
@@ -621,13 +626,20 @@ self.transferTokens = async function () {
     });
     if ("Ok" in result) {
       setStatusMessage(`Transfer success! Block index: ${result.Ok}`);
-      await self.checkTokenBalance();
+      // Clear inputs
+      const recipientInput = runtimeGlobal.objects.TextInput_Recipient.getFirstInstance();
+      if (recipientInput) recipientInput.text = "";
+      const amountInput = runtimeGlobal.objects.TextInput_Amount.getFirstInstance();
+      if (amountInput) amountInput.text = "";
+      runtimeGlobal.callFunction("OnTransferComplete", 1); // Success
     } else {
       setStatusMessage("Transfer error: " + stringifyWithBigInt(result.Err));
+      runtimeGlobal.callFunction("OnTransferComplete", 0); // Failure
     }
   } catch (err) {
     console.error(err);
     setStatusMessage("Error transferring tokens: " + err.message);
+    runtimeGlobal.callFunction("OnTransferComplete", 0); // Failure
   }
 };
 

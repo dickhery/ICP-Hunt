@@ -116,6 +116,70 @@ const scriptsInEvents = {
 		
 	},
 
+	async Menu_event_Event2_Act1(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event2_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event2_Act11(runtime, localVars)
+	{
+		window.checkLastAwardTs();
+	},
+
+	async Menu_event_Event3_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event3_Act3(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event4_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
+	},
+
+	async Menu_event_Event5_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event17_Act1(runtime, localVars)
+	{
+		window.depositIcpForUser();
+	},
+
+	async Menu_event_Event30_Act2(runtime, localVars)
+	{
+		window.logout();
+	},
+
 	async Game_over_event_Event2_Act1(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
@@ -201,80 +265,6 @@ const scriptsInEvents = {
 		} else {
 		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
 		}
-	},
-
-	async Menu_event_Event2_Act1(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Menu_event_Event2_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event2_Act9(runtime, localVars)
-	{
-		window.checkLastAwardTs();
-	},
-
-	async Menu_event_Event3_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event3_Act3(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Menu_event_Event4_Act1(runtime, localVars)
-	{
-		window.copyPrincipalToClipboard();
-		
-	},
-
-	async Menu_event_Event5_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event17_Act1(runtime, localVars)
-	{
-		window.depositIcpForUser();
-	},
-
-	async Menu_event_Event18_Act3(runtime, localVars)
-	{
-		window.depositIcpForUser();
-	},
-
-	async Menu_event_Event19_Act3(runtime, localVars)
-	{
-		window.depositIcpForUser();
-	},
-
-	async Menu_event_Event28_Act2(runtime, localVars)
-	{
-		window.logout();
 	},
 
 	async Auth_event_Event1_Act1(runtime, localVars)
@@ -492,6 +482,16 @@ const scriptsInEvents = {
 })();
 	},
 
+	async Leaderboard_event_Event1_Act4(runtime, localVars)
+	{
+		await self.getLastWinnerDetails();
+	},
+
+	async Leaderboard_event_Event3_Act2(runtime, localVars)
+	{
+		await self.getLastWinnerDetails();
+	},
+
 	async Leaderboard_event_Event4_Act1(runtime, localVars)
 	{
 		self.getHighScorePot();
@@ -590,7 +590,7 @@ const scriptsInEvents = {
 		window.refreshTransactionLogs();
 	},
 
-	async Wallet_event_Event4_Act3(runtime, localVars)
+	async Wallet_event_Event4_Act4(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
 		
@@ -604,24 +604,24 @@ const scriptsInEvents = {
 		
 	},
 
-	async Wallet_event_Event4_Act5(runtime, localVars)
+	async Wallet_event_Event4_Act6(runtime, localVars)
 	{
 		// call your main.js function
 		window.checkTokenBalance();
 		
 	},
 
-	async Wallet_event_Event4_Act7(runtime, localVars)
+	async Wallet_event_Event4_Act8(runtime, localVars)
 	{
 		console.log("On start of layout: About to call refreshTransactionLogs");
 	},
 
-	async Wallet_event_Event4_Act8(runtime, localVars)
+	async Wallet_event_Event4_Act9(runtime, localVars)
 	{
 		window.refreshWinStats();
 	},
 
-	async Wallet_event_Event4_Act9(runtime, localVars)
+	async Wallet_event_Event4_Act10(runtime, localVars)
 	{
 		window.refreshTransactionLogs();
 	},
@@ -727,23 +727,17 @@ const scriptsInEvents = {
 
 	async Wallet_event_Event24_Act2(runtime, localVars)
 	{
-		// 1) Capture the user input from your text inputs into the global vars:
-		runtime.globalVars.TokenRecipient = runtime.objects.TextInput_Recipient.getFirstInstance().text;
-		runtime.globalVars.TokenAmount = runtime.objects.TextInput_Amount.getFirstInstance().text;
-		
-		// 2) Call the main.js function to do the transfer:
+
+	},
+
+	async Wallet_event_Event25_Act5(runtime, localVars)
+	{
 		window.transferTokens();
-		
 	},
 
-	async Leaderboard_event_Event1_Act4(runtime, localVars)
+	async Menu_event_Event23_Act2(runtime, localVars)
 	{
-		await self.getLastWinnerDetails();
-	},
-
-	async Leaderboard_event_Event3_Act2(runtime, localVars)
-	{
-		await self.getLastWinnerDetails();
+		window.depositIcpForUser();
 	}
 };
 

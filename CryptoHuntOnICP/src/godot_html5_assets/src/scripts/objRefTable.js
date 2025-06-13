@@ -150,15 +150,14 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.Function.Exps.Param,
 		C3.Plugins.Touch.Exps.AbsoluteYForID,
 		C3.Plugins.System.Exps.canvastolayery,
-		C3.Plugins.System.Cnds.CompareTime,
 		C3.Plugins.Sprite.Acts.MoveToTop,
 		C3.JavaScriptInEvents.Game_event_Event223_Act8,
 		C3.Plugins.System.Acts.SetLayerVisible,
-		C3.Plugins.Sprite.Acts.SetOpacity,
-		C3.Plugins.Sprite.Acts.LoadURL,
 		C3.Plugins.Touch.Cnds.OnTapGestureObject,
 		C3.Behaviors.Timer.Acts.StopTimer,
 		C3.Plugins.Browser.Acts.GoToURL,
+		C3.Plugins.Sprite.Acts.SetOpacity,
+		C3.Plugins.Sprite.Acts.LoadURL,
 		C3.Plugins.Spritefont2.Acts.SetVisible,
 		C3.Plugins.System.Acts.SetTimescale,
 		C3.Plugins.Audio.Acts.Preload,
@@ -184,7 +183,7 @@ self.C3_GetObjectRefTable = function () {
 		C3.JavaScriptInEvents.Menu_event_Event2_Act1,
 		C3.JavaScriptInEvents.Menu_event_Event2_Act2,
 		C3.Plugins.System.Acts.SetLayerInteractive,
-		C3.JavaScriptInEvents.Menu_event_Event2_Act9,
+		C3.JavaScriptInEvents.Menu_event_Event2_Act11,
 		C3.JavaScriptInEvents.Menu_event_Event3_Act2,
 		C3.JavaScriptInEvents.Menu_event_Event3_Act3,
 		C3.JavaScriptInEvents.Menu_event_Event4_Act1,
@@ -193,9 +192,8 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.Browser.Acts.Close,
 		C3.JavaScriptInEvents.Menu_event_Event17_Act1,
 		C3.Plugins.Mouse.Cnds.OnObjectClicked,
-		C3.JavaScriptInEvents.Menu_event_Event18_Act3,
-		C3.JavaScriptInEvents.Menu_event_Event19_Act3,
-		C3.JavaScriptInEvents.Menu_event_Event28_Act2,
+		C3.JavaScriptInEvents.Menu_event_Event23_Act2,
+		C3.JavaScriptInEvents.Menu_event_Event30_Act2,
 		C3.JavaScriptInEvents.Game_over_event_Event2_Act1,
 		C3.Plugins.TextBox.Acts.SetText,
 		C3.JavaScriptInEvents.Game_over_event_Event5_Act1,
@@ -251,11 +249,11 @@ self.C3_GetObjectRefTable = function () {
 		C3.JavaScriptInEvents.Wallet_event_Event2_Act1,
 		C3.JavaScriptInEvents.Wallet_event_Event2_Act2,
 		C3.JavaScriptInEvents.Wallet_event_Event3_Act1,
-		C3.JavaScriptInEvents.Wallet_event_Event4_Act3,
-		C3.JavaScriptInEvents.Wallet_event_Event4_Act5,
-		C3.JavaScriptInEvents.Wallet_event_Event4_Act7,
+		C3.JavaScriptInEvents.Wallet_event_Event4_Act4,
+		C3.JavaScriptInEvents.Wallet_event_Event4_Act6,
 		C3.JavaScriptInEvents.Wallet_event_Event4_Act8,
 		C3.JavaScriptInEvents.Wallet_event_Event4_Act9,
+		C3.JavaScriptInEvents.Wallet_event_Event4_Act10,
 		C3.JavaScriptInEvents.Wallet_event_Event7_Act1,
 		C3.JavaScriptInEvents.Wallet_event_Event9_Act1,
 		C3.JavaScriptInEvents.Wallet_event_Event10_Act1,
@@ -273,7 +271,7 @@ self.C3_GetObjectRefTable = function () {
 		C3.JavaScriptInEvents.Wallet_event_Event21_Act3,
 		C3.Plugins.HTMLElement.Acts.SetPos,
 		C3.Plugins.TextBox.Acts.SetPos,
-		C3.JavaScriptInEvents.Wallet_event_Event24_Act2
+		C3.JavaScriptInEvents.Wallet_event_Event25_Act5
 	];
 };
 self.C3_JsPropNameTable = [
@@ -332,6 +330,8 @@ self.C3_JsPropNameTable = [
 	{HighScorePot_Text: 0},
 	{CountdownText: 0},
 	{LeaderboardScores: 0},
+	{Text_ConfirmMessage: 0},
+	{Text_ConfirmRecipient: 0},
 	{Button_Exit: 0},
 	{Button_Fullscreen: 0},
 	{Button_Menu: 0},
@@ -468,6 +468,10 @@ self.C3_JsPropNameTable = [
 	{LastWinnerAmountText: 0},
 	{LastWinnerTimestampText: 0},
 	{Sprite2: 0},
+	{Sprite_ConfirmBG: 0},
+	{Button_Confirm: 0},
+	{Button_Cancel: 0},
+	{Sprite_ConfirmDarkBG: 0},
 	{Buttons: 0},
 	{Texts: 0},
 	{Spawn_Duck: 0},
@@ -552,7 +556,8 @@ self.C3_JsPropNameTable = [
 	{isBetaTester: 0},
 	{UserInputPassword: 0},
 	{StatusMessage: 0},
-	{TransactionLogsText: 0}
+	{TransactionLogsText: 0},
+	{success: 0}
 ];
 
 self.InstanceType = {
@@ -602,6 +607,8 @@ self.InstanceType = {
 	HighScorePot_Text: class extends self.ISpriteFontInstance {},
 	CountdownText: class extends self.ISpriteFontInstance {},
 	LeaderboardScores: class extends self.ISpriteFontInstance {},
+	Text_ConfirmMessage: class extends self.ISpriteFontInstance {},
+	Text_ConfirmRecipient: class extends self.ISpriteFontInstance {},
 	Button_Exit: class extends self.ISpriteInstance {},
 	Button_Fullscreen: class extends self.ISpriteInstance {},
 	Button_Menu: class extends self.ISpriteInstance {},
@@ -717,6 +724,10 @@ self.InstanceType = {
 	LastWinnerAmountText: class extends self.ITextInstance {},
 	LastWinnerTimestampText: class extends self.ITextInstance {},
 	Sprite2: class extends self.ISpriteInstance {},
+	Sprite_ConfirmBG: class extends self.ISpriteInstance {},
+	Button_Confirm: class extends self.ISpriteInstance {},
+	Button_Cancel: class extends self.ISpriteInstance {},
+	Sprite_ConfirmDarkBG: class extends self.ISpriteInstance {},
 	Buttons: class extends self.ISpriteInstance {},
 	Texts: class extends self.ISpriteInstance {}
 }
