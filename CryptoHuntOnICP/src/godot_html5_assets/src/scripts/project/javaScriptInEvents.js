@@ -175,6 +175,11 @@ const scriptsInEvents = {
 		window.depositIcpForUser();
 	},
 
+	async Menu_event_Event23_Act2(runtime, localVars)
+	{
+		window.depositIcpForUser();
+	},
+
 	async Menu_event_Event30_Act2(runtime, localVars)
 	{
 		window.logout();
@@ -229,8 +234,8 @@ const scriptsInEvents = {
 		    console.log("Not a top score.");
 		    runtime.globalVars.GotHighScore = 0;
 		  }
+		  runtime.globalVars.HighScoreCheckComplete = 1;
 		})();
-		
 	},
 
 	async Game_over_event_Event10_Act1(runtime, localVars)
@@ -245,18 +250,18 @@ const scriptsInEvents = {
 		
 	},
 
-	async Game_over_event_Event12_Act1(runtime, localVars)
+	async Game_over_event_Event14_Act1(runtime, localVars)
 	{
 		window.checkTokenBalance();
 	},
 
-	async Game_over_event_Event13_Act1(runtime, localVars)
+	async Game_over_event_Event15_Act1(runtime, localVars)
 	{
 		window.copyPrincipalToClipboard();
 		
 	},
 
-	async Game_over_event_Event14_Act2(runtime, localVars)
+	async Game_over_event_Event16_Act2(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
 		
@@ -733,11 +738,6 @@ const scriptsInEvents = {
 	async Wallet_event_Event25_Act5(runtime, localVars)
 	{
 		window.transferTokens();
-	},
-
-	async Menu_event_Event23_Act2(runtime, localVars)
-	{
-		window.depositIcpForUser();
 	}
 };
 

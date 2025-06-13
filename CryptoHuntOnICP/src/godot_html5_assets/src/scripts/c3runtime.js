@@ -2002,6 +2002,7 @@ self.C3_ExpressionFuncs = [
 		() => 1630,
 		() => 590,
 		() => 20,
+		() => 1300,
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => ((f0() / 2) - 380);
@@ -2010,13 +2011,11 @@ self.C3_ExpressionFuncs = [
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => ((f0() / 2) - 140);
 		},
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => ((f0() / 2) + 280);
-		},
 		() => "Button_Restart",
 		() => "Payment",
 		() => "Button Submit Score",
+		() => 1400,
+		() => 820,
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			const n1 = p._GetNode(1);
@@ -2123,7 +2122,6 @@ self.C3_ExpressionFuncs = [
 			const v0 = p._GetNode(0).GetVar();
 			return () => (v0.GetValue() + "?");
 		},
-		() => 1300,
 		() => "Processing",
 		() => "Idle"
 ];
