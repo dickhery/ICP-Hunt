@@ -207,15 +207,18 @@ actor {
 
   // Calculate average rounds per game
   private func getAverageRounds() : Float {
-    if (gameRoundsCount == 0) return 0.0;
-    var sum : Nat = 0;
-    let count = if (gameRoundsCount < 100) gameRoundsCount else 100;
-    for (i in Iter.range(0, count - 1)) {
-      let idx = (gameRoundsIndex - 1 - i + 100) % 100;
-      sum += gameRounds[idx];
-    };
-    Float.fromInt(sum) / Float.fromInt(count);
+  if (gameRoundsCount == 0) return 0.0;
+  var sum : Int = 0;
+  let count = if (gameRoundsCount < 100) gameRoundsCount else 100;
+  for (i in Iter.range(0, count - 1)) {
+    // Calculate the index using Int to handle negative values
+    let idxInt : Int = (gameRoundsIndex : Int) - 1 - (i : Int);
+    // Adjust for circular buffer: modulo 100, then take absolute value
+    let idx = Int.abs(idxInt % 100);
+    sum += gameRounds[idx];
   };
+  Float.fromInt(sum) / Float.fromInt(count);
+};
 
   // Calculate dynamic n for gold and silver ducks
   private func getNGold() : Nat {

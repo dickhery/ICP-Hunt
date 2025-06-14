@@ -32,7 +32,7 @@ const scriptsInEvents = {
 		
 	},
 
-	async Game_event_Event40_Act1(runtime, localVars)
+	async Game_event_Event42_Act1(runtime, localVars)
 	{
 		try {
 		    const isGolden = await self.checkGoldenDuck();
@@ -48,7 +48,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event41_Act1(runtime, localVars)
+	async Game_event_Event43_Act1(runtime, localVars)
 	{
 		try {
 		    const isSilver = await self.checkSilverDuck();
@@ -64,17 +64,17 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event152_Act3(runtime, localVars)
+	async Game_event_Event162_Act3(runtime, localVars)
 	{
 		await window.custodianActor.recordGameEnd();
 	},
 
-	async Game_event_Event166_Act2(runtime, localVars)
+	async Game_event_Event176_Act2(runtime, localVars)
 	{
 		await window.custodianActor.recordGameEnd();
 	},
 
-	async Game_event_Event195_Act12(runtime, localVars)
+	async Game_event_Event205_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Gold");
 		if (success) {
@@ -92,7 +92,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event196_Act12(runtime, localVars)
+	async Game_event_Event206_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Silver");
 		if (success) {
@@ -110,7 +110,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event223_Act8(runtime, localVars)
+	async Game_event_Event233_Act8(runtime, localVars)
 	{
 		self.fetchNextAd();
 		

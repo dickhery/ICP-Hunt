@@ -1362,6 +1362,7 @@ self.C3_ExpressionFuncs = [
 			const v5 = p._GetNode(5).GetVar();
 			return () => (((v0.GetValue() + (50 * v1.GetValue())) * 3) - (((v2.GetValue() + (50 * v3.GetValue())) * 3) - ((v4.GetValue() + (50 * v5.GetValue())) * 2.5)));
 		},
+		() => -1,
 		() => 320,
 		() => 192,
 		() => 576,
@@ -1532,33 +1533,6 @@ self.C3_ExpressionFuncs = [
 		() => 10,
 		() => "Ducks_Settings",
 		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => f0(1, 2);
-		},
-		() => 9,
-		() => "Collision",
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			const f1 = p._GetNode(1).GetBoundMethod();
-			const f2 = p._GetNode(2).GetBoundMethod();
-			const f3 = p._GetNode(3).GetBoundMethod();
-			const f4 = p._GetNode(4).GetBoundMethod();
-			return () => f0((f1(0) + (f2() / 4)), (f3(0) - (f4() / 4)));
-		},
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => ((f0() / 2) + 360);
-		},
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => (270 + Math.round(f0((-45), 45)));
-		},
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => f0("Black", "Blue", "Red");
-		},
-		() => "Midground",
-		p => {
 			const n0 = p._GetNode(0);
 			return () => Math.round(n0.ExpObject());
 		},
@@ -1644,6 +1618,34 @@ self.C3_ExpressionFuncs = [
 		() => "Win_2_Duck_Blue_Black",
 		() => "Win_2_Duck_Red_Black",
 		() => "Win_2_Duck_Red_Blue",
+		() => "Controlled Duck Spawning",
+		() => "Collision",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			const f1 = p._GetNode(1).GetBoundMethod();
+			const f2 = p._GetNode(2).GetBoundMethod();
+			const f3 = p._GetNode(3).GetBoundMethod();
+			const f4 = p._GetNode(4).GetBoundMethod();
+			return () => f0((f1(0) + (f2() / 4)), (f3(0) - (f4() / 4)));
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => ((f0() / 2) + 360);
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => (270 + Math.round(f0((-45), 45)));
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => f0("Black", "Blue", "Red");
+		},
+		() => "Midground",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => f0(1, 2);
+		},
+		() => "SpawnTimer",
 		() => "GoldenDuck_Settings",
 		() => "GoldDuck_Fall",
 		() => "SilverDuck_Settings",
@@ -1668,6 +1670,7 @@ self.C3_ExpressionFuncs = [
 			const n0 = p._GetNode(0);
 			return () => (n0.ExpObject() + 8);
 		},
+		() => 0.5,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => ((((v0.GetValue()) === ("Single") ? 1 : 0)) ? (1) : (2));
@@ -1686,6 +1689,7 @@ self.C3_ExpressionFuncs = [
 		() => "Full Page Landscape",
 		() => "Full_Page_Ad_Settings",
 		() => 6,
+		() => 9,
 		() => "Game_Over",
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
@@ -1802,7 +1806,6 @@ self.C3_ExpressionFuncs = [
 			const v2 = p._GetNode(2).GetVar();
 			return () => (((n0.ExpObject() - n1.ExpObject()) / v2.GetValue()) * 100);
 		},
-		() => -1,
 		() => "Move_Aim",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
@@ -1972,7 +1975,6 @@ self.C3_ExpressionFuncs = [
 			const v0 = p._GetNode(0).GetVar();
 			return () => ("Your PID: " + v0.GetValue());
 		},
-		() => 0.5,
 		() => "Principal ID Copied to Clipboard",
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
