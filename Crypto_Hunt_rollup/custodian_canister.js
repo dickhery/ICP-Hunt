@@ -22,6 +22,7 @@ export const idlFactory = ({ IDL }) => {
     'awardGoldPotToCaller' : IDL.Func([], [IDL.Bool], []),
     'awardHighScorePot' : IDL.Func([], [IDL.Bool], []),
     'awardSilverPotToCaller' : IDL.Func([], [IDL.Bool], []),
+    'generatePromoCode' : IDL.Func([], [IDL.Text], []),
     'getCurrentAverageRounds' : IDL.Func([], [IDL.Float64], ['query']),
     'getGoldDuckOdds' : IDL.Func([], [IDL.Float64], ['query']),
     'getGoldPot' : IDL.Func([], [IDL.Nat64], []),
@@ -76,6 +77,7 @@ export const idlFactory = ({ IDL }) => {
     'resetHighScores' : IDL.Func([], [], []),
     'resetSilverPotFromCustodian' : IDL.Func([], [IDL.Bool], []),
     'updatePassword' : IDL.Func([IDL.Text], [IDL.Bool], []),
+    'validatePromoCode' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'verify_password' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   });
 };

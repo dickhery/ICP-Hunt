@@ -14,6 +14,9 @@ import Hash "mo:base/Hash";
 import Nat32 "mo:base/Nat32";
 import Debug "mo:base/Debug";
 import Float "mo:base/Float";
+import Error "mo:base/Error";
+
+import Text "mo:base/Text";
 
 actor {
 
@@ -87,6 +90,8 @@ actor {
     nonce : Nat; // Unique nonce for the win
   };
 
+  stable var promoCodes : [Text] = [];
+
   type PlayerRoundState = {
     lastRoundToken : Nat;
     goldWinInRound : ?Nat;
@@ -129,6 +134,58 @@ actor {
     );
     playerStates := updated;
   };
+
+  public shared ({ caller }) func generatePromoCode() : async Text {
+  if (caller != custodianPrincipal) {
+    throw Error.reject("Only admin can generate promo codes");
+  };
+
+  let seed = await Random.blob();
+  let rng = Random.Finite(seed);
+  let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+let charsArray = Text.toArray(chars);
+var code = "";
+for (_ in Iter.range(0, 11)) { // 12 characters
+  switch (rng.range(5)) {
+    case (?n) {
+      let index = n % 36;
+      code := code # Text.fromChar(charsArray[index]);
+    };
+    case null {
+      throw Error.reject("Random number generation failed");
+    };
+  };
+};
+
+  // Ensure uniqueness
+  while (Array.find(promoCodes, func (c : Text) : Bool { c == code }) != null) {
+    switch (rng.range(5)) {
+      case (?n) {
+        let index = n % 36;
+        code := code # Text.fromChar(charsArray[index]);
+      };
+      case null {
+        throw Error.reject("Random number generation failed");
+      };
+    };
+  };
+
+  promoCodes := Array.append(promoCodes, [code]);
+  return code;
+};
+
+public shared func validatePromoCode(code : Text) : async Bool {
+  let index = Array.indexOf(code, promoCodes, Text.equal);
+  switch (index) {
+    case (?i) {
+      promoCodes := Array.filter(promoCodes, func (c : Text) : Bool { c != code });
+      return true;
+    };
+    case null {
+      return false;
+    };
+  };
+};
 
   // Helper to check/set reentrancy guard
   private func isWinInProgress(pid : Principal) : Bool {
