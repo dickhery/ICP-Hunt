@@ -240,14 +240,14 @@ const scriptsInEvents = {
 
 	async Game_over_event_Event10_Act1(runtime, localVars)
 	{
-		const nameBox  = runtime.objects.NameInputBox.getFirstInstance();
+		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
 		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
 		
-		runtime.globalVars.PlayerNameInput  = nameBox.text;
-		runtime.globalVars.PlayerEmailInput = emailBox.text;
+		const nameInput = nameBox ? nameBox.text.trim() : "";
+		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
+		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
 		
-		self.submitHighScore();   
-		
+		self.submitHighScore();
 	},
 
 	async Game_over_event_Event14_Act1(runtime, localVars)

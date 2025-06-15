@@ -1880,6 +1880,8 @@ self.C3_ExpressionFuncs = [
 			return () => and("Top Score:", v0.GetValue());
 		},
 		() => "Button_Menu",
+		() => "MenuConfirmation",
+		() => "Button_Menu2",
 		() => "Pause_Settings",
 		() => "Hide_Pause_Settings",
 		() => "Button_Pause",
