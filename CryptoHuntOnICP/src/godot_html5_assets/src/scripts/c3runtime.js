@@ -1973,6 +1973,8 @@ self.C3_ExpressionFuncs = [
 		() => 594,
 		() => 4,
 		() => "PaymentConfirmation",
+		() => "PaymentPopupLayer",
+		() => "UsePromoLayer",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => ("Your PID: " + v0.GetValue());
@@ -1997,7 +1999,13 @@ self.C3_ExpressionFuncs = [
 		() => "Payment_Popup",
 		() => "Button_Exit",
 		() => "Pressed",
-		() => "PaymentPopupLayer",
+		() => 1300,
+		() => 620,
+		() => 616,
+		() => "Idle",
+		() => 1159,
+		() => 886,
+		() => 792,
 		() => "Button Leaderboard",
 		() => "Button My Tokens",
 		() => "Button Logout",
@@ -2006,7 +2014,6 @@ self.C3_ExpressionFuncs = [
 		() => 1630,
 		() => 590,
 		() => 20,
-		() => 1300,
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => ((f0() / 2) - 380);
@@ -2126,8 +2133,7 @@ self.C3_ExpressionFuncs = [
 			const v0 = p._GetNode(0).GetVar();
 			return () => (v0.GetValue() + "?");
 		},
-		() => "Processing",
-		() => "Idle"
+		() => "Processing"
 ];
 
 

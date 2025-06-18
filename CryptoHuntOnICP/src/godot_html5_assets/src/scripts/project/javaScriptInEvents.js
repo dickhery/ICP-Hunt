@@ -132,7 +132,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Menu_event_Event2_Act11(runtime, localVars)
+	async Menu_event_Event2_Act19(runtime, localVars)
 	{
 		window.checkLastAwardTs();
 	},
@@ -175,12 +175,12 @@ const scriptsInEvents = {
 		window.depositIcpForUser();
 	},
 
-	async Menu_event_Event23_Act2(runtime, localVars)
+	async Menu_event_Event24_Act2(runtime, localVars)
 	{
 		window.depositIcpForUser();
 	},
 
-	async Menu_event_Event30_Act2(runtime, localVars)
+	async Menu_event_Event33_Act2(runtime, localVars)
 	{
 		window.logout();
 	},
@@ -738,6 +738,11 @@ const scriptsInEvents = {
 	async Wallet_event_Event25_Act5(runtime, localVars)
 	{
 		window.transferTokens();
+	},
+
+	async Menu_event_Event26_Act3(runtime, localVars)
+	{
+		window.validatePromoCode();
 	}
 };
 

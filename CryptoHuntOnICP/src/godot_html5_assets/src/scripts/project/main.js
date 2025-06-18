@@ -94,12 +94,12 @@ function setPayButtonState(state /* "idle" | "processing" */) {
 
   if (state === "processing") {
     inst.opacity = 0.5;
-    if (inst.animationName !== "Pressed")
-      inst.animationName = "Pressed";
+    if (inst.animation.name !== "Pressed")
+      inst.setAnimation("Pressed");
   } else {
     inst.opacity = 1;
-    if (inst.animationName !== "Idle")
-      inst.animationName = "Idle";
+    if (inst.animation.name !== "Idle")
+      inst.setAnimation("Idle");
   }
 }
 window.setPayButtonState = setPayButtonState;
@@ -489,6 +489,92 @@ self.depositIcpForUser = async function () {
   }
 
   setPaymentFlag(false);
+};
+
+self.validatePromoCode = async function () {
+  if (!runtimeGlobal || paymentInProgress()) return;
+  if (!authMethod) {
+    setStatusMessage("Please authenticate first!");
+    return;
+  }
+
+  setPaymentFlag(true);
+  setPayButtonState("processing");
+
+  const promoInput = runtimeGlobal.objects.PromoCodeInput.getFirstInstance();
+  if (!promoInput) {
+    console.error("PromoCodeInput instance not found");
+    setStatusMessage("Promo code input object not found!");
+    setPaymentFlag(false);
+    setPayButtonState("idle");
+    return;
+  }
+
+  const code = promoInput.text.trim();
+  if (!code) {
+    console.log("No promo code entered");
+    setStatusMessage("Please enter a promo code.");
+    setPaymentFlag(false);
+    setPayButtonState("idle");
+    runtimeGlobal.callFunction("OnValidationFailed");
+    return;
+  }
+
+  if (!window.custodianActor) {
+    console.error("custodianActor not initialized");
+    setStatusMessage("Custodian actor not initialized.");
+    setPaymentFlag(false);
+    setPayButtonState("idle");
+    runtimeGlobal.callFunction("OnValidationFailed");
+    return;
+  }
+
+  try {
+    setStatusMessage("Validating promo code...");
+    console.log("Calling validatePromoCode with code:", code);
+
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Promo code validation timed out")), 10000);
+    });
+
+    const isValid = await Promise.race([
+      window.custodianActor.validatePromoCode(code),
+      timeoutPromise,
+    ]);
+
+    console.log("validatePromoCode result:", isValid);
+
+    if (isValid) {
+      setStatusMessage("Promo code accepted! Starting game...");
+      runtimeGlobal.callFunction("OnPaymentSuccess");
+    } else {
+      console.log("Promo code invalid or already used");
+      setStatusMessage("Invalid or used promo code. Please try again or pay to play.");
+      setPayButtonState("idle");
+      runtimeGlobal.callFunction("OnValidationFailed");
+    }
+  } catch (err) {
+    console.error("validatePromoCode error:", err);
+    setStatusMessage("Error validating promo code: " + err.message);
+    setPayButtonState("idle");
+    runtimeGlobal.callFunction("OnValidationFailed");
+  } finally {
+    setPaymentFlag(false);
+    console.log("Payment flag reset to false");
+  }
+};
+
+self.generatePromoCode = async function () {
+  if (!runtimeGlobal || !window.custodianActor) return;
+  try {
+    const code = await window.custodianActor.generatePromoCode();
+    setStatusMessage("Generated promo code: " + code);
+    const promoText = runtimeGlobal.objects.GeneratedPromoCode?.getFirstInstance();
+    if (promoText) promoText.text = code;
+  } catch (err) {
+    console.error("generatePromoCode error:", err);
+    setStatusMessage("Error generating promo code: " + err.message);
+  }
 };
 
 self.withdrawIcp = async function () {
