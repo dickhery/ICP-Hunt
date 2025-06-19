@@ -432,7 +432,9 @@ self.depositIcpForUser = async function () {
   if (!runtimeGlobal || paymentInProgress()) return;
 
   if (!authMethod) {
-    setStatusMessage("Please connect Plug or Internet Identity first!");
+    runtimeGlobal.callFunction("ShowPaymentError", "Please connect your wallet first.");
+    setPayButtonState("idle");
+    setPaymentFlag(false);
     return;
   }
 
@@ -453,7 +455,15 @@ self.depositIcpForUser = async function () {
     });
 
     if ("Err" in transferResult) {
-      setStatusMessage("Ledger transfer failed: " + JSON.stringify(transferResult.Err));
+      let errorMessage = "Payment failed: ";
+      if ("InsufficientFunds" in transferResult.Err) {
+        const balance = Number(transferResult.Err.InsufficientFunds.balance) / 1e8;
+        errorMessage += `Insufficient funds. Your balance is ${balance.toFixed(2)} ICP.`;
+      } else {
+        errorMessage += JSON.stringify(transferResult.Err);
+      }
+      runtimeGlobal.callFunction("ShowPaymentError", errorMessage);
+      setPayButtonState("idle");
       throw new Error("Ledger transfer failed");
     }
 
@@ -468,7 +478,7 @@ self.depositIcpForUser = async function () {
       success = await icpTransfer_recordDeposit(user, depositAmountE8s, blockIndex);
       if (!success) {
         attempt++;
-        const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
+        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
         setStatusMessage(`Attempt ${attempt}/${maxRetries} failed. Retrying in ${delay / 1000}s…`);
         await new Promise(r => setTimeout(r, delay));
       }
@@ -478,17 +488,17 @@ self.depositIcpForUser = async function () {
       setStatusMessage("Deposit confirmed – starting game!");
       runtimeGlobal.callFunction("OnPaymentSuccess");
     } else {
-      setStatusMessage(`Deposit failed after ${maxRetries} attempts. Please try again or contact support.`);
+      runtimeGlobal.callFunction("ShowPaymentError", "Deposit confirmation failed after " + maxRetries + " attempts. Please try again or contact support.");
       setPayButtonState("idle");
     }
 
   } catch (err) {
     console.error("depositIcpForUser:", err);
-    setStatusMessage("Deposit error: " + err.message);
+    runtimeGlobal.callFunction("ShowPaymentError", "Deposit error: " + err.message);
     setPayButtonState("idle");
+  } finally {
+    setPaymentFlag(false);
   }
-
-  setPaymentFlag(false);
 };
 
 self.validatePromoCode = async function () {

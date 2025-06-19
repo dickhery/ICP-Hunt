@@ -2000,6 +2000,8 @@ self.C3_ExpressionFuncs = [
 		() => "Button_Exit",
 		() => "Pressed",
 		() => 1300,
+		() => "Processing",
+		() => "Your Payment is processing.",
 		() => 620,
 		() => 616,
 		() => "Idle",
@@ -2010,6 +2012,8 @@ self.C3_ExpressionFuncs = [
 		() => "Button My Tokens",
 		() => "Button Logout",
 		() => "Button Bounties",
+		() => "hideError",
+		() => "Are you sure you want to spend 0.05 ICP to play?",
 		() => "Game_Over_Settings",
 		() => 1630,
 		() => 590,
@@ -2132,8 +2136,7 @@ self.C3_ExpressionFuncs = [
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => (v0.GetValue() + "?");
-		},
-		() => "Processing"
+		}
 ];
 
 
