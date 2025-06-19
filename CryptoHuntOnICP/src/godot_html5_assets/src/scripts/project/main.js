@@ -526,7 +526,7 @@ self.validatePromoCode = async function () {
     setStatusMessage("Please enter a promo code.");
     setPaymentFlag(false);
     setPayButtonState("idle");
-    runtimeGlobal.callFunction("OnValidationFailed");
+    runtimeGlobal.callFunction("OnPromoCodeInvalid"); // Changed from OnValidationFailed
     return;
   }
 
@@ -535,7 +535,7 @@ self.validatePromoCode = async function () {
     setStatusMessage("Custodian actor not initialized.");
     setPaymentFlag(false);
     setPayButtonState("idle");
-    runtimeGlobal.callFunction("OnValidationFailed");
+    runtimeGlobal.callFunction("OnPromoCodeInvalid"); // Changed from OnValidationFailed
     return;
   }
 
@@ -561,13 +561,13 @@ self.validatePromoCode = async function () {
       console.log("Promo code invalid or already used");
       setStatusMessage("Invalid or used promo code. Please try again or pay to play.");
       setPayButtonState("idle");
-      runtimeGlobal.callFunction("OnValidationFailed");
+      runtimeGlobal.callFunction("OnPromoCodeInvalid"); // Changed from OnValidationFailed
     }
   } catch (err) {
     console.error("validatePromoCode error:", err);
     setStatusMessage("Error validating promo code: " + err.message);
     setPayButtonState("idle");
-    runtimeGlobal.callFunction("OnValidationFailed");
+    runtimeGlobal.callFunction("OnPromoCodeInvalid"); // Changed from OnValidationFailed
   } finally {
     setPaymentFlag(false);
     console.log("Payment flag reset to false");

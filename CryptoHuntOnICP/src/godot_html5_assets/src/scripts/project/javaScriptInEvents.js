@@ -180,7 +180,7 @@ const scriptsInEvents = {
 		window.depositIcpForUser();
 	},
 
-	async Menu_event_Event26_Act3(runtime, localVars)
+	async Menu_event_Event26_Act5(runtime, localVars)
 	{
 		window.validatePromoCode();
 	},
