@@ -66,6 +66,10 @@ actor {
   let highScoreActor : HighScore = actor (Principal.toText(highScoreCanisterId));
   let tokenTransferActor : TokenTransfer = actor (Principal.toText(tokenTransferCanisterId));
 
+  let SILVER_ADD : Nat64 = 1_167_000; // 0.01167 ICP in e8s
+let GOLD_ADD : Nat64 = 1_556_000;   // 0.01556 ICP in e8s
+let HIGH_SCORE_ADD : Nat64 = 778_000; // 0.00778 ICP in e8s
+
   stable var storedPassword : Text = "";
 
   stable var roundsSinceGoldWin : Nat = 0;
@@ -179,6 +183,9 @@ public shared func validatePromoCode(code : Text) : async Bool {
   switch (index) {
     case (?i) {
       promoCodes := Array.filter(promoCodes, func (c : Text) : Bool { c != code });
+      ignore tokenTransferActor.addToSilverPot(SILVER_ADD);
+      ignore tokenTransferActor.addToGoldPot(GOLD_ADD);
+      ignore tokenTransferActor.addToHighScorePot(HIGH_SCORE_ADD);
       return true;
     };
     case null {
