@@ -2,37 +2,37 @@
 
 const scriptsInEvents = {
 
-	async Game_event_Event9_Act19(runtime, localVars)
+	async Game_event_Event10_Act19(runtime, localVars)
 	{
 		self.getGoldPot();
 		
 	},
 
-	async Game_event_Event9_Act20(runtime, localVars)
+	async Game_event_Event10_Act20(runtime, localVars)
 	{
 		self.getSilverPot();
 		
 	},
 
-	async Game_event_Event19_Act1(runtime, localVars)
+	async Game_event_Event20_Act1(runtime, localVars)
 	{
 		self.getGoldPot();
 		
 	},
 
-	async Game_event_Event19_Act2(runtime, localVars)
+	async Game_event_Event20_Act2(runtime, localVars)
 	{
 		self.getSilverPot();
 		
 	},
 
-	async Game_event_Event36_Act1(runtime, localVars)
+	async Game_event_Event37_Act1(runtime, localVars)
 	{
 		await window.incRoundCounters();
 		
 	},
 
-	async Game_event_Event42_Act1(runtime, localVars)
+	async Game_event_Event43_Act1(runtime, localVars)
 	{
 		try {
 		    const isGolden = await self.checkGoldenDuck();
@@ -48,7 +48,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event43_Act1(runtime, localVars)
+	async Game_event_Event44_Act1(runtime, localVars)
 	{
 		try {
 		    const isSilver = await self.checkSilverDuck();
@@ -64,17 +64,17 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event162_Act3(runtime, localVars)
+	async Game_event_Event163_Act3(runtime, localVars)
 	{
 		await window.custodianActor.recordGameEnd();
 	},
 
-	async Game_event_Event176_Act2(runtime, localVars)
+	async Game_event_Event177_Act2(runtime, localVars)
 	{
 		await window.custodianActor.recordGameEnd();
 	},
 
-	async Game_event_Event205_Act12(runtime, localVars)
+	async Game_event_Event206_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Gold");
 		if (success) {
@@ -92,7 +92,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event206_Act12(runtime, localVars)
+	async Game_event_Event207_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Silver");
 		if (success) {
@@ -110,7 +110,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event233_Act8(runtime, localVars)
+	async Game_event_Event234_Act8(runtime, localVars)
 	{
 		self.fetchNextAd();
 		
@@ -255,18 +255,18 @@ const scriptsInEvents = {
 		self.submitHighScore();
 	},
 
-	async Game_over_event_Event14_Act1(runtime, localVars)
+	async Game_over_event_Event15_Act1(runtime, localVars)
 	{
 		window.checkTokenBalance();
 	},
 
-	async Game_over_event_Event15_Act1(runtime, localVars)
+	async Game_over_event_Event16_Act1(runtime, localVars)
 	{
 		window.copyPrincipalToClipboard();
 		
 	},
 
-	async Game_over_event_Event16_Act2(runtime, localVars)
+	async Game_over_event_Event17_Act2(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
 		
@@ -743,6 +743,18 @@ const scriptsInEvents = {
 	async Wallet_event_Event25_Act5(runtime, localVars)
 	{
 		window.transferTokens();
+	},
+
+	async Game_over_event_Event11_Act1(runtime, localVars)
+	{
+		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
+		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
+		
+		const nameInput = nameBox ? nameBox.text.trim() : "";
+		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
+		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
+		
+		self.submitHighScore();
 	}
 };
 

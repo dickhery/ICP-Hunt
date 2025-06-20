@@ -1595,6 +1595,7 @@ self.C3_ExpressionFuncs = [
 			return () => (n0.ExpInstVar() + "_Fall");
 		},
 		() => "FlyAwaySound",
+		() => "Background",
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => (f0() - 100);
@@ -2023,18 +2024,11 @@ self.C3_ExpressionFuncs = [
 		() => 1630,
 		() => 590,
 		() => 20,
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => ((f0() / 2) - 380);
-		},
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => ((f0() / 2) - 140);
-		},
 		() => "Button_Restart",
 		() => "Payment",
 		() => "Button Submit Score",
 		() => 1400,
+		() => 893,
 		() => 820,
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
