@@ -77,12 +77,15 @@ thread_local! { static STATE: RefCell<State> = RefCell::new(State::default()); }
 /* helpers */
 fn with_state<R>(f: impl FnOnce(&State) -> R) -> R { STATE.with(|s| f(&s.borrow())) }
 fn with_state_mut<R>(f: impl FnOnce(&mut State) -> R) -> R { STATE.with(|s| f(&mut s.borrow_mut())) }
-fn add_log(caller:Principal, action:&str, amt:u64, idx:Option<u64>){
-    with_state_mut(|st| st.logs.push(LogEntry{
-        timestamp: api::time(),
-        caller, action: action.into(),
-        amount_e8s: amt, block_index: idx,
-    }));
+fn add_log(caller: Principal, action: &str, amt: u64, idx: Option<u64>) {
+  with_state_mut(|st| {
+    if st.logs.len() >= 1000 { st.logs.remove(0); }
+    st.logs.push(LogEntry {
+      timestamp: api::time(),
+      caller, action: action.into(),
+      amount_e8s: amt, block_index: idx,
+    });
+  });
 }
 
 /* ─────────── lifecycle hooks ─────────── */
