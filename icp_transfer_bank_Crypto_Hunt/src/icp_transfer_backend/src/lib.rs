@@ -17,14 +17,14 @@ const ALLOWED_CALLER: [&str; 2] = [
     "z5cfx-3yaaa-aaaam-aee3a-cai",
     "fa5ig-bkalm-nw7nw-k6i37-uowjc-7mcwv-3pcvm-5dm7z-5va6r-v7scb-hqe",
 ];
-const STATE_VERSION:  u8   = 1;             // bump on breaking State changes
+const STATE_VERSION: u8 = 1; // bump on breaking State changes
 
 /* ───────────── data types ──────────── */
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct TransferArgs {
-    to_principal : Principal,
+    to_principal: Principal,
     to_subaccount: Option<Subaccount>,
-    amount       : Tokens,
+    amount: Tokens,
 }
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
@@ -32,31 +32,31 @@ pub enum TransferResult { Ok(u64), Err(String) }
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 struct LogEntry {
-    timestamp   : u64,
-    caller      : Principal,
-    action      : String,
-    amount_e8s  : u64,
-    block_index : Option<u64>,
+    timestamp: u64,
+    caller: Principal,
+    action: String,
+    amount_e8s: u64,
+    block_index: Option<u64>,
 }
 
 /* ─────────── State (v1, current) ────────── */
 #[derive(Default, CandidType, Serialize, Deserialize, Clone, Debug)]
 #[serde(default)]
 struct State {
-    balances        : HashMap<Principal, u64>,
-    credited_blocks : HashSet<u64>,
-    logs            : Vec<LogEntry>,
-    silver_pot_e8s  : u64,
-    gold_pot_e8s    : u64,
-    high_score_pot_e8s : u64,
+    balances: HashMap<Principal, u64>,
+    credited_blocks: HashSet<u64>,
+    logs: Vec<LogEntry>,
+    silver_pot_e8s: u64,
+    gold_pot_e8s: u64,
+    high_score_pot_e8s: u64,
 }
 
 /* ─── legacy State (v0: *no* pot fields) ── */
 #[derive(Default, CandidType, Serialize, Deserialize, Clone, Debug)]
 struct StateV0 {
-    balances        : HashMap<Principal, u64>,
-    credited_blocks : HashSet<u64>,
-    logs            : Vec<LogEntry>,
+    balances: HashMap<Principal, u64>,
+    credited_blocks: HashSet<u64>,
+    logs: Vec<LogEntry>,
 }
 impl From<StateV0> for State {
     fn from(v0: StateV0) -> Self {
@@ -78,14 +78,14 @@ thread_local! { static STATE: RefCell<State> = RefCell::new(State::default()); }
 fn with_state<R>(f: impl FnOnce(&State) -> R) -> R { STATE.with(|s| f(&s.borrow())) }
 fn with_state_mut<R>(f: impl FnOnce(&mut State) -> R) -> R { STATE.with(|s| f(&mut s.borrow_mut())) }
 fn add_log(caller: Principal, action: &str, amt: u64, idx: Option<u64>) {
-  with_state_mut(|st| {
-    if st.logs.len() >= 1000 { st.logs.remove(0); }
-    st.logs.push(LogEntry {
-      timestamp: api::time(),
-      caller, action: action.into(),
-      amount_e8s: amt, block_index: idx,
+    with_state_mut(|st| {
+        if st.logs.len() >= 1000 { st.logs.remove(0); }
+        st.logs.push(LogEntry {
+            timestamp: api::time(),
+            caller, action: action.into(),
+            amount_e8s: amt, block_index: idx,
+        });
     });
-  });
 }
 
 /* ─────────── lifecycle hooks ─────────── */
@@ -118,9 +118,8 @@ fn post_upgrade() {
 }
 
 /* ─────── ledger-side verification ─────── */
-async fn verify_block(user:Principal, amount_e8s:u64,
-                      block_index:u64) -> Result<(),String> {
-    if with_state(|st| st.credited_blocks.contains(&block_index)){
+async fn verify_block(user: Principal, amount_e8s: u64, block_index: u64) -> Result<(), String> {
+    if with_state(|st| st.credited_blocks.contains(&block_index)) {
         return Err("block_index already credited".into());
     }
 
@@ -135,10 +134,10 @@ async fn verify_block(user:Principal, amount_e8s:u64,
 
     match blk.transaction.operation.as_ref().ok_or("operation missing")? {
         Operation::Transfer { from, to, amount, .. } => {
-            let expected_to   = AccountIdentifier::new(&ic_cdk::id(), &DEFAULT_SUBACCOUNT);
-            let expected_from = AccountIdentifier::new(&user,         &DEFAULT_SUBACCOUNT);
-            if to != &expected_to   { return Err("destination is not this canister".into()); }
-            if from != &expected_from{ return Err("source does not match user".into()); }
+            let expected_to = AccountIdentifier::new(&ic_cdk::id(), &DEFAULT_SUBACCOUNT);
+            let expected_from = AccountIdentifier::new(&user, &DEFAULT_SUBACCOUNT);
+            if to != &expected_to { return Err("destination is not this canister".into()); }
+            if from != &expected_from { return Err("source does not match user".into()); }
             if amount.e8s() != amount_e8s { return Err("amount mismatch".into()); }
         }
         _ => return Err("block is not a transfer".into()),
@@ -146,34 +145,57 @@ async fn verify_block(user:Principal, amount_e8s:u64,
     Ok(())
 }
 
-// ───────────────── public methods ──────────────────────
+/* ───────────────── public methods ────────────────────── */
 
 /// Secure **async** recordDeposit
+fn add_with_overflow_check(a: u64, b: u64) -> Option<u64> {
+    a.checked_add(b)
+}
+
 #[update]
 async fn recordDeposit(user: Principal, amount_e8s: u64, block_index: u64) -> bool {
     let caller = api::caller();
     match verify_block(user, amount_e8s, block_index).await {
         Ok(()) => {
-            let silver_add = 1_167_000; // 0.01167 ICP in e8s
-            let gold_add = 1_556_000;   // 0.01556 ICP ICP in e8s
-            let high_score_add = 778_000; // 0.00778 ICP in e8s
-            with_state_mut(|st| {
-                *st.balances.entry(user).or_default() += amount_e8s;
+            let silver_add = 1_167_000;
+            let gold_add = 1_556_000;
+            let high_score_add = 778_000;
+            let success = with_state_mut(|st| {
+                let new_balance = match add_with_overflow_check(*st.balances.entry(user).or_default(), amount_e8s) {
+                    Some(balance) => balance,
+                    None => return false, // Overflow occurred
+                };
+                st.balances.insert(user, new_balance);
                 st.credited_blocks.insert(block_index);
-                st.silver_pot_e8s += silver_add;
-                st.gold_pot_e8s += gold_add;
-                st.high_score_pot_e8s += high_score_add;
+                st.silver_pot_e8s = match add_with_overflow_check(st.silver_pot_e8s, silver_add) {
+                    Some(new_pot) => new_pot,
+                    None => return false, // Overflow occurred
+                };
+                st.gold_pot_e8s = match add_with_overflow_check(st.gold_pot_e8s, gold_add) {
+                    Some(new_pot) => new_pot,
+                    None => return false, // Overflow occurred
+                };
+                st.high_score_pot_e8s = match add_with_overflow_check(st.high_score_pot_e8s, high_score_add) {
+                    Some(new_pot) => new_pot,
+                    None => return false, // Overflow occurred
+                };
+                true
             });
-            add_log(caller, "recordDeposit", amount_e8s, Some(block_index));
-            add_log(caller, "autoAddSilver", silver_add, None);
-            add_log(caller, "autoAddGold", gold_add, None);
-            add_log(caller, "autoAddHighScore", high_score_add, None);
-            api::print(format!(
-                "[recordDeposit] {} +{} e8s (block {}) – ok",
-                user, amount_e8s, block_index
-            ));
-            true
-        }
+            if success {
+                add_log(caller, "recordDeposit", amount_e8s, Some(block_index));
+                add_log(caller, "autoAddSilver", silver_add, None);
+                add_log(caller, "autoAddGold", gold_add, None);
+                add_log(caller, "autoAddHighScore", high_score_add, None);
+                api::print(format!(
+                    "[recordDeposit] {} +{} e8s (block {}) – ok",
+                    user, amount_e8s, block_index
+                ));
+                true
+            } else {
+                api::print(format!("[recordDeposit] rejected: overflow occurred"));
+                false
+            }
+        },
         Err(e) => {
             api::print(format!("[recordDeposit] rejected: {}", e));
             false
@@ -226,7 +248,6 @@ fn is_allowed_caller(caller: &Principal) -> bool {
     ALLOWED_CALLER.contains(&caller.to_text().as_str())
 }
 
-
 /// Custodian-only ICP transfer
 #[update]
 async fn transfer(args: TransferArgs) -> Result<BlockIndex, String> {
@@ -256,23 +277,23 @@ async fn transfer(args: TransferArgs) -> Result<BlockIndex, String> {
 
 // ───────── audit + jackpot helpers (unchanged) ─────────
 #[query]
-fn getLogs() -> Vec<LogEntry>                 { with_state(|st| st.logs.clone()) }
+fn getLogs() -> Vec<LogEntry> { with_state(|st| st.logs.clone()) }
 #[query]
-fn getSilverPot() -> u64                      { with_state(|st| st.silver_pot_e8s) }
+fn getSilverPot() -> u64 { with_state(|st| st.silver_pot_e8s) }
 #[query]
-fn getGoldPot() -> u64                        { with_state(|st| st.gold_pot_e8s) }
+fn getGoldPot() -> u64 { with_state(|st| st.gold_pot_e8s) }
 #[query]
-fn getTotalPot() -> u64                       { with_state(|st| st.silver_pot_e8s + st.gold_pot_e8s) }
+fn getTotalPot() -> u64 { with_state(|st| st.silver_pot_e8s + st.gold_pot_e8s) }
 
 #[update]
-fn addToSilverPot(amount_e8s: u64) -> bool    { pot_add(amount_e8s, true) }
+fn addToSilverPot(amount_e8s: u64) -> bool { pot_add(amount_e8s, true) }
 #[update]
-fn addToGoldPot(amount_e8s: u64)   -> bool    { pot_add(amount_e8s, false) }
+fn addToGoldPot(amount_e8s: u64) -> bool { pot_add(amount_e8s, false) }
 
 #[update]
-async fn resetSilverPot() -> bool             { pot_reset(15_000_000, true) }
+async fn resetSilverPot() -> bool { pot_reset(15_000_000, true) }
 #[update]
-async fn resetGoldPot() -> bool               { pot_reset(150_000_000, false) }
+async fn resetGoldPot() -> bool { pot_reset(150_000_000, false) }
 
 // internal helpers for pots
 fn pot_add(amount: u64, silver: bool) -> bool {
@@ -289,7 +310,7 @@ fn pot_reset(amount: u64, silver: bool) -> bool {
     if !is_allowed_caller(&caller) { return false; }
     with_state_mut(|st| {
         if silver { st.silver_pot_e8s = 15_000_000; } // Changed from 25_000_000 - 0.15 ICP
-        else { st.gold_pot_e8s = 150_000_000; }      // Changed from 250_000_000 - 1.5 ICP
+        else { st.gold_pot_e8s = 150_000_000; } // Changed from 250_000_000 - 1.5 ICP
     });
     add_log(caller, if silver { "resetSilver" } else { "resetGold" }, amount, None);
     true
