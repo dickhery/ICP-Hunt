@@ -255,6 +255,18 @@ const scriptsInEvents = {
 		self.submitHighScore();
 	},
 
+	async Game_over_event_Event11_Act1(runtime, localVars)
+	{
+		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
+		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
+		
+		const nameInput = nameBox ? nameBox.text.trim() : "";
+		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
+		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
+		
+		self.submitHighScore();
+	},
+
 	async Game_over_event_Event15_Act1(runtime, localVars)
 	{
 		window.checkTokenBalance();
@@ -743,18 +755,6 @@ const scriptsInEvents = {
 	async Wallet_event_Event25_Act5(runtime, localVars)
 	{
 		window.transferTokens();
-	},
-
-	async Game_over_event_Event11_Act1(runtime, localVars)
-	{
-		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
-		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
-		
-		const nameInput = nameBox ? nameBox.text.trim() : "";
-		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
-		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
-		
-		self.submitHighScore();
 	}
 };
 

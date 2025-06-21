@@ -45,6 +45,7 @@ import {
   icpTransfer_withdraw,
   icpTransfer_getBalanceOf,
   icpTransfer_getMyBalance,
+  sha256,
   AuthClient,
   Principal
 } from "./ic_ad_network_bundle.js";
@@ -870,23 +871,36 @@ self.submitHighScore = async function () {
     setStatusMessage("Please authenticate first!");
     return;
   }
-
   try {
     const name = runtimeGlobal.globalVars.PlayerNameInput;
     const email = runtimeGlobal.globalVars.PlayerEmailInput;
     const score = runtimeGlobal.globalVars.Score;
     const token = window.currentRoundToken;
-
+    
+    // Generate session token client-side (must match backend logic)
+    const sessionToken = generateSessionToken(
+      runtimeGlobal.globalVars.currentPrincipal,
+      token,
+      score,
+      name,
+      email
+    );
+    
     setStatusMessage(`Submitting secure high score ${score}…`);
-
-    const ok = await custodian_addHighScoreSecure(name, email, score, token);
+    const ok = await custodian_addHighScoreSecure(name, email, score, token, sessionToken);
     if (ok) setStatusMessage("High score accepted!");
     else setStatusMessage("High score rejected (token or score invalid).");
-
   } catch (err) {
     console.error("submitHighScore:", err);
     setStatusMessage("Error submitting high score: " + err.message);
   }
+};
+
+// Function to generate session token client-side using SHA-256
+function generateSessionToken(principal, roundToken, score, name, email) {
+  const seed = principal + roundToken.toString() + score.toString() + name + email;
+  const hash = sha256(seed); // Returns a hexadecimal string
+  return hash;
 };
 
 self.loadHighScores = async function () {
