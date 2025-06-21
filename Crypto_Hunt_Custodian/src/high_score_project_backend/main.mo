@@ -429,19 +429,17 @@ actor {
   roundToken : Nat,
 ) : async Bool {
   if (duckType != "Gold" and duckType != "Silver") return false;
-
   if (isWinInProgress(caller)) return false;
   setWinInProgress(caller, true);
-
-  var result = false; // Changed to var for mutability
+  var result = false;
   try {
     let playerState = getPlayerState(caller);
-    if (roundToken == playerState.lastRoundToken) { // Proceed only if round token matches
+    if (roundToken == playerState.lastRoundToken) {
       let now = Time.now();
       let lastWinTs = getLastWinTimestamp(caller);
-      if (lastWinTs == 0 or now - lastWinTs >= 10_000_000_000) { // Cooldown check
+      if (lastWinTs == 0 or now - lastWinTs >= 10_000_000_000) {
         if ((duckType == "Gold" and playerState.goldWinInRound != ?roundToken) or
-            (duckType == "Silver" and playerState.silverWinInRound != ?roundToken)) { // Check if not already won
+            (duckType == "Silver" and playerState.silverWinInRound != ?roundToken)) {
           var amountE8s : Nat = 0;
           if (deriveFromPot) {
             amountE8s := if (duckType == "Gold") {
@@ -471,14 +469,14 @@ actor {
             lastSilverWinner := ?caller;
           };
           setLastWinTimestamp(caller, now);
-          result := true; // Set to true only if all conditions pass
+          result := true;
         };
       };
     };
   } catch (e) {
-    result := false; // Set to false if an error occurs
+    result := false;
   } finally {
-    setWinInProgress(caller, false); // Always release the guard
+    setWinInProgress(caller, false);
   };
   result
 };

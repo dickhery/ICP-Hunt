@@ -4,6 +4,7 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { AuthClient } from "@dfinity/auth-client";
 import { Principal } from "@dfinity/principal";
+import { sha256 } from 'js-sha256';
 
 // === IMPORT YOUR AD NETWORK CANISTER ===
 import {
@@ -53,6 +54,7 @@ export {
   ledgerActor,
   icpTransferActor,
   highScoreActor,
+  sha256,
 };
 
 export function getCurrentIdentity() {
