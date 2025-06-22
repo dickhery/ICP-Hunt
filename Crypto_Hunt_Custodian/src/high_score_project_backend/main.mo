@@ -71,6 +71,8 @@ actor {
   let HIGH_SCORE_ADD : Nat64 = 778_000; // 0.00778 ICP in e8s
 
   stable var storedPassword : Text = "";
+  stable var sessionTokens : [(Principal, Text)] = [];
+  stable var usedTokens : [Nat] = [];
 
   stable var roundsSinceGoldWin : Nat = 0;
   stable var roundsSinceSilverWin : Nat = 0;
@@ -305,19 +307,20 @@ actor {
   };
 
   public shared ({ caller }) func incRoundCounters() : async Nat {
+    let seed = await Random.blob();
+    let rng = Random.Finite(seed);
+    let newToken = switch (rng.range(32)) {
+      case (?n) { n };
+      case null { 0 }; // Fallback
+    };
     let playerState = getPlayerState(caller);
-    let newToken = playerState.lastRoundToken + 1;
-    let newCurrentGameRounds = playerState.currentGameRounds + 1;
-    updatePlayerState(
-      caller,
-      {
-        lastRoundToken = newToken;
-        goldWinInRound = playerState.goldWinInRound;
-        silverWinInRound = playerState.silverWinInRound;
-        currentGameRounds = newCurrentGameRounds;
-        maxAllowedScore = playerState.maxAllowedScore;
-      },
-    );
+    updatePlayerState(caller, {
+      lastRoundToken = newToken;
+      goldWinInRound = playerState.goldWinInRound;
+      silverWinInRound = playerState.silverWinInRound;
+      currentGameRounds = playerState.currentGameRounds + 1;
+      maxAllowedScore = playerState.maxAllowedScore;
+    });
     roundsSinceGoldWin += 1;
     roundsSinceSilverWin += 1;
     currentRoundToken += 1;
@@ -385,27 +388,32 @@ actor {
     email : Text,
     score : Int,
     roundToken : Nat,
+    sessionToken : Text
   ) : async Bool {
     let playerState = getPlayerState(caller);
-    if (roundToken != playerState.lastRoundToken) { return false };
+    if (roundToken != playerState.lastRoundToken) return false;
+    if (Array.indexOf<Nat>(roundToken, usedTokens, func (a, b) { a == b }) != null) return false; // Prevent replay
+    if (score < 0 or score > playerState.maxAllowedScore) return false;
 
-    if (score < 0 or score > playerState.maxAllowedScore) { return false };
+    // Validate session token
+    let expectedSeed = Principal.toText(caller) # Nat.toText(roundToken) # Int.toText(score) # name # email;
+    let expectedHash = Text.hash(expectedSeed); // Simple hash for demo; use a secure hash in production
+    if (sessionToken != expectedHash) return false;
 
     let result = await highScoreActor.addHighScore(caller, name, email, score);
     if (result) {
-      updatePlayerState(
-        caller,
-        {
-          lastRoundToken = playerState.lastRoundToken;
-          goldWinInRound = playerState.goldWinInRound;
-          silverWinInRound = playerState.silverWinInRound;
-          currentGameRounds = playerState.currentGameRounds;
-          maxAllowedScore = 0;
-        },
-      );
+      usedTokens := Array.append(usedTokens, [roundToken]);
+      updatePlayerState(caller, {
+        lastRoundToken = playerState.lastRoundToken;
+        goldWinInRound = playerState.goldWinInRound;
+        silverWinInRound = playerState.silverWinInRound;
+        currentGameRounds = playerState.currentGameRounds;
+        maxAllowedScore = 0;
+      });
     };
     result;
   };
+
 
   public shared (msg) func addHighScore(
     name : Text,

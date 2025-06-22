@@ -15,7 +15,7 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     'addHighScore' : IDL.Func([IDL.Text, IDL.Text, IDL.Int], [IDL.Bool], []),
     'addHighScoreSecure' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Int, IDL.Nat],
+        [IDL.Text, IDL.Text, IDL.Int, IDL.Nat, IDL.Text],
         [IDL.Bool],
         [],
       ),

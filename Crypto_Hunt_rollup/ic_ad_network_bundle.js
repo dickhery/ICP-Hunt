@@ -23501,7 +23501,7 @@ const idlFactory$2 = ({ IDL }) => {
   return IDL.Service({
     'addHighScore' : IDL.Func([IDL.Text, IDL.Text, IDL.Int], [IDL.Bool], []),
     'addHighScoreSecure' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Int, IDL.Nat],
+        [IDL.Text, IDL.Text, IDL.Int, IDL.Nat, IDL.Text],
         [IDL.Bool],
         [],
       ),
@@ -23995,14 +23995,16 @@ async function custodian_addHighScoreSecure(
   playerName,
   playerEmail,
   playerScore,
-  roundToken
+  roundToken,
+  sessionToken
 ) {
   checkCustodianActor();
   return await custodianActor.addHighScoreSecure(
     playerName,
     playerEmail,
     playerScore,
-    roundToken
+    roundToken,
+    sessionToken
   );
 }
 

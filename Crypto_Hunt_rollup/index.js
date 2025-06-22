@@ -406,14 +406,16 @@ export async function custodian_addHighScoreSecure(
   playerName,
   playerEmail,
   playerScore,
-  roundToken
+  roundToken,
+  sessionToken
 ) {
   checkCustodianActor();
   return await custodianActor.addHighScoreSecure(
     playerName,
     playerEmail,
     playerScore,
-    roundToken
+    roundToken,
+    sessionToken
   );
 }
 
