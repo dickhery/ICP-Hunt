@@ -876,16 +876,10 @@ self.submitHighScore = async function () {
     const email = runtimeGlobal.globalVars.PlayerEmailInput;
     const score = runtimeGlobal.globalVars.Score;
     const token = window.currentRoundToken;
-    
-    // Generate session token client-side (must match backend logic)
-    const sessionToken = generateSessionToken(
-      runtimeGlobal.globalVars.currentPrincipal,
-      token,
-      score,
-      name,
-      email
-    );
-    
+
+    const principal = runtimeGlobal.globalVars.currentPrincipal;
+    const sessionToken = generateSessionToken(principal, token, score, name, email);
+
     setStatusMessage(`Submitting secure high score ${score}…`);
     const ok = await custodian_addHighScoreSecure(name, email, score, token, sessionToken);
     if (ok) setStatusMessage("High score accepted!");
@@ -899,7 +893,7 @@ self.submitHighScore = async function () {
 // Function to generate session token client-side using SHA-256
 function generateSessionToken(principal, roundToken, score, name, email) {
   const seed = principal + roundToken.toString() + score.toString() + name + email;
-  const hash = sha256(seed); // Returns a hexadecimal string
+  const hash = sha256(seed); // Using js-sha256
   return hash;
 };
 

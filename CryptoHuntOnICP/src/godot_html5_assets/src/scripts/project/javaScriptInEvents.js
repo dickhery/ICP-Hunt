@@ -259,11 +259,9 @@ const scriptsInEvents = {
 	{
 		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
 		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
-		
 		const nameInput = nameBox ? nameBox.text.trim() : "";
 		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
 		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
-		
 		self.submitHighScore();
 	},
 
