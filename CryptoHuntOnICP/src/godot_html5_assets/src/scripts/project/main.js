@@ -575,13 +575,69 @@ self.validatePromoCode = async function () {
   }
 };
 
+// Add this function to fetch active promo codes
+self.getActivePromoCodes = async function() {
+  if (!window.custodianActor) {
+    setStatusMessage("Custodian actor not initialized.");
+    return [];
+  }
+  try {
+    const codes = await window.custodianActor.getActivePromoCodes();
+    return codes;
+  } catch (err) {
+    console.error("getActivePromoCodes error:", err);
+    setStatusMessage("Error fetching active promo codes: " + err.message);
+    return [];
+  }
+};
+
+// Add this function to fetch and update global variables
+self.fetchActivePromoCodes = async function() {
+  const codes = await self.getActivePromoCodes();
+  runtimeGlobal.globalVars.ActivePromoCodesCount = codes.length;
+  runtimeGlobal.globalVars.ActivePromoCodes = codes.join("\n");
+};
+
+// Add this function to copy the generated promo code
+self.copyGeneratedPromoCode = async function() {
+  const code = runtimeGlobal.globalVars.GeneratedPromoCode;
+  if (!code) {
+    setStatusMessage("No promo code to copy.");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(code);
+    setStatusMessage("Promo code copied to clipboard!");
+  } catch (err) {
+    console.error("Copy to clipboard error:", err);
+    setStatusMessage("Error copying to clipboard: " + err.message);
+  }
+};
+
+// Add this function to copy all active promo codes
+self.copyAllActivePromoCodes = async function() {
+  const codes = runtimeGlobal.globalVars.ActivePromoCodes;
+  if (!codes) {
+    setStatusMessage("No active promo codes to copy.");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(codes);
+    setStatusMessage("All active promo codes copied to clipboard!");
+  } catch (err) {
+    console.error("Copy to clipboard error:", err);
+    setStatusMessage("Error copying to clipboard: " + err.message);
+  }
+};
+
+// Modify the existing generatePromoCode function
 self.generatePromoCode = async function () {
   if (!runtimeGlobal || !window.custodianActor) return;
   try {
     const code = await window.custodianActor.generatePromoCode();
+    runtimeGlobal.globalVars.GeneratedPromoCode = code; // Set global variable
     setStatusMessage("Generated promo code: " + code);
-    const promoText = runtimeGlobal.objects.GeneratedPromoCode?.getFirstInstance();
-    if (promoText) promoText.text = code;
+    await self.fetchActivePromoCodes(); // Refresh the list after generation
   } catch (err) {
     console.error("generatePromoCode error:", err);
     setStatusMessage("Error generating promo code: " + err.message);

@@ -197,6 +197,13 @@ actor {
     };
   };
 
+  public query ({ caller }) func getActivePromoCodes() : async [Text] {
+  if (caller != custodianPrincipal) {
+    throw Error.reject("Only admin can view active promo codes");
+  };
+  return promoCodes;
+};
+
   // Helper to check/set reentrancy guard
   private func isWinInProgress(pid : Principal) : Bool {
     switch (Array.find(ongoingWins, func((p, _) : (Principal, Bool)) : Bool { p == pid })) {

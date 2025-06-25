@@ -23509,6 +23509,7 @@ const idlFactory$2 = ({ IDL }) => {
     'awardHighScorePot' : IDL.Func([], [IDL.Bool], []),
     'awardSilverPotToCaller' : IDL.Func([], [IDL.Bool], []),
     'generatePromoCode' : IDL.Func([], [IDL.Text], []),
+    'getActivePromoCodes' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getCurrentAverageRounds' : IDL.Func([], [IDL.Float64], ['query']),
     'getGoldDuckOdds' : IDL.Func([], [IDL.Float64], ['query']),
     'getGoldPot' : IDL.Func([], [IDL.Nat64], []),
