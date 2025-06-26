@@ -54,6 +54,7 @@ let authMethod = null; // "Plug" | "InternetIdentity" | null
 let runtimeGlobal;
 let messageQueue = [];
 let isDisplayingMessage = false;
+let activePromoCodes = [];
 
 const DECIMALS = 8;
 
@@ -592,10 +593,42 @@ self.getActivePromoCodes = async function() {
 };
 
 // Add this function to fetch and update global variables
-self.fetchActivePromoCodes = async function() {
-  const codes = await self.getActivePromoCodes();
-  runtimeGlobal.globalVars.ActivePromoCodesCount = codes.length;
-  runtimeGlobal.globalVars.ActivePromoCodes = codes.join("\n");
+self.fetchActivePromoCodes = async function () {
+  if (!runtimeGlobal || !window.custodianActor) return;
+  try {
+    activePromoCodes = await window.custodianActor.getActivePromoCodes();
+    runtimeGlobal.globalVars.ActivePromoCodesCount = activePromoCodes.length;
+    window.updatePromoCodeList();
+    setStatusMessage(`Fetched ${activePromoCodes.length} active promo code(s).`);
+  } catch (err) {
+    console.error("fetchActivePromoCodes error:", err);
+    setStatusMessage("Error fetching active promo codes: " + err.message);
+  }
+};
+
+window.updatePromoCodeList = function() {
+  if (!runtimeGlobal) return;
+  const listInstance = runtimeGlobal.objects.PromoCodeList.getFirstInstance();
+  if (!listInstance) return;
+
+  const nowMs = Date.now();
+  listInstance.clear();
+  activePromoCodes.forEach(({code, expiration}) => {
+    const expirationNs = BigInt(expiration);
+    const expirationMs = Number(expirationNs / 1_000_000n);
+    const remainingMs = expirationMs - nowMs;
+    if (remainingMs > 0) {
+      const remainingSeconds = Math.floor(remainingMs / 1000);
+      const days = Math.floor(remainingSeconds / 86400);
+      const hours = Math.floor((remainingSeconds % 86400) / 3600);
+      const minutes = Math.floor((remainingSeconds % 3600) / 60);
+      const seconds = remainingSeconds % 60;
+      const timeStr = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      listInstance.addItem(`${code} - ${timeStr}`);
+    } else {
+      listInstance.addItem(`${code} - Expired`);
+    }
+  });
 };
 
 // Add this function to copy the generated promo code
@@ -616,7 +649,7 @@ self.copyGeneratedPromoCode = async function() {
 
 // Add this function to copy all active promo codes
 self.copyAllActivePromoCodes = async function() {
-  const codes = runtimeGlobal.globalVars.ActivePromoCodes;
+  const codes = activePromoCodes.map(pc => pc.code).join("\n");
   if (!codes) {
     setStatusMessage("No active promo codes to copy.");
     return;
@@ -635,14 +668,30 @@ self.generatePromoCode = async function () {
   if (!runtimeGlobal || !window.custodianActor) return;
   try {
     const code = await window.custodianActor.generatePromoCode();
-    runtimeGlobal.globalVars.GeneratedPromoCode = code; // Set global variable
+    runtimeGlobal.globalVars.GeneratedPromoCode = code;
     setStatusMessage("Generated promo code: " + code);
-    await self.fetchActivePromoCodes(); // Refresh the list after generation
+    activePromoCodes = await window.custodianActor.getActivePromoCodes();
+    window.updatePromoCodeList();
   } catch (err) {
     console.error("generatePromoCode error:", err);
     setStatusMessage("Error generating promo code: " + err.message);
   }
 };
+
+self.getCanisterBalance = async function () {
+  if (!runtimeGlobal) return;
+  try {
+    const canisterPrincipal = Principal.fromText("sphs3-ayaaa-aaaah-arajq-cai");
+    const balanceE8s = await ledger_balanceOf(canisterPrincipal, null);
+    const balanceIcp = Number(balanceE8s) / 1e8;
+    runtimeGlobal.globalVars.CanisterBalance = balanceIcp;
+    setStatusMessage(`Canister Balance: ${balanceIcp.toFixed(4)} ICP`);
+  } catch (err) {
+    console.error("getCanisterBalance error:", err);
+    setStatusMessage("Error fetching canister balance: " + err.message);
+  }
+};
+window.getCanisterBalance = self.getCanisterBalance;
 
 self.withdrawIcp = async function () {
   if (!runtimeGlobal) return;

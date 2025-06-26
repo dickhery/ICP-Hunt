@@ -96,7 +96,25 @@ actor {
     nonce : Nat; // Unique nonce for the win
   };
 
+  type PromoCode = { code : Text; expiration : Time.Time };
+
+  stable var _old_promoCodes : [Text] = [];
   stable var promoCodes : [Text] = [];
+  stable var promoCodeRecords : [PromoCode] = [];
+
+  system func postupgrade() {
+    let defaultExpiry = Time.now() + (7 * 24 * 3600 * 1_000_000_000); // 7 days from upgrade
+
+    // Convert every legacy string into a full record with the default expiry.
+    promoCodeRecords := Array.map<Text, PromoCode>(
+      Array.append(promoCodes, _old_promoCodes),
+      func(c : Text) : PromoCode { { code = c; expiration = defaultExpiry } },
+    );
+
+    // We don’t need the text-only lists any more – clear them to save space.
+    promoCodes := [];
+    _old_promoCodes := [];
+  };
 
   type PlayerRoundState = {
     lastRoundToken : Nat;
@@ -142,67 +160,85 @@ actor {
   };
 
   public shared ({ caller }) func generatePromoCode() : async Text {
-    if (caller != custodianPrincipal) {
-      throw Error.reject("Only admin can generate promo codes");
-    };
-
-    let seed = await Random.blob();
-    let rng = Random.Finite(seed);
-    let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let charsArray = Text.toArray(chars);
-    var code = "";
-    for (_ in Iter.range(0, 11)) {
-      // 12 characters
-      switch (rng.range(5)) {
-        case (?n) {
-          let index = n % 36;
-          code := code # Text.fromChar(charsArray[index]);
-        };
-        case null {
-          throw Error.reject("Random number generation failed");
-        };
-      };
-    };
-
-    // Ensure uniqueness
-    while (Array.find(promoCodes, func(c : Text) : Bool { c == code }) != null) {
-      switch (rng.range(5)) {
-        case (?n) {
-          let index = n % 36;
-          code := code # Text.fromChar(charsArray[index]);
-        };
-        case null {
-          throw Error.reject("Random number generation failed");
-        };
-      };
-    };
-
-    promoCodes := Array.append(promoCodes, [code]);
-    return code;
+  if (caller != custodianPrincipal) {
+    throw Error.reject("Only admin can generate promo codes");
   };
 
+  // will hold the unique code we end up with
+  var unique : Text = "";
+
+  // ── labelled retry-loop ───────────────────────────────────────────────
+  label retry loop {
+    // 1. generate a candidate --------------------------------------------------
+    let seed      = await Random.blob();
+    let rng       = Random.Finite(seed);
+    let charset   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let chars     = Text.toArray(charset);
+
+    var code : Text = "";
+    for (_ in Iter.range(0, 11)) {
+      switch (rng.range(5)) {
+        case (?n) { code := code # Text.fromChar(chars[n % 36]) };
+        case null  { throw Error.reject("RNG failed") };
+      };
+    };
+
+    // 2. if already present → try again ---------------------------------------
+    if (
+      Array.find<PromoCode>(
+        promoCodeRecords,
+        func (r : PromoCode) : Bool { r.code == code },
+      ) != null
+    ) { continue retry };
+
+    // 3. persist and break out -------------------------------------------------
+    let expiration = Time.now() + (7 * 24 * 3600 * 1_000_000_000);   // 7 days
+    promoCodeRecords := Array.append(
+      promoCodeRecords,
+      [{ code = code; expiration }],
+    );
+
+    unique := code;
+    break retry;                      // leave the loop
+  };
+
+  // 4. finally return the collected value – this is a Text, so the
+  //    function body type matches its signature.
+  unique
+};
+
   public shared func validatePromoCode(code : Text) : async Bool {
-    let index = Array.indexOf(code, promoCodes, Text.equal);
-    switch (index) {
-      case (?i) {
-        promoCodes := Array.filter(promoCodes, func(c : Text) : Bool { c != code });
+    let now = Time.now();
+    let maybeRec = Array.find<PromoCode>(
+      promoCodeRecords,
+      func(r : PromoCode) : Bool { r.code == code and now < r.expiration },
+    );
+    switch (maybeRec) {
+      case (?_) {
+        // remove it so it can’t be reused
+        promoCodeRecords := Array.filter<PromoCode>(
+          promoCodeRecords,
+          func(r : PromoCode) : Bool { r.code != code },
+        );
         ignore tokenTransferActor.addToSilverPot(SILVER_ADD);
         ignore tokenTransferActor.addToGoldPot(GOLD_ADD);
         ignore tokenTransferActor.addToHighScorePot(HIGH_SCORE_ADD);
-        return true;
+        true;
       };
-      case null {
-        return false;
-      };
+      case null false;
     };
   };
 
-  public query ({ caller }) func getActivePromoCodes() : async [Text] {
-  if (caller != custodianPrincipal) {
-    throw Error.reject("Only admin can view active promo codes");
+  public query ({ caller }) func getActivePromoCodes() : async [PromoCode] {
+    // richer output now
+    if (caller != custodianPrincipal) throw Error.reject("Only admin can view active promo codes");
+
+    let now = Time.now();
+    Array.filter<PromoCode>(
+      promoCodeRecords,
+      func(r : PromoCode) : Bool { now < r.expiration },
+    );
   };
-  return promoCodes;
-};
 
   // Helper to check/set reentrancy guard
   private func isWinInProgress(pid : Principal) : Bool {
@@ -321,13 +357,16 @@ actor {
       case null { 0 }; // Fallback
     };
     let playerState = getPlayerState(caller);
-    updatePlayerState(caller, {
-      lastRoundToken = newToken;
-      goldWinInRound = playerState.goldWinInRound;
-      silverWinInRound = playerState.silverWinInRound;
-      currentGameRounds = playerState.currentGameRounds + 1;
-      maxAllowedScore = playerState.maxAllowedScore;
-    });
+    updatePlayerState(
+      caller,
+      {
+        lastRoundToken = newToken;
+        goldWinInRound = playerState.goldWinInRound;
+        silverWinInRound = playerState.silverWinInRound;
+        currentGameRounds = playerState.currentGameRounds + 1;
+        maxAllowedScore = playerState.maxAllowedScore;
+      },
+    );
     roundsSinceGoldWin += 1;
     roundsSinceSilverWin += 1;
     currentRoundToken += 1;
@@ -395,11 +434,11 @@ actor {
     email : Text,
     score : Int,
     roundToken : Nat,
-    sessionToken : Text
+    sessionToken : Text,
   ) : async Bool {
     let playerState = getPlayerState(caller);
     if (roundToken != playerState.lastRoundToken) return false;
-    if (Array.indexOf<Nat>(roundToken, usedTokens, func (a, b) { a == b }) != null) return false; // Prevent replay
+    if (Array.indexOf<Nat>(roundToken, usedTokens, func(a, b) { a == b }) != null) return false; // Prevent replay
     if (score < 0 or score > playerState.maxAllowedScore) return false;
 
     // Validate session token
@@ -410,17 +449,19 @@ actor {
     let result = await highScoreActor.addHighScore(caller, name, email, score);
     if (result) {
       usedTokens := Array.append(usedTokens, [roundToken]);
-      updatePlayerState(caller, {
-        lastRoundToken = playerState.lastRoundToken;
-        goldWinInRound = playerState.goldWinInRound;
-        silverWinInRound = playerState.silverWinInRound;
-        currentGameRounds = playerState.currentGameRounds;
-        maxAllowedScore = 0;
-      });
+      updatePlayerState(
+        caller,
+        {
+          lastRoundToken = playerState.lastRoundToken;
+          goldWinInRound = playerState.goldWinInRound;
+          silverWinInRound = playerState.silverWinInRound;
+          currentGameRounds = playerState.currentGameRounds;
+          maxAllowedScore = 0;
+        },
+      );
     };
     result;
   };
-
 
   public shared (msg) func addHighScore(
     name : Text,
@@ -439,62 +480,70 @@ actor {
   };
 
   public shared ({ caller }) func recordDuckWinSecure(
-  duckType : Text,
-  deriveFromPot : Bool,
-  roundToken : Nat,
-) : async Bool {
-  if (duckType != "Gold" and duckType != "Silver") return false;
-  if (isWinInProgress(caller)) return false;
-  setWinInProgress(caller, true);
-  var result = false;
-  try {
-    let playerState = getPlayerState(caller);
-    if (roundToken == playerState.lastRoundToken) {
-      let now = Time.now();
-      let lastWinTs = getLastWinTimestamp(caller);
-      if (lastWinTs == 0 or now - lastWinTs >= 10_000_000_000) {
-        if ((duckType == "Gold" and playerState.goldWinInRound != ?roundToken) or
-            (duckType == "Silver" and playerState.silverWinInRound != ?roundToken)) {
-          var amountE8s : Nat = 0;
-          if (deriveFromPot) {
-            amountE8s := if (duckType == "Gold") {
-              Nat64.toNat(await tokenTransferActor.getGoldPot());
-            } else {
-              Nat64.toNat(await tokenTransferActor.getSilverPot());
+    duckType : Text,
+    deriveFromPot : Bool,
+    roundToken : Nat,
+  ) : async Bool {
+    if (duckType != "Gold" and duckType != "Silver") return false;
+    if (isWinInProgress(caller)) return false;
+    setWinInProgress(caller, true);
+    var result = false;
+    try {
+      let playerState = getPlayerState(caller);
+      if (roundToken == playerState.lastRoundToken) {
+        let now = Time.now();
+        let lastWinTs = getLastWinTimestamp(caller);
+        if (lastWinTs == 0 or now - lastWinTs >= 10_000_000_000) {
+          if (
+            (duckType == "Gold" and playerState.goldWinInRound != ?roundToken) or
+            (duckType == "Silver" and playerState.silverWinInRound != ?roundToken)
+          ) {
+            var amountE8s : Nat = 0;
+            if (deriveFromPot) {
+              amountE8s := if (duckType == "Gold") {
+                Nat64.toNat(await tokenTransferActor.getGoldPot());
+              } else {
+                Nat64.toNat(await tokenTransferActor.getSilverPot());
+              };
             };
+            let nonce = incrementWinNonce(caller);
+            let entry : WinLog = {
+              pid = caller;
+              duckType;
+              amount = amountE8s;
+              ts = now;
+              nonce;
+            };
+            winLogs := Array.append(winLogs, [entry]);
+            let updatedState = {
+              currentGameRounds = playerState.currentGameRounds;
+              lastRoundToken = playerState.lastRoundToken;
+              goldWinInRound = if (duckType == "Gold") ?roundToken else playerState.goldWinInRound;
+              silverWinInRound = if (duckType == "Silver") ?roundToken else playerState.silverWinInRound;
+              maxAllowedScore = playerState.maxAllowedScore;
+            };
+            updatePlayerState(caller, updatedState);
+            if (duckType == "Gold") {
+              roundsSinceGoldWin := 0;
+              lastGoldWinTs := now;
+              lastGoldWinner := ?caller;
+            } else {
+              roundsSinceSilverWin := 0;
+              lastSilverWinTs := now;
+              lastSilverWinner := ?caller;
+            };
+            setLastWinTimestamp(caller, now);
+            result := true;
           };
-          let nonce = incrementWinNonce(caller);
-          let entry : WinLog = { pid = caller; duckType; amount = amountE8s; ts = now; nonce };
-          winLogs := Array.append(winLogs, [entry]);
-          let updatedState = {
-            currentGameRounds = playerState.currentGameRounds;
-            lastRoundToken = playerState.lastRoundToken;
-            goldWinInRound = if (duckType == "Gold") ?roundToken else playerState.goldWinInRound;
-            silverWinInRound = if (duckType == "Silver") ?roundToken else playerState.silverWinInRound;
-            maxAllowedScore = playerState.maxAllowedScore;
-          };
-          updatePlayerState(caller, updatedState);
-          if (duckType == "Gold") {
-            roundsSinceGoldWin := 0;
-            lastGoldWinTs := now;
-            lastGoldWinner := ?caller;
-          } else {
-            roundsSinceSilverWin := 0;
-            lastSilverWinTs := now;
-            lastSilverWinner := ?caller;
-          };
-          setLastWinTimestamp(caller, now);
-          result := true;
         };
       };
+    } catch (e) {
+      result := false;
+    } finally {
+      setWinInProgress(caller, false);
     };
-  } catch (e) {
-    result := false;
-  } finally {
-    setWinInProgress(caller, false);
+    result;
   };
-  result
-};
 
   public func oneInNSecure(n : Nat) : async Bool {
     let seed = await Random.blob();

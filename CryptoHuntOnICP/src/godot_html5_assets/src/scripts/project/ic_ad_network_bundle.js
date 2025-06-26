@@ -23491,6 +23491,7 @@ const idlFactory$3 = ({ IDL }) => {
 
 const idlFactory$2 = ({ IDL }) => {
   const Time = IDL.Int;
+  const PromoCode = IDL.Record({ 'code' : IDL.Text, 'expiration' : Time });
   const WinLog = IDL.Record({
     'ts' : IDL.Int,
     'pid' : IDL.Principal,
@@ -23509,7 +23510,7 @@ const idlFactory$2 = ({ IDL }) => {
     'awardHighScorePot' : IDL.Func([], [IDL.Bool], []),
     'awardSilverPotToCaller' : IDL.Func([], [IDL.Bool], []),
     'generatePromoCode' : IDL.Func([], [IDL.Text], []),
-    'getActivePromoCodes' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+    'getActivePromoCodes' : IDL.Func([], [IDL.Vec(PromoCode)], ['query']),
     'getCurrentAverageRounds' : IDL.Func([], [IDL.Float64], ['query']),
     'getGoldDuckOdds' : IDL.Func([], [IDL.Float64], ['query']),
     'getGoldPot' : IDL.Func([], [IDL.Nat64], []),
