@@ -449,12 +449,16 @@ self.depositIcpForUser = async function () {
     const user = Principal.fromText(principalString);
 
     setStatusMessage("Requesting ledger transfer (0.05 ICP) …");
-    const transferResult = await ledger_transfer({
+    const transferPromise = ledger_transfer({
       fromSubaccount: null,
       toPrincipal: Principal.fromText("sphs3-ayaaa-aaaah-arajq-cai"),
       toSubaccount: null,
       amount: depositAmountE8s,
     });
+    const transferTimeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Transfer timed out after 30s")), 30000) // Increased to 30s
+    );
+    const transferResult = await Promise.race([transferPromise, transferTimeout]);
 
     if ("Err" in transferResult) {
       let errorMessage = "Payment failed: ";
@@ -470,29 +474,15 @@ self.depositIcpForUser = async function () {
     }
 
     const blockIndex = transferResult.Ok;
-    setStatusMessage(`Ledger transfer ✓ (block #${blockIndex}). Confirming deposit…`);
+    setStatusMessage(`Ledger transfer ✓ (block #${blockIndex}). Starting game…`);
+    console.log(`Transfer succeeded at block ${blockIndex}`);
 
-    const maxRetries = 10;
-    let attempt = 0;
-    let success = false;
+    // Start the game immediately after successful transfer
+    runtimeGlobal.callFunction("OnPaymentSuccess");
 
-    while (attempt < maxRetries && !success) {
-      success = await icpTransfer_recordDeposit(user, depositAmountE8s, blockIndex);
-      if (!success) {
-        attempt++;
-        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-        setStatusMessage(`Attempt ${attempt}/${maxRetries} failed. Retrying in ${delay / 1000}s…`);
-        await new Promise(r => setTimeout(r, delay));
-      }
-    }
-
-    if (success) {
-      setStatusMessage("Deposit confirmed – starting game!");
-      runtimeGlobal.callFunction("OnPaymentSuccess");
-    } else {
-      runtimeGlobal.callFunction("ShowPaymentError", "Deposit confirmation failed after " + maxRetries + " attempts. Please try again or contact support.");
-      setPayButtonState("idle");
-    }
+    // Handle deposit confirmation asynchronously
+    setStatusMessage(`Confirming deposit (block #${blockIndex})…`);
+    confirmDepositAsync(user, depositAmountE8s, blockIndex);
 
   } catch (err) {
     console.error("depositIcpForUser:", err);
@@ -502,6 +492,40 @@ self.depositIcpForUser = async function () {
     setPaymentFlag(false);
   }
 };
+
+// Asynchronous deposit confirmation with retries
+async function confirmDepositAsync(user, amount, blockIndex) {
+  const maxRetries = 10;
+  let attempt = 0;
+  let success = false;
+
+  while (attempt < maxRetries && !success) {
+    try {
+      const depositPromise = icpTransfer_recordDeposit(user, amount, blockIndex);
+      const depositTimeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Deposit confirmation timed out after 10s")), 10000)
+      );
+      success = await Promise.race([depositPromise, depositTimeout]);
+      if (success) {
+        setStatusMessage("Deposit confirmed successfully!");
+        console.log(`Deposit confirmed at attempt ${attempt + 1}`);
+      }
+    } catch (retryErr) {
+      console.error(`Deposit attempt ${attempt + 1} failed:`, retryErr);
+      attempt++;
+      if (attempt < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff
+        setStatusMessage(`Deposit attempt ${attempt}/${maxRetries} failed. Retrying in ${delay / 1000}s…`);
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+  }
+
+  if (!success) {
+    console.error("All deposit confirmation attempts failed.");
+    setStatusMessage("Deposit confirmation failed after retries. Contact support if issues persist.");
+  }
+}
 
 self.validatePromoCode = async function () {
   if (!runtimeGlobal || paymentInProgress()) return;

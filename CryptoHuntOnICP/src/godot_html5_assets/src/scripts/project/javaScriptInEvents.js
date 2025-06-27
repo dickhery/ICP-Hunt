@@ -2,78 +2,118 @@
 
 const scriptsInEvents = {
 
-	async Menu_event_Event2_Act1(runtime, localVars)
+	async Game_event_Event10_Act19(runtime, localVars)
 	{
-		window.checkTokenBalance();
+		self.getGoldPot();
+		
 	},
 
-	async Menu_event_Event2_Act2(runtime, localVars)
+	async Game_event_Event10_Act20(runtime, localVars)
 	{
-		const p = runtime.globalVars.currentPrincipal;
+		self.getSilverPot();
 		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+	},
+
+	async Game_event_Event24_Act1(runtime, localVars)
+	{
+		self.getGoldPot();
+		
+	},
+
+	async Game_event_Event24_Act2(runtime, localVars)
+	{
+		self.getSilverPot();
+		
+	},
+
+	async Game_event_Event41_Act1(runtime, localVars)
+	{
+		await window.incRoundCounters();
+		
+	},
+
+	async Game_event_Event48_Act1(runtime, localVars)
+	{
+		try {
+		    const isGolden = await self.checkGoldenDuck();
+		    runtime.globalVars.SpawnGoldenDuck = isGolden ? 1 : 0;
+		    console.log("SpawnGoldenDuck set to", runtime.globalVars.SpawnGoldenDuck);
+		    runtime.globalVars.GoldenCheckDone = true;
+		    runtime.callFunction("OnCheckGoldenDuckComplete");
+		} catch (err) {
+		    runtime.globalVars.SpawnGoldenDuck = 0;
+		    runtime.globalVars.GoldenCheckDone = true;
+		    runtime.callFunction("OnCheckGoldenDuckComplete");
+		    console.error("Golden duck check failed:", err);
 		}
 	},
 
-	async Menu_event_Event2_Act20(runtime, localVars)
+	async Game_event_Event49_Act1(runtime, localVars)
 	{
-		window.checkLastAwardTs();
-	},
-
-	async Menu_event_Event3_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		try {
+		    const isSilver = await self.checkSilverDuck();
+		    runtime.globalVars.SpawnSilverDuck = isSilver ? 1 : 0;
+		    console.log("SpawnSilverDuck set to", runtime.globalVars.SpawnSilverDuck);
+		    runtime.globalVars.SilverCheckDone = true;
+		    runtime.callFunction("OnCheckSilverDuckComplete");
+		} catch (err) {
+		    runtime.globalVars.SpawnSilverDuck = 0;
+		    runtime.globalVars.SilverCheckDone = true;
+		    runtime.callFunction("OnCheckSilverDuckComplete");
+		    console.error("Silver duck check failed:", err);
 		}
 	},
 
-	async Menu_event_Event3_Act3(runtime, localVars)
+	async Game_event_Event175_Act3(runtime, localVars)
 	{
-		window.checkTokenBalance();
+		await window.custodianActor.recordGameEnd();
 	},
 
-	async Menu_event_Event4_Act1(runtime, localVars)
+	async Game_event_Event190_Act2(runtime, localVars)
 	{
-		window.copyPrincipalToClipboard();
-		
+		await window.custodianActor.recordGameEnd();
 	},
 
-	async Menu_event_Event5_Act2(runtime, localVars)
+	async Game_event_Event218_Act12(runtime, localVars)
 	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		const success = await self.recordDuckWin("Gold");
+		if (success) {
+		    runtime.globalVars.GoldWon = true;
+		    runtime.callFunction("ShowWinner", "Gold", runtime.globalVars.GoldPot);
+		    const ok = await window.custodianActor.awardGoldPotToCaller();
+		    console.log("awardGoldPotToCaller ->", ok);
+		    if (ok) {
+		        setStatusMessage("Gold pot awarded successfully!");
+		    } else {
+		        setStatusMessage("Failed to award Gold pot.");
+		    }
 		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		    runtime.globalVars.StatusMessage = "Cannot record Gold duck win: Operation in progress or invalid token.";
 		}
 	},
 
-	async Menu_event_Event17_Act1(runtime, localVars)
+	async Game_event_Event219_Act12(runtime, localVars)
 	{
-		window.depositIcpForUser();
+		const success = await self.recordDuckWin("Silver");
+		if (success) {
+		    runtime.globalVars.SilverWon = true;
+		    runtime.callFunction("ShowWinner", "Silver", runtime.globalVars.SilverPot);
+		    const ok = await window.custodianActor.awardSilverPotToCaller();
+		    console.log("awardSilverPotToCaller ->", ok);
+		    if (ok) {
+		        setStatusMessage("Silver pot awarded successfully!");
+		    } else {
+		        setStatusMessage("Failed to award Silver pot.");
+		    }
+		} else {
+		    runtime.globalVars.StatusMessage = "Cannot record Silver duck win: Operation in progress or invalid token.";
+		}
 	},
 
-	async Menu_event_Event24_Act6(runtime, localVars)
+	async Game_event_Event244_Act8(runtime, localVars)
 	{
-		window.depositIcpForUser();
-	},
-
-	async Menu_event_Event26_Act5(runtime, localVars)
-	{
-		window.validatePromoCode();
-	},
-
-	async Menu_event_Event33_Act2(runtime, localVars)
-	{
-		window.logout();
+		self.fetchNextAd();
+		
 	},
 
 	async Game_over_event_Event2_Act1(runtime, localVars)
@@ -171,120 +211,6 @@ const scriptsInEvents = {
 		} else {
 		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
 		}
-	},
-
-	async Game_event_Event10_Act19(runtime, localVars)
-	{
-		self.getGoldPot();
-		
-	},
-
-	async Game_event_Event10_Act20(runtime, localVars)
-	{
-		self.getSilverPot();
-		
-	},
-
-	async Game_event_Event20_Act1(runtime, localVars)
-	{
-		self.getGoldPot();
-		
-	},
-
-	async Game_event_Event20_Act2(runtime, localVars)
-	{
-		self.getSilverPot();
-		
-	},
-
-	async Game_event_Event37_Act1(runtime, localVars)
-	{
-		await window.incRoundCounters();
-		
-	},
-
-	async Game_event_Event43_Act1(runtime, localVars)
-	{
-		try {
-		    const isGolden = await self.checkGoldenDuck();
-		    runtime.globalVars.SpawnGoldenDuck = isGolden ? 1 : 0;
-		    console.log("SpawnGoldenDuck set to", runtime.globalVars.SpawnGoldenDuck);
-		    runtime.globalVars.GoldenCheckDone = true;
-		    runtime.callFunction("OnCheckGoldenDuckComplete");
-		} catch (err) {
-		    runtime.globalVars.SpawnGoldenDuck = 0;
-		    runtime.globalVars.GoldenCheckDone = true;
-		    runtime.callFunction("OnCheckGoldenDuckComplete");
-		    console.error("Golden duck check failed:", err);
-		}
-	},
-
-	async Game_event_Event44_Act1(runtime, localVars)
-	{
-		try {
-		    const isSilver = await self.checkSilverDuck();
-		    runtime.globalVars.SpawnSilverDuck = isSilver ? 1 : 0;
-		    console.log("SpawnSilverDuck set to", runtime.globalVars.SpawnSilverDuck);
-		    runtime.globalVars.SilverCheckDone = true;
-		    runtime.callFunction("OnCheckSilverDuckComplete");
-		} catch (err) {
-		    runtime.globalVars.SpawnSilverDuck = 0;
-		    runtime.globalVars.SilverCheckDone = true;
-		    runtime.callFunction("OnCheckSilverDuckComplete");
-		    console.error("Silver duck check failed:", err);
-		}
-	},
-
-	async Game_event_Event163_Act3(runtime, localVars)
-	{
-		await window.custodianActor.recordGameEnd();
-	},
-
-	async Game_event_Event177_Act2(runtime, localVars)
-	{
-		await window.custodianActor.recordGameEnd();
-	},
-
-	async Game_event_Event206_Act12(runtime, localVars)
-	{
-		const success = await self.recordDuckWin("Gold");
-		if (success) {
-		    runtime.globalVars.GoldWon = true;
-		    runtime.callFunction("ShowWinner", "Gold", runtime.globalVars.GoldPot);
-		    const ok = await window.custodianActor.awardGoldPotToCaller();
-		    console.log("awardGoldPotToCaller ->", ok);
-		    if (ok) {
-		        setStatusMessage("Gold pot awarded successfully!");
-		    } else {
-		        setStatusMessage("Failed to award Gold pot.");
-		    }
-		} else {
-		    runtime.globalVars.StatusMessage = "Cannot record Gold duck win: Operation in progress or invalid token.";
-		}
-	},
-
-	async Game_event_Event207_Act12(runtime, localVars)
-	{
-		const success = await self.recordDuckWin("Silver");
-		if (success) {
-		    runtime.globalVars.SilverWon = true;
-		    runtime.callFunction("ShowWinner", "Silver", runtime.globalVars.SilverPot);
-		    const ok = await window.custodianActor.awardSilverPotToCaller();
-		    console.log("awardSilverPotToCaller ->", ok);
-		    if (ok) {
-		        setStatusMessage("Silver pot awarded successfully!");
-		    } else {
-		        setStatusMessage("Failed to award Silver pot.");
-		    }
-		} else {
-		    runtime.globalVars.StatusMessage = "Cannot record Silver duck win: Operation in progress or invalid token.";
-		}
-	},
-
-	async Game_event_Event234_Act8(runtime, localVars)
-	{
-		self.fetchNextAd();
-		
 	},
 
 	async Auth_event_Event1_Act1(runtime, localVars)
@@ -760,6 +686,11 @@ const scriptsInEvents = {
 		window.fetchActivePromoCodes();
 	},
 
+	async Admin_event_Event1_Act2(runtime, localVars)
+	{
+		window.updatePromoCodeList();
+	},
+
 	async Admin_event_Event1_Act3(runtime, localVars)
 	{
 		self.getGoldPot();
@@ -778,6 +709,11 @@ const scriptsInEvents = {
 	async Admin_event_Event1_Act6(runtime, localVars)
 	{
 		self.getCanisterBalance();
+	},
+
+	async Admin_event_Event3_Act1(runtime, localVars)
+	{
+		window.updatePromoCodeList();
 	},
 
 	async Admin_event_Event4_Act1(runtime, localVars)
@@ -842,14 +778,78 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Admin_event_Event1_Act2(runtime, localVars)
+	async Menu_event_Event4_Act1(runtime, localVars)
 	{
-		window.updatePromoCodeList();
+		window.checkTokenBalance();
 	},
 
-	async Admin_event_Event3_Act1(runtime, localVars)
+	async Menu_event_Event4_Act2(runtime, localVars)
 	{
-		window.updatePromoCodeList();
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event4_Act20(runtime, localVars)
+	{
+		window.checkLastAwardTs();
+	},
+
+	async Menu_event_Event5_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event5_Act3(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event6_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
+	},
+
+	async Menu_event_Event7_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event19_Act1(runtime, localVars)
+	{
+		window.depositIcpForUser();
+	},
+
+	async Menu_event_Event26_Act6(runtime, localVars)
+	{
+		window.depositIcpForUser();
+	},
+
+	async Menu_event_Event28_Act5(runtime, localVars)
+	{
+		window.validatePromoCode();
+	},
+
+	async Menu_event_Event35_Act2(runtime, localVars)
+	{
+		window.logout();
 	}
 };
 

@@ -1387,6 +1387,14 @@ self.C3_ExpressionFuncs = [
 		() => "Scene",
 		() => 660,
 		() => "Second",
+		() => "Left",
+		p => {
+			const n0 = p._GetNode(0);
+			return () => n0.ExpObject();
+		},
+		() => "Right",
+		() => "Top",
+		() => "Bottom",
 		() => "Shadow_Out_Settings",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
@@ -1459,10 +1467,6 @@ self.C3_ExpressionFuncs = [
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => ((f0() / 2) + 640);
-		},
-		p => {
-			const n0 = p._GetNode(0);
-			return () => n0.ExpObject();
 		},
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
@@ -1547,7 +1551,10 @@ self.C3_ExpressionFuncs = [
 			const v0 = p._GetNode(0).GetVar();
 			return () => (v0.GetValue() * 2);
 		},
-		() => "Top",
+		p => {
+			const n0 = p._GetNode(0);
+			return () => (n0.ExpInstVar() + 1);
+		},
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => f0("Duck_1", "Duck_2", "Duck_3");
@@ -1556,20 +1563,33 @@ self.C3_ExpressionFuncs = [
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => Math.round((90 + f0((-90), 90)));
 		},
-		() => "Left",
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => Math.round((0 + f0((-90), 90)));
 		},
-		() => "Right",
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => Math.round((180 + f0((-90), 90)));
 		},
-		() => "Bottom",
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => Math.round((270 + f0((-90), 90)));
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => Math.round(f0(90, 270));
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => Math.round(f0(270, 450));
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => Math.round(f0(0, 180));
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => Math.round(f0(180, 360));
 		},
 		p => {
 			const n0 = p._GetNode(0);
@@ -1624,7 +1644,17 @@ self.C3_ExpressionFuncs = [
 		() => "Win_2_Duck_Blue_Black",
 		() => "Win_2_Duck_Red_Black",
 		() => "Win_2_Duck_Red_Blue",
+		p => {
+			const n0 = p._GetNode(0);
+			const v1 = p._GetNode(1).GetVar();
+			const v2 = p._GetNode(2).GetVar();
+			return () => C3.clamp(n0.ExpObject(), v1.GetValue(), v2.GetValue());
+		},
 		() => "Controlled Duck Spawning",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => f0(1, 2);
+		},
 		() => "Collision",
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
@@ -1647,10 +1677,6 @@ self.C3_ExpressionFuncs = [
 			return () => f0("Black", "Blue", "Red");
 		},
 		() => "Midground",
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => f0(1, 2);
-		},
 		() => "SpawnTimer",
 		() => "GoldenDuck_Settings",
 		() => "GoldDuck_Fall",
@@ -1684,6 +1710,7 @@ self.C3_ExpressionFuncs = [
 		() => "Shot",
 		() => "Shadow_In_Settings",
 		() => "Shadow_In",
+		() => "AdLoadTimeout",
 		() => 0.1,
 		() => "Game_Won",
 		() => 1000,
@@ -1972,6 +1999,10 @@ self.C3_ExpressionFuncs = [
 		},
 		() => "Shadow_Out",
 		() => "Menu_Settings",
+		() => "Deposit confirmed successfully",
+		() => "Deposit confirmed!",
+		() => "Deposit confirmation failed",
+		() => "Deposit confirmation delayed. Contact support if issues persist.",
 		() => 1421,
 		() => 773,
 		() => 552,
@@ -2142,7 +2173,7 @@ self.C3_ExpressionFuncs = [
 			return () => (v0.GetValue() + "?");
 		},
 		() => "font-size",
-		() => "30px",
+		() => "20px",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => and("Active Promo Codes: ", v0.GetValue());
