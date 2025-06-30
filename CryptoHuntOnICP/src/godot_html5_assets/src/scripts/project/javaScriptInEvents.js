@@ -116,6 +116,80 @@ const scriptsInEvents = {
 		
 	},
 
+	async Menu_event_Event4_Act1(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event4_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event4_Act20(runtime, localVars)
+	{
+		window.checkLastAwardTs();
+	},
+
+	async Menu_event_Event5_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event5_Act3(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event6_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
+	},
+
+	async Menu_event_Event7_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event19_Act1(runtime, localVars)
+	{
+		window.depositIcpForUser();
+	},
+
+	async Menu_event_Event26_Act6(runtime, localVars)
+	{
+		window.depositIcpForUser();
+	},
+
+	async Menu_event_Event28_Act5(runtime, localVars)
+	{
+		window.validatePromoCode();
+	},
+
+	async Menu_event_Event35_Act2(runtime, localVars)
+	{
+		window.logout();
+	},
+
 	async Game_over_event_Event2_Act1(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
@@ -776,80 +850,6 @@ const scriptsInEvents = {
 		} else {
 		    setStatusMessage("Promo code list not found.");
 		}
-	},
-
-	async Menu_event_Event4_Act1(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Menu_event_Event4_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event4_Act20(runtime, localVars)
-	{
-		window.checkLastAwardTs();
-	},
-
-	async Menu_event_Event5_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event5_Act3(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Menu_event_Event6_Act1(runtime, localVars)
-	{
-		window.copyPrincipalToClipboard();
-		
-	},
-
-	async Menu_event_Event7_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event19_Act1(runtime, localVars)
-	{
-		window.depositIcpForUser();
-	},
-
-	async Menu_event_Event26_Act6(runtime, localVars)
-	{
-		window.depositIcpForUser();
-	},
-
-	async Menu_event_Event28_Act5(runtime, localVars)
-	{
-		window.validatePromoCode();
-	},
-
-	async Menu_event_Event35_Act2(runtime, localVars)
-	{
-		window.logout();
 	}
 };
 

@@ -2173,7 +2173,7 @@ self.C3_ExpressionFuncs = [
 			return () => (v0.GetValue() + "?");
 		},
 		() => "font-size",
-		() => "20px",
+		() => "15px",
 		p => {
 			const v0 = p._GetNode(0).GetVar();
 			return () => and("Active Promo Codes: ", v0.GetValue());
