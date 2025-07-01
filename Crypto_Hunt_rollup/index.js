@@ -5,6 +5,7 @@ import { Actor, HttpAgent } from "@dfinity/agent";
 import { AuthClient } from "@dfinity/auth-client";
 import { Principal } from "@dfinity/principal";
 import { sha256 } from 'js-sha256';
+import { IcpWallet } from "@dfinity/oisy-wallet-signer/icp-wallet";
 
 // === IMPORT YOUR AD NETWORK CANISTER ===
 import {
@@ -39,7 +40,7 @@ import {
 
 
 
-export { AuthClient, Principal };
+export { AuthClient, Principal, IcpWallet };
 
 let adNetworkActor = null;
 let icpTransferActor = null;

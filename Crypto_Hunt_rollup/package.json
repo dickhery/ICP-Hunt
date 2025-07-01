@@ -15,6 +15,7 @@
     "@dfinity/auth-client": "^2.2.0",
     "@dfinity/candid": "^2.2.0",
     "@dfinity/ledger-icp": "^2.6.4",
+    "@dfinity/oisy-wallet-signer": "^0.2.1",
     "@dfinity/principal": "^2.2.0",
     "@dfinity/utils": "^2.7.1",
     "@funded-labs/plug-mobile-sdk": "^0.1.3",
