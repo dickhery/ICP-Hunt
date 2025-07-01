@@ -160,52 +160,52 @@ actor {
   };
 
   public shared ({ caller }) func generatePromoCode() : async Text {
-  if (caller != custodianPrincipal) {
-    throw Error.reject("Only admin can generate promo codes");
-  };
-
-  // will hold the unique code we end up with
-  var unique : Text = "";
-
-  // ── labelled retry-loop ───────────────────────────────────────────────
-  label retry loop {
-    // 1. generate a candidate --------------------------------------------------
-    let seed      = await Random.blob();
-    let rng       = Random.Finite(seed);
-    let charset   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let chars     = Text.toArray(charset);
-
-    var code : Text = "";
-    for (_ in Iter.range(0, 11)) {
-      switch (rng.range(5)) {
-        case (?n) { code := code # Text.fromChar(chars[n % 36]) };
-        case null  { throw Error.reject("RNG failed") };
-      };
+    if (caller != custodianPrincipal) {
+      throw Error.reject("Only admin can generate promo codes");
     };
 
-    // 2. if already present → try again ---------------------------------------
-    if (
-      Array.find<PromoCode>(
+    // will hold the unique code we end up with
+    var unique : Text = "";
+
+    // ── labelled retry-loop ───────────────────────────────────────────────
+    label retry loop {
+      // 1. generate a candidate --------------------------------------------------
+      let seed = await Random.blob();
+      let rng = Random.Finite(seed);
+      let charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let chars = Text.toArray(charset);
+
+      var code : Text = "";
+      for (_ in Iter.range(0, 11)) {
+        switch (rng.range(5)) {
+          case (?n) { code := code # Text.fromChar(chars[n % 36]) };
+          case null { throw Error.reject("RNG failed") };
+        };
+      };
+
+      // 2. if already present → try again ---------------------------------------
+      if (
+        Array.find<PromoCode>(
+          promoCodeRecords,
+          func(r : PromoCode) : Bool { r.code == code },
+        ) != null
+      ) { continue retry };
+
+      // 3. persist and break out -------------------------------------------------
+      let expiration = Time.now() + (7 * 24 * 3600 * 1_000_000_000); // 7 days
+      promoCodeRecords := Array.append(
         promoCodeRecords,
-        func (r : PromoCode) : Bool { r.code == code },
-      ) != null
-    ) { continue retry };
+        [{ code = code; expiration }],
+      );
 
-    // 3. persist and break out -------------------------------------------------
-    let expiration = Time.now() + (7 * 24 * 3600 * 1_000_000_000);   // 7 days
-    promoCodeRecords := Array.append(
-      promoCodeRecords,
-      [{ code = code; expiration }],
-    );
+      unique := code;
+      break retry; // leave the loop
+    };
 
-    unique := code;
-    break retry;                      // leave the loop
+    // 4. finally return the collected value – this is a Text, so the
+    //    function body type matches its signature.
+    unique;
   };
-
-  // 4. finally return the collected value – this is a Text, so the
-  //    function body type matches its signature.
-  unique
-};
 
   public shared func validatePromoCode(code : Text) : async Bool {
     let now = Time.now();
@@ -568,21 +568,21 @@ actor {
     go();
   };
 
-  public func oneIn50k() : async Bool { await oneInNSecure(getNGold()) };
-  public func oneIn100() : async Bool { await oneInNSecure(getNSilver()) };
+  // public func oneIn50k() : async Bool { await oneInNSecure(getNGold()) };
+  //  public func oneIn100() : async Bool { await oneInNSecure(getNSilver()) };
 
   //Testing setup
   // Function to determine if a gold duck spawns (originally 1 in 50,000 chance)
-  //    public shared func oneIn50k() : async Bool {
   // Temporarily set to always return true for testing
-  //        return true;
-  //    };
+  public shared func oneIn50k() : async Bool {
+    return true;
+  };
 
   // Function to determine if a silver duck spawns (originally 1 in 100 chance)
   // Temporarily set to always return true for testing
-  //    public shared func oneIn100() : async Bool {
-  //       return true;
-  //    };
+  public shared func oneIn100() : async Bool {
+    return true;
+  };
 
   public query func getGoldDuckOdds() : async Float {
     let avg = getAverageRounds();
