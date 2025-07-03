@@ -46,15 +46,18 @@ import {
   icpTransfer_getBalanceOf,
   icpTransfer_getMyBalance,
   sha256,
+  initAllWithPlug,
   AuthClient,
-  Principal
+  Principal,
+  IcpWallet
 } from "./ic_ad_network_bundle.js";
 
-let authMethod = null; // "Plug" | "InternetIdentity" | null
+let authMethod = null; // "Plug" | "InternetIdentity" | "OisyWallet" | null
 let runtimeGlobal;
 let messageQueue = [];
 let isDisplayingMessage = false;
 let activePromoCodes = [];
+let oisyWallet;
 
 const DECIMALS = 8;
 
@@ -77,6 +80,11 @@ function setStatusMessage(msg) {
 }
 window.setStatusMessage = setStatusMessage;
 
+window.addEventListener('unhandledrejection', function(event) {
+  console.error('Unhandled promise rejection:', event.reason);
+  setStatusMessage('An error occurred: ' + (event.reason.message || event.reason));
+});
+
 async function displayNextMessage() {
   if (isDisplayingMessage) return;
   if (!messageQueue.length) return;
@@ -88,6 +96,63 @@ async function displayNextMessage() {
   isDisplayingMessage = false;
   displayNextMessage();
 }
+
+self.initOisyWallet = async function () {
+  if (!runtimeGlobal) return;
+
+  if (authMethod && authMethod !== "OisyWallet") {
+    setStatusMessage(`Already authenticated with ${authMethod}. Logging out first...`);
+    await self.logout();
+  }
+
+  try {
+    setStatusMessage("Connecting to Oisy Wallet...");
+    oisyWallet = await IcpWallet.connect({
+      url: 'https://oisy.com/sign', // Production Oisy Wallet signer URL
+    });
+
+    setStatusMessage("Connected to Oisy Wallet. Requesting permissions...");
+    const { allPermissionsGranted } = await oisyWallet.requestPermissionsNotGranted();
+    if (!allPermissionsGranted) {
+      setStatusMessage("Permissions not granted by Oisy Wallet.");
+      runtimeGlobal.globalVars.AuthState = "Unauthenticated";
+      return;
+    }
+
+    const accounts = await oisyWallet.accounts();
+    if (!accounts || accounts.length === 0) {
+      setStatusMessage("No accounts found in Oisy Wallet.");
+      runtimeGlobal.globalVars.AuthState = "Unauthenticated";
+      return;
+    }
+
+    const account = accounts[0];
+    
+    // Handle account.owner based on its type
+    if (typeof account.owner === "string") {
+      runtimeGlobal.globalVars.currentPrincipal = account.owner;
+    } else if (account.owner && typeof account.owner.toText === "function") {
+      runtimeGlobal.globalVars.currentPrincipal = account.owner.toText();
+    } else {
+      console.error("Unexpected type for account.owner:", account.owner);
+      setStatusMessage("Error: Unexpected account owner type.");
+      runtimeGlobal.globalVars.AuthState = "Unauthenticated";
+      return;
+    }
+
+    runtimeGlobal.globalVars.AuthState = "OisyWallet";
+    authMethod = "OisyWallet";
+    runtimeGlobal.globalVars.Authenticated = 1;
+
+    setStatusMessage("Authenticated with Oisy Wallet!");
+    await self.fetchTrackingData();
+  } catch (err) {
+    console.error("initOisyWallet error:", err);
+    setStatusMessage("Error connecting to Oisy Wallet: " + err.message);
+    runtimeGlobal.globalVars.AuthState = "Unauthenticated";
+  }
+};
+window.initOisyWallet = self.initOisyWallet;
 
 function setPayButtonState(state /* "idle" | "processing" */) {
   if (!runtimeGlobal?.objects.Sprite_PayNow) return;
@@ -109,33 +174,28 @@ window.setPayButtonState = setPayButtonState;
 function ns2DateString(input) {
   let ns;
 
-  // Case 1: Input is a direct BigInt
   if (typeof input === "bigint") {
     ns = input;
   }
-  // Case 2: Input is an array (for optional timestamps)
   else if (Array.isArray(input)) {
     if (input.length === 0) {
-      return "—"; // Empty array means no timestamp
+      return "—";
     } else if (input.length === 1 && typeof input[0] === "bigint") {
-      ns = input[0]; // Extract the BigInt from the array
+      ns = input[0];
     } else {
       console.error("ns2DateString: Invalid array input:", input);
       return "Invalid timestamp";
     }
   }
-  // Case 3: Input is neither a BigInt nor an array
   else {
     console.error("ns2DateString: Expected BigInt or array, got:", input);
     return "Invalid timestamp";
   }
 
-  // If the timestamp is 0, treat it as no timestamp
   if (ns === 0n) {
     return "—";
   }
 
-  // Convert nanoseconds to milliseconds and format as a date string
   const ms = Number(ns / 1_000_000n);
   return new Date(ms).toLocaleString();
 }
@@ -162,16 +222,31 @@ self.recordDuckWin = async function (duckType) {
       setStatusMessage("Custodian actor not initialized.");
       return false;
     }
-    const result = await window.custodianActor.recordDuckWinSecure(
-      duckType,
-      true,
-      window.currentRoundToken
-    );
-    if (!result) {
-      setStatusMessage(`Failed to record ${duckType} duck win: Operation in progress or invalid token.`);
-      return false;
+    if (authMethod === "OisyWallet" && oisyWallet) {
+      const result = await oisyWallet.icrc49CallCanister({
+        canisterId: "z5cfx-3yaaa-aaaam-aee3a-cai", // Custodian canister ID
+        method: "recordDuckWinSecure",
+        args: [duckType, true, window.currentRoundToken],
+      });
+      if ("Ok" in result) {
+        setStatusMessage(`${duckType} duck win recorded with Oisy Wallet!`);
+        return true;
+      } else {
+        setStatusMessage(`Failed to record ${duckType} duck win: ${JSON.stringify(result.Err)}`);
+        return false;
+      }
+    } else {
+      const result = await window.custodianActor.recordDuckWinSecure(
+        duckType,
+        true,
+        window.currentRoundToken
+      );
+      if (!result) {
+        setStatusMessage(`Failed to record ${duckType} duck win: Operation in progress or invalid token`);
+        return false;
+      }
+      return true;
     }
-    return true;
   } catch (err) {
     console.error(`recordDuckWin (${duckType}):`, err);
     setStatusMessage(`Error recording ${duckType} duck win: ${err.message}`);
@@ -238,7 +313,7 @@ self.recordGameEnd = async function () {
   try {
     await window.custodianActor.recordGameEnd();
     console.log("Game end recorded successfully.");
-    await self.updateDuckOdds(); // Refresh odds after game ends
+    await self.updateDuckOdds();
   } catch (err) {
     console.error("recordGameEnd error:", err);
     setStatusMessage("Error recording game end: " + err.message);
@@ -301,6 +376,9 @@ self.logout = async function () {
     if (authMethod === "Plug" && window.ic && window.ic.plug && window.ic.plug.requestDisconnect) {
       await window.ic.plug.requestDisconnect();
     }
+    if (authMethod === "OisyWallet" && oisyWallet) {
+      oisyWallet.disconnect();
+    }
 
     authMethod = null;
     runtimeGlobal.globalVars.AuthState = "Unauthenticated";
@@ -317,10 +395,10 @@ self.logout = async function () {
 self.initIcpTransferActor = async function () {
   try {
     await initIcpTransferActorUnauthenticated();
-    console.log("icpTransferActor initialized:", window.icpTransferActor); // Add this
+    console.log("icpTransferActor initialized:", window.icpTransferActor);
     setStatusMessage("ICP Transfer Actor initialized anonymously.");
   } catch (err) {
-    console.error("initIcpTransferActor error:", err); // Add this
+    console.error("initIcpTransferActor error:", err);
     setStatusMessage("Error initializing ICP Transfer: " + err.message);
   }
 };
@@ -360,8 +438,8 @@ self.initAdNetworkActor = async function () {
 self.initAdNetworkWithPlug = async function () {
   if (!runtimeGlobal) return;
 
-  if (authMethod === "InternetIdentity") {
-    setStatusMessage("Already authenticated with Internet Identity. Logging out first...");
+  if (authMethod === "InternetIdentity" || authMethod === "OisyWallet") {
+    setStatusMessage(`Already authenticated with ${authMethod}. Logging out first...`);
     await self.logout();
   }
 
@@ -396,8 +474,8 @@ self.initAdNetworkWithPlug = async function () {
 self.initAdNetworkWithII = async function () {
   if (!runtimeGlobal) return;
 
-  if (authMethod === "Plug") {
-    setStatusMessage("Already authenticated with Plug. Logging out first...");
+  if (authMethod === "Plug" || authMethod === "OisyWallet") {
+    setStatusMessage(`Already authenticated with ${authMethod}. Logging out first...`);
     await self.logout();
   }
 
@@ -448,42 +526,54 @@ self.depositIcpForUser = async function () {
     const principalString = runtimeGlobal.globalVars.currentPrincipal;
     const user = Principal.fromText(principalString);
 
-    setStatusMessage("Requesting ledger transfer (0.05 ICP) …");
-    const transferPromise = ledger_transfer({
-      fromSubaccount: null,
-      toPrincipal: Principal.fromText("sphs3-ayaaa-aaaah-arajq-cai"),
-      toSubaccount: null,
-      amount: depositAmountE8s,
-    });
-    const transferTimeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Transfer timed out after 30s")), 30000) // Increased to 30s
-    );
-    const transferResult = await Promise.race([transferPromise, transferTimeout]);
+    if (authMethod === "OisyWallet") {
+      if (!oisyWallet) throw new Error("Oisy Wallet not initialized");
 
-    if ("Err" in transferResult) {
-      let errorMessage = "Payment failed: ";
-      if ("InsufficientFunds" in transferResult.Err) {
-        const balance = Number(transferResult.Err.InsufficientFunds.balance) / 1e8;
-        errorMessage += `Insufficient funds. Your balance is ${balance.toFixed(2)} ICP.`;
-      } else {
-        errorMessage += JSON.stringify(transferResult.Err);
+      setStatusMessage("Processing payment with Oisy Wallet...");
+      const accounts = await oisyWallet.accounts();
+      if (!accounts || accounts.length === 0) throw new Error("No accounts found in Oisy Wallet");
+      const account = accounts[0];
+      const toPrincipal = Principal.fromText("sphs3-ayaaa-aaaah-arajq-cai"); // Token transfer canister
+      const request = {
+        to: {
+          owner: toPrincipal,
+          subaccount: [], // Use empty array instead of null
+        },
+        amount: depositAmountE8s,
+      };
+      let blockIndex;
+      try {
+        blockIndex = await oisyWallet.icrc1Transfer({
+          owner: account.owner,
+          request
+        });
+        setStatusMessage(`Payment successful! Block index: ${blockIndex}`);
+        runtimeGlobal.callFunction("OnPaymentSuccess");
+        confirmDepositAsync(user, depositAmountE8s, blockIndex);
+      } catch (err) {
+        throw new Error(`Payment failed: ${err.message}`);
       }
-      runtimeGlobal.callFunction("ShowPaymentError", errorMessage);
-      setPayButtonState("idle");
-      throw new Error("Ledger transfer failed");
+    } else {
+      setStatusMessage("Requesting ledger transfer (0.05 ICP) …");
+      const transferResult = await ledger_transfer({
+        fromSubaccount: null,
+        toPrincipal: Principal.fromText("sphs3-ayaaa-aaaah-arajq-cai"),
+        toSubaccount: null,
+        amount: depositAmountE8s,
+      });
+
+      if ("Err" in transferResult) {
+        let errorMessage = "Payment failed: " + JSON.stringify(transferResult.Err);
+        runtimeGlobal.callFunction("ShowPaymentError", errorMessage);
+        setPayButtonState("idle");
+        throw new Error("Ledger transfer failed");
+      }
+
+      const blockIndex = transferResult.Ok;
+      setStatusMessage(`Ledger transfer ✓ (block #${blockIndex}). Starting game…`);
+      runtimeGlobal.callFunction("OnPaymentSuccess");
+      confirmDepositAsync(user, depositAmountE8s, blockIndex);
     }
-
-    const blockIndex = transferResult.Ok;
-    setStatusMessage(`Ledger transfer ✓ (block #${blockIndex}). Starting game…`);
-    console.log(`Transfer succeeded at block ${blockIndex}`);
-
-    // Start the game immediately after successful transfer
-    runtimeGlobal.callFunction("OnPaymentSuccess");
-
-    // Handle deposit confirmation asynchronously
-    setStatusMessage(`Confirming deposit (block #${blockIndex})…`);
-    confirmDepositAsync(user, depositAmountE8s, blockIndex);
-
   } catch (err) {
     console.error("depositIcpForUser:", err);
     runtimeGlobal.callFunction("ShowPaymentError", "Deposit error: " + err.message);
@@ -493,7 +583,6 @@ self.depositIcpForUser = async function () {
   }
 };
 
-// Asynchronous deposit confirmation with retries
 async function confirmDepositAsync(user, amount, blockIndex) {
   const maxRetries = 10;
   let attempt = 0;
@@ -514,7 +603,7 @@ async function confirmDepositAsync(user, amount, blockIndex) {
       console.error(`Deposit attempt ${attempt + 1} failed:`, retryErr);
       attempt++;
       if (attempt < maxRetries) {
-        const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff
+        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
         setStatusMessage(`Deposit attempt ${attempt}/${maxRetries} failed. Retrying in ${delay / 1000}s…`);
         await new Promise(r => setTimeout(r, delay));
       }
@@ -552,7 +641,7 @@ self.validatePromoCode = async function () {
     setStatusMessage("Please enter a promo code.");
     setPaymentFlag(false);
     setPayButtonState("idle");
-    runtimeGlobal.callFunction("OnPromoCodeInvalid"); // Changed from OnValidationFailed
+    runtimeGlobal.callFunction("OnPromoCodeInvalid");
     return;
   }
 
@@ -561,7 +650,7 @@ self.validatePromoCode = async function () {
     setStatusMessage("Custodian actor not initialized.");
     setPaymentFlag(false);
     setPayButtonState("idle");
-    runtimeGlobal.callFunction("OnPromoCodeInvalid"); // Changed from OnValidationFailed
+    runtimeGlobal.callFunction("OnPromoCodeInvalid");
     return;
   }
 
@@ -587,20 +676,19 @@ self.validatePromoCode = async function () {
       console.log("Promo code invalid or already used");
       setStatusMessage("Invalid or used promo code. Please try again or pay to play.");
       setPayButtonState("idle");
-      runtimeGlobal.callFunction("OnPromoCodeInvalid"); // Changed from OnValidationFailed
+      runtimeGlobal.callFunction("OnPromoCodeInvalid");
     }
   } catch (err) {
     console.error("validatePromoCode error:", err);
     setStatusMessage("Error validating promo code: " + err.message);
     setPayButtonState("idle");
-    runtimeGlobal.callFunction("OnPromoCodeInvalid"); // Changed from OnValidationFailed
+    runtimeGlobal.callFunction("OnPromoCodeInvalid");
   } finally {
     setPaymentFlag(false);
     console.log("Payment flag reset to false");
   }
 };
 
-// Add this function to fetch active promo codes
 self.getActivePromoCodes = async function() {
   if (!window.custodianActor) {
     setStatusMessage("Custodian actor not initialized.");
@@ -616,7 +704,6 @@ self.getActivePromoCodes = async function() {
   }
 };
 
-// Add this function to fetch and update global variables
 self.fetchActivePromoCodes = async function () {
   if (!runtimeGlobal || !window.custodianActor) return;
   try {
@@ -655,7 +742,6 @@ window.updatePromoCodeList = function() {
   });
 };
 
-// Add this function to copy the generated promo code
 self.copyGeneratedPromoCode = async function() {
   const code = runtimeGlobal.globalVars.GeneratedPromoCode;
   if (!code) {
@@ -671,7 +757,6 @@ self.copyGeneratedPromoCode = async function() {
   }
 };
 
-// Add this function to copy all active promo codes
 self.copyAllActivePromoCodes = async function() {
   const codes = activePromoCodes.map(pc => pc.code).join("\n");
   if (!codes) {
@@ -687,7 +772,6 @@ self.copyAllActivePromoCodes = async function() {
   }
 };
 
-// Modify the existing generatePromoCode function
 self.generatePromoCode = async function () {
   if (!runtimeGlobal || !window.custodianActor) return;
   try {
@@ -760,13 +844,13 @@ self.fetchNextAd = async function () {
   if (!runtimeGlobal) return;
 
   let attempts = 0;
-  const maxAttempts = 2; // Reduced from 3
+  const maxAttempts = 2;
   let lastAdId = null;
 
   while (attempts < maxAttempts) {
     try {
       const fetchPromise = getNextAd(runtimeGlobal.globalVars.projectId, runtimeGlobal.globalVars.AdTypeInput || "");
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Ad fetch timed out")), 5000)); // Reduced to 5s
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Ad fetch timed out")), 5000));
       const result = await Promise.race([fetchPromise, timeoutPromise]);
 
       if (!result || result.length === 0) {
@@ -789,7 +873,6 @@ self.fetchNextAd = async function () {
       runtimeGlobal.globalVars.CurrentAdClickUrl = ad.clickUrl;
       setStatusMessage(`Fetched Ad #${ad.id} (served: ${ad.viewsServed}), token: ${tokenId}`);
 
-      // Call Construct 3 function to display the ad
       runtimeGlobal.callFunction("DisplayAd");
 
       if (adViewTimeoutId !== null) {
@@ -822,7 +905,6 @@ self.fetchNextAd = async function () {
     }
   }
 
-  // If all attempts fail
   setStatusMessage("No ad available after retries. Continuing game...");
   runtimeGlobal.globalVars.CurrentAdBase64 = "";
   runtimeGlobal.callFunction("CloseAdLayer");
@@ -844,28 +926,47 @@ self.transferTokens = async function () {
     const toPrincipal = Principal.fromText(toPrincipalStr);
     const decimalAmount = parseFloat(runtimeGlobal.globalVars.TokenAmount) || 0;
     const rawAmount = BigInt(Math.round(decimalAmount * 10 ** DECIMALS));
-    const result = await ledger_transfer({
-      fromSubaccount: null,
-      toPrincipal,
-      toSubaccount: null,
-      amount: rawAmount,
-    });
+
+    let result;
+    if (authMethod === "OisyWallet" && oisyWallet) {
+      const accounts = await oisyWallet.accounts();
+      if (!accounts || accounts.length === 0) throw new Error("No accounts found in Oisy Wallet");
+      const account = accounts[0];
+      const request = {
+        to: {
+          owner: toPrincipal,
+          subaccount: null,
+        },
+        amount: rawAmount,
+      };
+      result = await oisyWallet.icrc1Transfer({
+        owner: account.owner,
+        request
+      });
+    } else {
+      result = await ledger_transfer({
+        fromSubaccount: null,
+        toPrincipal,
+        toSubaccount: null,
+        amount: rawAmount,
+      });
+    }
+
     if ("Ok" in result) {
       setStatusMessage(`Transfer success! Block index: ${result.Ok}`);
-      // Clear inputs
       const recipientInput = runtimeGlobal.objects.TextInput_Recipient.getFirstInstance();
       if (recipientInput) recipientInput.text = "";
       const amountInput = runtimeGlobal.objects.TextInput_Amount.getFirstInstance();
       if (amountInput) amountInput.text = "";
-      runtimeGlobal.callFunction("OnTransferComplete", 1); // Success
+      runtimeGlobal.callFunction("OnTransferComplete", 1);
     } else {
       setStatusMessage("Transfer error: " + stringifyWithBigInt(result.Err));
-      runtimeGlobal.callFunction("OnTransferComplete", 0); // Failure
+      runtimeGlobal.callFunction("OnTransferComplete", 0);
     }
   } catch (err) {
     console.error(err);
     setStatusMessage("Error transferring tokens: " + err.message);
-    runtimeGlobal.callFunction("OnTransferComplete", 0); // Failure
+    runtimeGlobal.callFunction("OnTransferComplete", 0);
   }
 };
 
@@ -917,7 +1018,7 @@ self.addToGoldPot = async function (amountIcp) {
     const success = await window.icpTransferActor.addToGoldPot(amountE8s);
     if (success) {
       setStatusMessage(`Added ${amountIcp} ICP to Gold Pot.`);
-      await self.getGoldPot(); // Refresh displayed value
+      await self.getGoldPot();
     } else {
       setStatusMessage("Failed to add to Gold Pot. Possibly not authorized.");
     }
@@ -939,7 +1040,7 @@ self.addToSilverPot = async function (amountIcp) {
     const success = await window.icpTransferActor.addToSilverPot(amountE8s);
     if (success) {
       setStatusMessage(`Added ${amountIcp} ICP to Silver Pot.`);
-      await self.getSilverPot(); // Refresh displayed value
+      await self.getSilverPot();
     } else {
       setStatusMessage("Failed to add to Silver Pot. Possibly not authorized.");
     }
@@ -1019,10 +1120,9 @@ self.submitHighScore = async function () {
   }
 };
 
-// Function to generate session token client-side using SHA-256
 function generateSessionToken(principal, roundToken, score, name, email) {
   const seed = principal + roundToken.toString() + score.toString() + name + email;
-  const hash = sha256(seed); // Using js-sha256
+  const hash = sha256(seed);
   return hash;
 };
 
@@ -1074,7 +1174,7 @@ self.isPasswordSet = async function () {
     return false;
   }
 };
-window.isPasswordSet = self.isPasswordSet;
+window.isPassword = self.isPasswordSet;
 
 self.checkPassword = async function () {
   if (!runtimeGlobal) return;
@@ -1220,12 +1320,10 @@ self.checkSilverDuck = async function () {
 async function fetchUserLogsSafe(userPrincipal) {
   if (!window.icpTransferActor) throw new Error("ICP-Transfer actor missing");
 
-  // Preferred, if the stub exists
   if (typeof window.icpTransferActor.getUserLogs === "function") {
     return await window.icpTransferActor.getUserLogs(userPrincipal);
   }
 
-  // Fallback – use getLogs() and filter client-side
   if (typeof window.icpTransferActor.getLogs === "function") {
     const all = await window.icpTransferActor.getLogs();
     return all.filter(l =>
@@ -1250,10 +1348,10 @@ self.getMyTransactionLogs = async function () {
 
     const logs = await fetchUserLogsSafe(userPrincipal);
     const newest10 = logs
-      .slice()                               // copy so we don’t mutate the original
-      .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))  // newest first
+      .slice()
+      .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
       .slice(0, 10);
-    return newest10;          // 10 most-recent only
+    return newest10;
   } catch (err) {
     console.error("getMyTransactionLogs error:", err);
     setStatusMessage("Error fetching transaction logs: " + err.message);
@@ -1277,28 +1375,23 @@ self.refreshTransactionLogs = async function () {
 
     const userPrincipal = Principal.fromText(principalString);
 
-    // Fetch deposit logs
     const depositLogs = await fetchUserLogsSafe(userPrincipal);
     const filteredDepositLogs = depositLogs.filter(log => log.action === "recordDeposit");
 
-    // Fetch win logs
     const allWinLogs = await window.custodianActor.getRecentWins();
     const userWinLogs = allWinLogs.filter(win => win.pid.toText() === principalString);
 
-    // Combine logs
     const combinedLogs = [
       ...filteredDepositLogs.map(log => ({ type: 'deposit', log })),
       ...userWinLogs.map(win => ({ type: 'win', win }))
     ];
 
-    // Sort by timestamp descending
     combinedLogs.sort((a, b) => {
       const tsA = a.type === 'deposit' ? Number(a.log.timestamp) : Number(a.win.ts);
       const tsB = b.type === 'deposit' ? Number(b.log.timestamp) : Number(b.win.ts);
       return tsB - tsA;
     });
 
-    // Format all logs (no limit)
     const logText = combinedLogs.map(entry => {
       if (entry.type === 'deposit') {
         const log = entry.log;
@@ -1316,7 +1409,6 @@ self.refreshTransactionLogs = async function () {
 
     runtimeGlobal.globalVars.TransactionLogsText = logText || "— No transactions —";
 
-    // Update the HTML element
     updateTransactionLogs(logText);
   } catch (err) {
     console.error("refreshTransactionLogs error:", err);

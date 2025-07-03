@@ -309,15 +309,20 @@ const scriptsInEvents = {
 		
 	},
 
-	async Auth_event_Event2_Act1(runtime, localVars)
+	async Auth_event_Event2_Act2(runtime, localVars)
 	{
 		window.initAdNetworkWithPlug();
 		
 	},
 
-	async Auth_event_Event3_Act1(runtime, localVars)
+	async Auth_event_Event3_Act2(runtime, localVars)
 	{
 		window.initAdNetworkWithII();
+	},
+
+	async Auth_event_Event6_Act2(runtime, localVars)
+	{
+		window.initOisyWallet();
 	},
 
 	async Bounties_event_Event2_Act1(runtime, localVars)

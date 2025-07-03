@@ -27472,7 +27472,7 @@ async function initActorWithInternetIdentity() {
   }
   return new Promise((resolve, reject) => {
     authClient.login({
-      identityProvider: "https://identity.ic0.app",
+      identityProvider: "https://id.ai",
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         const agent = new HttpAgent({ identity, host: "https://ic0.app" });
@@ -27546,7 +27546,7 @@ async function initCustodianActorWithInternetIdentity() {
 
   return new Promise((resolve, reject) => {
     authClient.login({
-      identityProvider: "https://identity.ic0.app",
+      identityProvider: "https://id.ai",
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         const agent = new HttpAgent({ identity, host: "https://ic0.app" });
@@ -27689,7 +27689,7 @@ async function initIcpTransferActorWithInternetIdentity() {
   }
   return new Promise((resolve, reject) => {
     authClient.login({
-      identityProvider: "https://identity.ic0.app",
+      identityProvider: "https://id.ai",
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         const agent = new HttpAgent({ identity, host: "https://ic0.app" });
@@ -27839,7 +27839,7 @@ async function initLedgerActorWithInternetIdentity() {
   }
   return new Promise((resolve, reject) => {
     authClient.login({
-      identityProvider: "https://identity.ic0.app",
+      identityProvider: "https://id.ai",
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         ledgerAgent = new HttpAgent({ identity, host: "https://ic0.app" });

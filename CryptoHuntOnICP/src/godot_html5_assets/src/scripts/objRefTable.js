@@ -218,8 +218,9 @@ self.C3_GetObjectRefTable = function () {
 		C3.JavaScriptInEvents.Auth_event_Event1_Act2,
 		C3.JavaScriptInEvents.Auth_event_Event1_Act3,
 		C3.JavaScriptInEvents.Auth_event_Event1_Act4,
-		C3.JavaScriptInEvents.Auth_event_Event2_Act1,
-		C3.JavaScriptInEvents.Auth_event_Event3_Act1,
+		C3.JavaScriptInEvents.Auth_event_Event2_Act2,
+		C3.JavaScriptInEvents.Auth_event_Event3_Act2,
+		C3.JavaScriptInEvents.Auth_event_Event6_Act2,
 		C3.JavaScriptInEvents.Bounties_event_Event2_Act1,
 		C3.JavaScriptInEvents.Bounties_event_Event2_Act2,
 		C3.JavaScriptInEvents.Bounties_event_Event2_Act7,
@@ -518,6 +519,7 @@ self.C3_JsPropNameTable = [
 	{SelectedCode: 0},
 	{PromoCodeList: 0},
 	{Sprite_Menu: 0},
+	{Button_Auth_Oisy: 0},
 	{Buttons: 0},
 	{Texts: 0},
 	{Spawn_Duck: 0},
@@ -806,6 +808,7 @@ self.InstanceType = {
 	Text_CanisterBalance: class extends self.ITextInstance {},
 	PromoCodeList: class extends self.IListInstance {},
 	Sprite_Menu: class extends self.ISpriteInstance {},
+	Button_Auth_Oisy: class extends self.ISpriteInstance {},
 	Buttons: class extends self.ISpriteInstance {},
 	Texts: class extends self.ISpriteInstance {}
 }

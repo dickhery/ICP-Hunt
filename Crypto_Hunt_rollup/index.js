@@ -48,6 +48,7 @@ let ledgerActor = null;
 let custodianActor = null;
 let authClient = null;
 let highScoreActor = null;
+let isPlugInitialized = false;
 
 export {
   adNetworkActor,
@@ -105,7 +106,7 @@ export async function initActorWithInternetIdentity() {
   }
   return new Promise((resolve, reject) => {
     authClient.login({
-      identityProvider: "https://identity.ic0.app",
+      identityProvider: "https://id.ai",
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         const agent = new HttpAgent({ identity, host: "https://ic0.app" });
@@ -179,7 +180,7 @@ export async function initCustodianActorWithInternetIdentity() {
 
   return new Promise((resolve, reject) => {
     authClient.login({
-      identityProvider: "https://identity.ic0.app",
+      identityProvider: "https://id.ai",
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         const agent = new HttpAgent({ identity, host: "https://ic0.app" });
@@ -322,7 +323,7 @@ export async function initIcpTransferActorWithInternetIdentity() {
   }
   return new Promise((resolve, reject) => {
     authClient.login({
-      identityProvider: "https://identity.ic0.app",
+      identityProvider: "https://id.ai",
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         const agent = new HttpAgent({ identity, host: "https://ic0.app" });
@@ -472,7 +473,7 @@ export async function initLedgerActorWithInternetIdentity() {
   }
   return new Promise((resolve, reject) => {
     authClient.login({
-      identityProvider: "https://identity.ic0.app",
+      identityProvider: "https://id.ai",
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         ledgerAgent = new HttpAgent({ identity, host: "https://ic0.app" });
