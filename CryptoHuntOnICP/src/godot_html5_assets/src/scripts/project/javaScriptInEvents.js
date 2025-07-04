@@ -32,7 +32,7 @@ const scriptsInEvents = {
 		
 	},
 
-	async Game_event_Event48_Act1(runtime, localVars)
+	async Game_event_Event44_Act1(runtime, localVars)
 	{
 		try {
 		    const isGolden = await self.checkGoldenDuck();
@@ -48,7 +48,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event49_Act1(runtime, localVars)
+	async Game_event_Event45_Act1(runtime, localVars)
 	{
 		try {
 		    const isSilver = await self.checkSilverDuck();
@@ -64,17 +64,17 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event176_Act3(runtime, localVars)
+	async Game_event_Event172_Act3(runtime, localVars)
 	{
 		await window.custodianActor.recordGameEnd();
 	},
 
-	async Game_event_Event191_Act2(runtime, localVars)
+	async Game_event_Event187_Act2(runtime, localVars)
 	{
 		await window.custodianActor.recordGameEnd();
 	},
 
-	async Game_event_Event219_Act12(runtime, localVars)
+	async Game_event_Event215_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Gold");
 		if (success) {
@@ -92,7 +92,7 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event220_Act12(runtime, localVars)
+	async Game_event_Event216_Act12(runtime, localVars)
 	{
 		const success = await self.recordDuckWin("Silver");
 		if (success) {
@@ -110,107 +110,10 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Game_event_Event245_Act8(runtime, localVars)
+	async Game_event_Event241_Act8(runtime, localVars)
 	{
 		self.fetchNextAd();
 		
-	},
-
-	async Game_over_event_Event2_Act1(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Game_over_event_Event5_Act1(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Game_over_event_Event7_Act1(runtime, localVars)
-	{
-		(async function() {
-		  console.log("[GameOver] Checking if new high score?");
-		  
-		  // 1) Load scoreboard
-		  await self.loadHighScores();  
-		  let arr = runtime.globalVars.HighScoreArray || [];
-		
-		  // 2) Sort descending by score
-		  arr = arr.slice().sort((a, b) => Number(b[3]) - Number(a[3]));
-		
-		  // 3) Compare the player's final Score
-		  let score = runtime.globalVars.Score;
-		  let isTop = false;
-		
-		  if (arr.length < 10) {
-		    isTop = true;
-		  } else {
-		    let tenthPlaceScore = Number(arr[9][3]);
-		    if (score > tenthPlaceScore) {
-		      isTop = true;
-		    }
-		  }
-		
-		  // 4) Instead of show/hide directly, do this:
-		  if (isTop) {
-		    console.log("You got a new high score!");
-		    runtime.globalVars.GotHighScore = 1;
-		  } else {
-		    console.log("Not a top score.");
-		    runtime.globalVars.GotHighScore = 0;
-		  }
-		  runtime.globalVars.HighScoreCheckComplete = 1;
-		})();
-	},
-
-	async Game_over_event_Event10_Act1(runtime, localVars)
-	{
-		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
-		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
-		
-		const nameInput = nameBox ? nameBox.text.trim() : "";
-		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
-		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
-		
-		self.submitHighScore();
-	},
-
-	async Game_over_event_Event11_Act1(runtime, localVars)
-	{
-		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
-		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
-		const nameInput = nameBox ? nameBox.text.trim() : "";
-		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
-		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
-		self.submitHighScore();
-	},
-
-	async Game_over_event_Event15_Act1(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Game_over_event_Event16_Act1(runtime, localVars)
-	{
-		window.copyPrincipalToClipboard();
-		
-	},
-
-	async Game_over_event_Event17_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
 	},
 
 	async Menu_event_Event4_Act1(runtime, localVars)
@@ -285,6 +188,103 @@ const scriptsInEvents = {
 	async Menu_event_Event35_Act2(runtime, localVars)
 	{
 		window.logout();
+	},
+
+	async Game_over_event_Event2_Act1(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Game_over_event_Event5_Act1(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Game_over_event_Event7_Act1(runtime, localVars)
+	{
+		(async function() {
+		  console.log("[GameOver] Checking if new high score?");
+		  
+		  // 1) Load scoreboard
+		  await self.loadHighScores();  
+		  let arr = runtime.globalVars.HighScoreArray || [];
+		
+		  // 2) Sort descending by score
+		  arr = arr.slice().sort((a, b) => Number(b[3]) - Number(a[3]));
+		
+		  // 3) Compare the player's final Score
+		  let score = runtime.globalVars.Score;
+		  let isTop = false;
+		
+		  if (arr.length < 10) {
+		    isTop = true;
+		  } else {
+		    let tenthPlaceScore = Number(arr[9][3]);
+		    if (score > tenthPlaceScore) {
+		      isTop = true;
+		    }
+		  }
+		
+		  // 4) Instead of show/hide directly, do this:
+		  if (isTop) {
+		    console.log("You got a new high score!");
+		    runtime.globalVars.GotHighScore = 1;
+		  } else {
+		    console.log("Not a top score.");
+		    runtime.globalVars.GotHighScore = 0;
+		  }
+		  runtime.globalVars.HighScoreCheckComplete = 1;
+		})();
+	},
+
+	async Game_over_event_Event10_Act1(runtime, localVars)
+	{
+		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
+		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
+		
+		const nameInput = nameBox ? nameBox.text.trim() : "";
+		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
+		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
+		
+		self.submitHighScore();
+	},
+
+	async Game_over_event_Event11_Act2(runtime, localVars)
+	{
+		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
+		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
+		const nameInput = nameBox ? nameBox.text.trim() : "";
+		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
+		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
+		self.submitHighScore();
+	},
+
+	async Game_over_event_Event15_Act1(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Game_over_event_Event16_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
+	},
+
+	async Game_over_event_Event17_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
 	},
 
 	async Auth_event_Event1_Act1(runtime, localVars)
@@ -461,23 +461,6 @@ const scriptsInEvents = {
 		
 	},
 
-	async Beta_event_Event1_Act1(runtime, localVars)
-	{
-		window.checkPassword();
-	},
-
-	async Beta_event_Event6_Act1(runtime, localVars)
-	{
-		self.getGoldPot();
-		
-	},
-
-	async Beta_event_Event6_Act2(runtime, localVars)
-	{
-		self.getSilverPot();
-		
-	},
-
 	async Leaderboard_event_Event1_Act1(runtime, localVars)
 	{
 // A single async script to fetch and display high scores
@@ -599,101 +582,21 @@ const scriptsInEvents = {
 		})();
 	},
 
-	async Admin_event_Event1_Act1(runtime, localVars)
+	async Beta_event_Event1_Act1(runtime, localVars)
 	{
-		window.fetchActivePromoCodes();
+		window.checkPassword();
 	},
 
-	async Admin_event_Event1_Act2(runtime, localVars)
-	{
-		window.updatePromoCodeList();
-	},
-
-	async Admin_event_Event1_Act3(runtime, localVars)
+	async Beta_event_Event6_Act1(runtime, localVars)
 	{
 		self.getGoldPot();
+		
 	},
 
-	async Admin_event_Event1_Act4(runtime, localVars)
+	async Beta_event_Event6_Act2(runtime, localVars)
 	{
 		self.getSilverPot();
-	},
-
-	async Admin_event_Event1_Act5(runtime, localVars)
-	{
-		self.getHighScorePot();
-	},
-
-	async Admin_event_Event1_Act6(runtime, localVars)
-	{
-		self.getCanisterBalance();
-	},
-
-	async Admin_event_Event3_Act1(runtime, localVars)
-	{
-		window.updatePromoCodeList();
-	},
-
-	async Admin_event_Event4_Act1(runtime, localVars)
-	{
-		self.getGoldPot();
-	},
-
-	async Admin_event_Event4_Act2(runtime, localVars)
-	{
-		self.getSilverPot();
-	},
-
-	async Admin_event_Event4_Act3(runtime, localVars)
-	{
-		self.getHighScorePot();
-	},
-
-	async Admin_event_Event4_Act4(runtime, localVars)
-	{
-		self.getCanisterBalance();
-	},
-
-	async Admin_event_Event5_Act1(runtime, localVars)
-	{
-		window.generatePromoCode();
-	},
-
-	async Admin_event_Event6_Act1(runtime, localVars)
-	{
-		window.copyGeneratedPromoCode();
-	},
-
-	async Admin_event_Event7_Act1(runtime, localVars)
-	{
-		const listInstance = runtime.objects.PromoCodeList.getFirstInstance();
-		if (listInstance) {
-		    const allCodes = Array.from({length: listInstance.itemCount}, (_, i) => listInstance.getItemText(i)).join("\n");
-		    navigator.clipboard.writeText(allCodes).then(() => {
-		        setStatusMessage("All active promo codes copied to clipboard!");
-		    }).catch(err => {
-		        console.error("Clipboard error:", err);
-		        setStatusMessage("Error copying promo codes.");
-		    });
-		} else {
-		    setStatusMessage("Promo code list not found.");
-		}
-	},
-
-	async Admin_event_Event9_Act2(runtime, localVars)
-	{
-		const listInstance = runtime.objects.PromoCodeList.getFirstInstance();
-		if (listInstance) {
-		    const selectedCode = listInstance.instVars.SelectedCode;
-		    navigator.clipboard.writeText(selectedCode).then(() => {
-		        setStatusMessage("Promo code copied to clipboard!");
-		    }).catch(err => {
-		        console.error("Clipboard error:", err);
-		        setStatusMessage("Error copying promo code.");
-		    });
-		} else {
-		    setStatusMessage("Promo code list not found.");
-		}
+		
 	},
 
 	async Wallet_event_Event2_Act1(runtime, localVars)
@@ -855,6 +758,103 @@ const scriptsInEvents = {
 	async Wallet_event_Event28_Act5(runtime, localVars)
 	{
 		window.transferTokens();
+	},
+
+	async Admin_event_Event1_Act1(runtime, localVars)
+	{
+		window.fetchActivePromoCodes();
+	},
+
+	async Admin_event_Event1_Act2(runtime, localVars)
+	{
+		window.updatePromoCodeList();
+	},
+
+	async Admin_event_Event1_Act3(runtime, localVars)
+	{
+		self.getGoldPot();
+	},
+
+	async Admin_event_Event1_Act4(runtime, localVars)
+	{
+		self.getSilverPot();
+	},
+
+	async Admin_event_Event1_Act5(runtime, localVars)
+	{
+		self.getHighScorePot();
+	},
+
+	async Admin_event_Event1_Act6(runtime, localVars)
+	{
+		self.getCanisterBalance();
+	},
+
+	async Admin_event_Event3_Act1(runtime, localVars)
+	{
+		window.updatePromoCodeList();
+	},
+
+	async Admin_event_Event4_Act1(runtime, localVars)
+	{
+		self.getGoldPot();
+	},
+
+	async Admin_event_Event4_Act2(runtime, localVars)
+	{
+		self.getSilverPot();
+	},
+
+	async Admin_event_Event4_Act3(runtime, localVars)
+	{
+		self.getHighScorePot();
+	},
+
+	async Admin_event_Event4_Act4(runtime, localVars)
+	{
+		self.getCanisterBalance();
+	},
+
+	async Admin_event_Event5_Act1(runtime, localVars)
+	{
+		window.generatePromoCode();
+	},
+
+	async Admin_event_Event6_Act1(runtime, localVars)
+	{
+		window.copyGeneratedPromoCode();
+	},
+
+	async Admin_event_Event7_Act1(runtime, localVars)
+	{
+		const listInstance = runtime.objects.PromoCodeList.getFirstInstance();
+		if (listInstance) {
+		    const allCodes = Array.from({length: listInstance.itemCount}, (_, i) => listInstance.getItemText(i)).join("\n");
+		    navigator.clipboard.writeText(allCodes).then(() => {
+		        setStatusMessage("All active promo codes copied to clipboard!");
+		    }).catch(err => {
+		        console.error("Clipboard error:", err);
+		        setStatusMessage("Error copying promo codes.");
+		    });
+		} else {
+		    setStatusMessage("Promo code list not found.");
+		}
+	},
+
+	async Admin_event_Event9_Act2(runtime, localVars)
+	{
+		const listInstance = runtime.objects.PromoCodeList.getFirstInstance();
+		if (listInstance) {
+		    const selectedCode = listInstance.instVars.SelectedCode;
+		    navigator.clipboard.writeText(selectedCode).then(() => {
+		        setStatusMessage("Promo code copied to clipboard!");
+		    }).catch(err => {
+		        console.error("Clipboard error:", err);
+		        setStatusMessage("Error copying promo code.");
+		    });
+		} else {
+		    setStatusMessage("Promo code list not found.");
+		}
 	}
 };
 

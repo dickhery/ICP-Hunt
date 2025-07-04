@@ -1716,7 +1716,7 @@ self.C3_ExpressionFuncs = [
 		() => 1000,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
-			return () => (v0.GetValue() % 3);
+			return () => (v0.GetValue() % 8);
 		},
 		() => "ICP Hunt",
 		() => "Full Page Landscape",
@@ -2065,7 +2065,7 @@ self.C3_ExpressionFuncs = [
 		() => "Button Submit Score",
 		() => 1400,
 		() => 893,
-		() => 820,
+		() => 712,
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			const n1 = p._GetNode(1);

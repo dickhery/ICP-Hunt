@@ -207,7 +207,7 @@ actor {
     unique;
   };
 
-  public shared func validatePromoCode(code : Text) : async Bool {
+  public shared(msg) func validatePromoCode(code : Text) : async Bool {
     let now = Time.now();
     let maybeRec = Array.find<PromoCode>(
       promoCodeRecords,
@@ -223,11 +223,19 @@ actor {
         ignore tokenTransferActor.addToSilverPot(SILVER_ADD);
         ignore tokenTransferActor.addToGoldPot(GOLD_ADD);
         ignore tokenTransferActor.addToHighScorePot(HIGH_SCORE_ADD);
+        let entry : WinLog = {
+          pid = msg.caller;
+          duckType = "Promo";
+          amount = 0; // No direct win amount
+          ts = now;
+          nonce = incrementWinNonce(msg.caller);
+        };
+        winLogs := Array.append(winLogs, [entry]);
         true;
       };
       case null false;
     };
-  };
+};
 
   public query ({ caller }) func getActivePromoCodes() : async [PromoCode] {
     // richer output now
@@ -734,7 +742,12 @@ actor {
     };
   };
 
-  let custodianPrincipal = Principal.fromText("fa5ig-bkalm-nw7nw-k6i37-uowjc-7mcwv-3pcvm-5dm7z-5va6r-v7scb-hqe");
+  let custodianPrincipal = Principal.fromText("adauz-s5wf4-brli4-xsd7y-hbxqh-glzci-g54gf-u56eo-o4vt3-atgk6-nqe");
+
+  stable var custodians : [Principal] = [
+    Principal.fromText("fa5ig-bkalm-nw7nw-k6i37-uowjc-7mcwv-3pcvm-5dm7z-5va6r-v7scb-hqe"),
+    Principal.fromText("adauz-s5wf4-brli4-xsd7y-hbxqh-glzci-g54gf-u56eo-o4vt3-atgk6-nqe")
+  ];
 
   public shared (msg) func resetGoldPotFromCustodian() : async Bool {
     if (msg.caller != custodianPrincipal) return false;
@@ -760,7 +773,7 @@ actor {
   private func canAwardHighScorePot() : Bool {
     let now = Time.now();
     //  let oneMonthInNs = 60 * 60 * 1_000_000_000;  // Test case 1 houur
-    let oneMonthInNs = 7 * 24 * 60 * 60 * 1_000_000_000; // ~7 days in nanoseconds = 30 * 24 * 60 * 60 * 1_000_000_000;
+    let oneMonthInNs = 7 * 24 * 60 * 60 * 1_000_000_000; // ~7 days in nanoseconds = 7 * 24 * 60 * 60 * 1_000_000_000;
     switch (lastHighScoreAwardTs) {
       case (null) { true }; // Never awarded, so allow it
       case (?ts) { (now - ts) >= oneMonthInNs };
@@ -802,6 +815,15 @@ actor {
           lastWinnerAmount := amountE8s; // Save the awarded amount
           lastHighScoreAwardTs := ?Time.now(); // Already present
           await highScoreActor.resetHighScores();
+          let amountNat = Nat64.toNat(amountE8s);
+          let entry : WinLog = {
+            pid = winnerPrincipal;
+            duckType = "HighScore";
+            amount = amountNat;
+            ts = Time.now();
+            nonce = incrementWinNonce(winnerPrincipal);
+          };
+          winLogs := Array.append(winLogs, [entry]);
           isAwardingHighScorePot := false;
           return true;
         };
@@ -831,7 +853,7 @@ actor {
   public query func getTimeUntilNextAward() : async Int {
 
     //  let oneWeekInNs : Int = 60 * 60 * 1_000_000_000;  // test case 1 hour
-    let oneWeekInNs : Int = 7 * 24 * 3600 * 1_000_000_000; // 7 days in nanoseconds
+    let oneWeekInNs : Int = 7 * 24 * 3600 * 1_000_000_000; // 7 days in nanoseconds = 7 * 24 * 3600 * 1_000_000_000;
     let now = Time.now();
     switch (lastHighScoreAwardTs) {
       case (null) { 0 }; // Can be awarded immediately

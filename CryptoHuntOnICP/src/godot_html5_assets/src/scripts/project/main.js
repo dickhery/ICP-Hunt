@@ -727,15 +727,20 @@ window.updatePromoCodeList = function () {
   activePromoCodes.forEach(({ code, expiration }) => {
     const expirationNs = BigInt(expiration);
     const expirationMs = Number(expirationNs / 1_000_000n);
-    const remainingMs = expirationMs - nowMs;
-    if (remainingMs > 0) {
-      const remainingSeconds = Math.floor(remainingMs / 1000);
-      const days = Math.floor(remainingSeconds / 86400);
-      const hours = Math.floor((remainingSeconds % 86400) / 3600);
-      const minutes = Math.floor((remainingSeconds % 3600) / 60);
-      const seconds = remainingSeconds % 60;
-      const timeStr = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-      listInstance.addItem(`${code} - ${timeStr}`);
+    if (expirationMs > nowMs) {
+      const expirationDate = new Date(expirationMs);
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZone: 'America/Los_Angeles',
+        timeZoneName: 'short'
+      });
+      const formattedDate = formatter.format(expirationDate);
+      listInstance.addItem(`${code} - Expires on ${formattedDate}`);
     } else {
       listInstance.addItem(`${code} - Expired`);
     }
