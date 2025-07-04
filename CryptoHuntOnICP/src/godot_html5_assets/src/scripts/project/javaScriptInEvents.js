@@ -116,80 +116,6 @@ const scriptsInEvents = {
 		
 	},
 
-	async Menu_event_Event4_Act1(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Menu_event_Event4_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event4_Act20(runtime, localVars)
-	{
-		window.checkLastAwardTs();
-	},
-
-	async Menu_event_Event5_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event5_Act3(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Menu_event_Event6_Act1(runtime, localVars)
-	{
-		window.copyPrincipalToClipboard();
-		
-	},
-
-	async Menu_event_Event7_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event19_Act1(runtime, localVars)
-	{
-		window.depositIcpForUser();
-	},
-
-	async Menu_event_Event26_Act6(runtime, localVars)
-	{
-		window.depositIcpForUser();
-	},
-
-	async Menu_event_Event28_Act5(runtime, localVars)
-	{
-		window.validatePromoCode();
-	},
-
-	async Menu_event_Event35_Act2(runtime, localVars)
-	{
-		window.logout();
-	},
-
 	async Game_over_event_Event2_Act1(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
@@ -285,6 +211,80 @@ const scriptsInEvents = {
 		} else {
 		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
 		}
+	},
+
+	async Menu_event_Event4_Act1(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event4_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event4_Act20(runtime, localVars)
+	{
+		window.checkLastAwardTs();
+	},
+
+	async Menu_event_Event5_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event5_Act3(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event6_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
+	},
+
+	async Menu_event_Event7_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event19_Act1(runtime, localVars)
+	{
+		window.depositIcpForUser();
+	},
+
+	async Menu_event_Event26_Act6(runtime, localVars)
+	{
+		window.depositIcpForUser();
+	},
+
+	async Menu_event_Event28_Act5(runtime, localVars)
+	{
+		window.validatePromoCode();
+	},
+
+	async Menu_event_Event35_Act2(runtime, localVars)
+	{
+		window.logout();
 	},
 
 	async Auth_event_Event1_Act1(runtime, localVars)
@@ -461,6 +461,23 @@ const scriptsInEvents = {
 		
 	},
 
+	async Beta_event_Event1_Act1(runtime, localVars)
+	{
+		window.checkPassword();
+	},
+
+	async Beta_event_Event6_Act1(runtime, localVars)
+	{
+		self.getGoldPot();
+		
+	},
+
+	async Beta_event_Event6_Act2(runtime, localVars)
+	{
+		self.getSilverPot();
+		
+	},
+
 	async Leaderboard_event_Event1_Act1(runtime, localVars)
 	{
 // A single async script to fetch and display high scores
@@ -582,21 +599,101 @@ const scriptsInEvents = {
 		})();
 	},
 
-	async Beta_event_Event1_Act1(runtime, localVars)
+	async Admin_event_Event1_Act1(runtime, localVars)
 	{
-		window.checkPassword();
+		window.fetchActivePromoCodes();
 	},
 
-	async Beta_event_Event6_Act1(runtime, localVars)
+	async Admin_event_Event1_Act2(runtime, localVars)
+	{
+		window.updatePromoCodeList();
+	},
+
+	async Admin_event_Event1_Act3(runtime, localVars)
 	{
 		self.getGoldPot();
-		
 	},
 
-	async Beta_event_Event6_Act2(runtime, localVars)
+	async Admin_event_Event1_Act4(runtime, localVars)
 	{
 		self.getSilverPot();
-		
+	},
+
+	async Admin_event_Event1_Act5(runtime, localVars)
+	{
+		self.getHighScorePot();
+	},
+
+	async Admin_event_Event1_Act6(runtime, localVars)
+	{
+		self.getCanisterBalance();
+	},
+
+	async Admin_event_Event3_Act1(runtime, localVars)
+	{
+		window.updatePromoCodeList();
+	},
+
+	async Admin_event_Event4_Act1(runtime, localVars)
+	{
+		self.getGoldPot();
+	},
+
+	async Admin_event_Event4_Act2(runtime, localVars)
+	{
+		self.getSilverPot();
+	},
+
+	async Admin_event_Event4_Act3(runtime, localVars)
+	{
+		self.getHighScorePot();
+	},
+
+	async Admin_event_Event4_Act4(runtime, localVars)
+	{
+		self.getCanisterBalance();
+	},
+
+	async Admin_event_Event5_Act1(runtime, localVars)
+	{
+		window.generatePromoCode();
+	},
+
+	async Admin_event_Event6_Act1(runtime, localVars)
+	{
+		window.copyGeneratedPromoCode();
+	},
+
+	async Admin_event_Event7_Act1(runtime, localVars)
+	{
+		const listInstance = runtime.objects.PromoCodeList.getFirstInstance();
+		if (listInstance) {
+		    const allCodes = Array.from({length: listInstance.itemCount}, (_, i) => listInstance.getItemText(i)).join("\n");
+		    navigator.clipboard.writeText(allCodes).then(() => {
+		        setStatusMessage("All active promo codes copied to clipboard!");
+		    }).catch(err => {
+		        console.error("Clipboard error:", err);
+		        setStatusMessage("Error copying promo codes.");
+		    });
+		} else {
+		    setStatusMessage("Promo code list not found.");
+		}
+	},
+
+	async Admin_event_Event9_Act2(runtime, localVars)
+	{
+		const listInstance = runtime.objects.PromoCodeList.getFirstInstance();
+		if (listInstance) {
+		    const selectedCode = listInstance.instVars.SelectedCode;
+		    navigator.clipboard.writeText(selectedCode).then(() => {
+		        setStatusMessage("Promo code copied to clipboard!");
+		    }).catch(err => {
+		        console.error("Clipboard error:", err);
+		        setStatusMessage("Error copying promo code.");
+		    });
+		} else {
+		    setStatusMessage("Promo code list not found.");
+		}
 	},
 
 	async Wallet_event_Event2_Act1(runtime, localVars)
@@ -758,103 +855,6 @@ const scriptsInEvents = {
 	async Wallet_event_Event28_Act5(runtime, localVars)
 	{
 		window.transferTokens();
-	},
-
-	async Admin_event_Event1_Act1(runtime, localVars)
-	{
-		window.fetchActivePromoCodes();
-	},
-
-	async Admin_event_Event1_Act2(runtime, localVars)
-	{
-		window.updatePromoCodeList();
-	},
-
-	async Admin_event_Event1_Act3(runtime, localVars)
-	{
-		self.getGoldPot();
-	},
-
-	async Admin_event_Event1_Act4(runtime, localVars)
-	{
-		self.getSilverPot();
-	},
-
-	async Admin_event_Event1_Act5(runtime, localVars)
-	{
-		self.getHighScorePot();
-	},
-
-	async Admin_event_Event1_Act6(runtime, localVars)
-	{
-		self.getCanisterBalance();
-	},
-
-	async Admin_event_Event3_Act1(runtime, localVars)
-	{
-		window.updatePromoCodeList();
-	},
-
-	async Admin_event_Event4_Act1(runtime, localVars)
-	{
-		self.getGoldPot();
-	},
-
-	async Admin_event_Event4_Act2(runtime, localVars)
-	{
-		self.getSilverPot();
-	},
-
-	async Admin_event_Event4_Act3(runtime, localVars)
-	{
-		self.getHighScorePot();
-	},
-
-	async Admin_event_Event4_Act4(runtime, localVars)
-	{
-		self.getCanisterBalance();
-	},
-
-	async Admin_event_Event5_Act1(runtime, localVars)
-	{
-		window.generatePromoCode();
-	},
-
-	async Admin_event_Event6_Act1(runtime, localVars)
-	{
-		window.copyGeneratedPromoCode();
-	},
-
-	async Admin_event_Event7_Act1(runtime, localVars)
-	{
-		const listInstance = runtime.objects.PromoCodeList.getFirstInstance();
-		if (listInstance) {
-		    const allCodes = Array.from({length: listInstance.itemCount}, (_, i) => listInstance.getItemText(i)).join("\n");
-		    navigator.clipboard.writeText(allCodes).then(() => {
-		        setStatusMessage("All active promo codes copied to clipboard!");
-		    }).catch(err => {
-		        console.error("Clipboard error:", err);
-		        setStatusMessage("Error copying promo codes.");
-		    });
-		} else {
-		    setStatusMessage("Promo code list not found.");
-		}
-	},
-
-	async Admin_event_Event9_Act2(runtime, localVars)
-	{
-		const listInstance = runtime.objects.PromoCodeList.getFirstInstance();
-		if (listInstance) {
-		    const selectedCode = listInstance.instVars.SelectedCode;
-		    navigator.clipboard.writeText(selectedCode).then(() => {
-		        setStatusMessage("Promo code copied to clipboard!");
-		    }).catch(err => {
-		        console.error("Clipboard error:", err);
-		        setStatusMessage("Error copying promo code.");
-		    });
-		} else {
-		    setStatusMessage("Promo code list not found.");
-		}
 	}
 };
 

@@ -1577,19 +1577,19 @@ self.C3_ExpressionFuncs = [
 		},
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => Math.round(f0(90, 270));
+			return () => Math.round(f0(100, 260));
 		},
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => Math.round(f0(270, 450));
+			return () => Math.round(f0(280, 440));
 		},
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => Math.round(f0(0, 180));
+			return () => Math.round(f0(10, 170));
 		},
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => Math.round(f0(180, 360));
+			return () => Math.round(f0(190, 350));
 		},
 		p => {
 			const n0 = p._GetNode(0);

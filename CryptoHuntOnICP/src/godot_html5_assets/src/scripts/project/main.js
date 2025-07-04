@@ -80,7 +80,7 @@ function setStatusMessage(msg) {
 }
 window.setStatusMessage = setStatusMessage;
 
-window.addEventListener('unhandledrejection', function(event) {
+window.addEventListener('unhandledrejection', function (event) {
   console.error('Unhandled promise rejection:', event.reason);
   setStatusMessage('An error occurred: ' + (event.reason.message || event.reason));
 });
@@ -127,7 +127,7 @@ self.initOisyWallet = async function () {
     }
 
     const account = accounts[0];
-    
+
     // Handle account.owner based on its type
     if (typeof account.owner === "string") {
       runtimeGlobal.globalVars.currentPrincipal = account.owner;
@@ -327,7 +327,7 @@ self.refreshWinStats = async function () {
   try {
     const stats = await custodianActor.getWinStats();
     const winsOriginal = await custodianActor.getRecentWins();
-    const wins = winsOriginal.slice().reverse();
+    const wins = winsOriginal.slice().reverse().filter(win => win.duckType === "Gold" || win.duckType === "Silver");
 
     const g = runtimeGlobal.globalVars;
     g.RoundsSinceGoldWin = stats.roundsSinceGoldWin;
@@ -689,7 +689,7 @@ self.validatePromoCode = async function () {
   }
 };
 
-self.getActivePromoCodes = async function() {
+self.getActivePromoCodes = async function () {
   if (!window.custodianActor) {
     setStatusMessage("Custodian actor not initialized.");
     return [];
@@ -717,14 +717,14 @@ self.fetchActivePromoCodes = async function () {
   }
 };
 
-window.updatePromoCodeList = function() {
+window.updatePromoCodeList = function () {
   if (!runtimeGlobal) return;
   const listInstance = runtimeGlobal.objects.PromoCodeList.getFirstInstance();
   if (!listInstance) return;
 
   const nowMs = Date.now();
   listInstance.clear();
-  activePromoCodes.forEach(({code, expiration}) => {
+  activePromoCodes.forEach(({ code, expiration }) => {
     const expirationNs = BigInt(expiration);
     const expirationMs = Number(expirationNs / 1_000_000n);
     const remainingMs = expirationMs - nowMs;
@@ -742,7 +742,7 @@ window.updatePromoCodeList = function() {
   });
 };
 
-self.copyGeneratedPromoCode = async function() {
+self.copyGeneratedPromoCode = async function () {
   const code = runtimeGlobal.globalVars.GeneratedPromoCode;
   if (!code) {
     setStatusMessage("No promo code to copy.");
@@ -757,7 +757,7 @@ self.copyGeneratedPromoCode = async function() {
   }
 };
 
-self.copyAllActivePromoCodes = async function() {
+self.copyAllActivePromoCodes = async function () {
   const codes = activePromoCodes.map(pc => pc.code).join("\n");
   if (!codes) {
     setStatusMessage("No active promo codes to copy.");
@@ -1402,8 +1402,16 @@ self.refreshTransactionLogs = async function () {
         const win = entry.win;
         const ts = new Date(Number(win.ts) / 1e6).toLocaleString();
         const amt = (Number(win.amount) / 1e8).toFixed(4);
-        const duckType = win.duckType;
-        return `${ts}: ${duckType} Duck Win ${amt} ICP`;
+        const eventType = win.duckType;
+        if (eventType === "Gold" || eventType === "Silver") {
+          return `${ts}: ${eventType} Duck Win ${amt} ICP`;
+        } else if (eventType === "Promo") {
+          return `${ts}: Used Promo Code`;
+        } else if (eventType === "HighScore") {
+          return `${ts}: Won High Score Pot ${amt} ICP`;
+        } else {
+          return `${ts}: Unknown Event ${eventType}`;
+        }
       }
     }).join("\n");
 
@@ -1480,7 +1488,7 @@ self.getTimeUntilNextAward = async function () {
 };
 window.getTimeUntilNextAward = self.getTimeUntilNextAward;
 
-self.getLastWinnerDetails = async function() {
+self.getLastWinnerDetails = async function () {
   if (!runtimeGlobal || !window.custodianActor) return null;
   try {
     const details = await window.custodianActor.getLastWinnerDetails();
