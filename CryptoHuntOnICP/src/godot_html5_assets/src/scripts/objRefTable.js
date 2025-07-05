@@ -278,12 +278,12 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.HTMLElement.Acts.SetPos,
 		C3.Plugins.TextBox.Acts.SetPos,
 		C3.JavaScriptInEvents.Wallet_event_Event28_Act5,
-		C3.JavaScriptInEvents.Admin_event_Event1_Act1,
 		C3.JavaScriptInEvents.Admin_event_Event1_Act2,
 		C3.JavaScriptInEvents.Admin_event_Event1_Act3,
 		C3.JavaScriptInEvents.Admin_event_Event1_Act4,
 		C3.JavaScriptInEvents.Admin_event_Event1_Act5,
 		C3.JavaScriptInEvents.Admin_event_Event1_Act6,
+		C3.JavaScriptInEvents.Admin_event_Event1_Act7,
 		C3.Plugins.List.Acts.SetCSSStyle,
 		C3.JavaScriptInEvents.Admin_event_Event3_Act1,
 		C3.JavaScriptInEvents.Admin_event_Event4_Act1,
@@ -617,7 +617,8 @@ self.C3_JsPropNameTable = [
 	{GeneratedPromoCode: 0},
 	{ActivePromoCodesCount: 0},
 	{ActivePromoCodes: 0},
-	{success: 0}
+	{success: 0},
+	{isListInteracting: 0}
 ];
 
 self.InstanceType = {

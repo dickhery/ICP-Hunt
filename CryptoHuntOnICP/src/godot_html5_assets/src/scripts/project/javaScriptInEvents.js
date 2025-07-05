@@ -760,32 +760,32 @@ const scriptsInEvents = {
 		window.transferTokens();
 	},
 
-	async Admin_event_Event1_Act1(runtime, localVars)
+	async Admin_event_Event1_Act2(runtime, localVars)
 	{
 		window.fetchActivePromoCodes();
 	},
 
-	async Admin_event_Event1_Act2(runtime, localVars)
+	async Admin_event_Event1_Act3(runtime, localVars)
 	{
 		window.updatePromoCodeList();
 	},
 
-	async Admin_event_Event1_Act3(runtime, localVars)
+	async Admin_event_Event1_Act4(runtime, localVars)
 	{
 		self.getGoldPot();
 	},
 
-	async Admin_event_Event1_Act4(runtime, localVars)
+	async Admin_event_Event1_Act5(runtime, localVars)
 	{
 		self.getSilverPot();
 	},
 
-	async Admin_event_Event1_Act5(runtime, localVars)
+	async Admin_event_Event1_Act6(runtime, localVars)
 	{
 		self.getHighScorePot();
 	},
 
-	async Admin_event_Event1_Act6(runtime, localVars)
+	async Admin_event_Event1_Act7(runtime, localVars)
 	{
 		self.getCanisterBalance();
 	},
