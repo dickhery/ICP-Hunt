@@ -74,9 +74,17 @@ function stringifyWithBigInt(obj) {
   return JSON.stringify(obj, (k, v) => (typeof v === "bigint" ? v.toString() : v));
 }
 
-function setStatusMessage(msg) {
-  messageQueue.push(msg);
-  displayNextMessage();
+function setStatusMessage(msg, immediate = false) {
+  if (immediate) {
+    messageQueue = [msg]; // Clear queue and set new message
+    if (isDisplayingMessage) {
+      isDisplayingMessage = false; // Interrupt current display
+      displayNextMessage();
+    }
+  } else {
+    messageQueue.push(msg);
+    displayNextMessage();
+  }
 }
 window.setStatusMessage = setStatusMessage;
 
@@ -922,15 +930,40 @@ self.topUpAdViews = async function () { /* ... */ };
 self.transferTokens = async function () {
   if (!runtimeGlobal) return;
   if (!authMethod) {
-    setStatusMessage("Please authenticate first.");
+    setStatusMessage("Please authenticate first.", true);
     return;
   }
+
   setStatusMessage("Processing transfer...");
   try {
-    const toPrincipalStr = runtimeGlobal.globalVars.TokenRecipient;
-    const toPrincipal = Principal.fromText(toPrincipalStr);
+    const toPrincipalStr = runtimeGlobal.globalVars.TokenRecipient.trim();
     const decimalAmount = parseFloat(runtimeGlobal.globalVars.TokenAmount) || 0;
     const rawAmount = BigInt(Math.round(decimalAmount * 10 ** DECIMALS));
+
+    function isValidPrincipal(str) {
+      try {
+        Principal.fromText(str);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function isPotentialAccountIdentifier(str) {
+      return /^[0-9a-fA-F]{64}$/.test(str);
+    }
+
+    if (!isValidPrincipal(toPrincipalStr)) {
+      if (isPotentialAccountIdentifier(toPrincipalStr)) {
+        setStatusMessage("Please enter a Principal ID, not an account identifier.", true);
+      } else {
+        setStatusMessage("Invalid recipient input. Please enter a valid Principal ID.", true);
+      }
+      runtimeGlobal.callFunction("OnTransferComplete", 0);
+      return;
+    }
+
+    const toPrincipal = Principal.fromText(toPrincipalStr);
 
     let result;
     if (authMethod === "OisyWallet" && oisyWallet) {
@@ -940,7 +973,7 @@ self.transferTokens = async function () {
       const request = {
         to: {
           owner: toPrincipal,
-          subaccount: null,
+          subaccount: [], // Default subaccount
         },
         amount: rawAmount,
       };
@@ -952,7 +985,7 @@ self.transferTokens = async function () {
       result = await ledger_transfer({
         fromSubaccount: null,
         toPrincipal,
-        toSubaccount: null,
+        toSubaccount: null, // Default subaccount
         amount: rawAmount,
       });
     }
@@ -970,7 +1003,7 @@ self.transferTokens = async function () {
     }
   } catch (err) {
     console.error(err);
-    setStatusMessage("Error transferring tokens: " + err.message);
+    setStatusMessage("Error transferring tokens: " + err.message, true);
     runtimeGlobal.callFunction("OnTransferComplete", 0);
   }
 };

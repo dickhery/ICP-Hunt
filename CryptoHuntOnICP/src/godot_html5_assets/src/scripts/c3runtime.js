@@ -2172,6 +2172,9 @@ self.C3_ExpressionFuncs = [
 			const v0 = p._GetNode(0).GetVar();
 			return () => (v0.GetValue() + "?");
 		},
+		() => "Invalid recipient input. Please enter a valid Principal ID.",
+		() => "Error",
+		() => "Please enter a Principal ID, not an account identifier.",
 		() => "font-size",
 		() => "15px",
 		p => {

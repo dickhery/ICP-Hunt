@@ -363,6 +363,7 @@ self.C3_JsPropNameTable = [
 	{PromoStatusText: 0},
 	{Game_Score_Font2: 0},
 	{Text_NewHighScoreMessage2: 0},
+	{RecipientErrorText: 0},
 	{Button_Exit: 0},
 	{Button_Fullscreen: 0},
 	{Button_Menu: 0},
@@ -520,6 +521,7 @@ self.C3_JsPropNameTable = [
 	{PromoCodeList: 0},
 	{Sprite_Menu: 0},
 	{Button_Auth_Oisy: 0},
+	{Sprite_ConfirmBG2: 0},
 	{Buttons: 0},
 	{Texts: 0},
 	{Spawn_Duck: 0},
@@ -675,6 +677,7 @@ self.InstanceType = {
 	PromoStatusText: class extends self.ISpriteFontInstance {},
 	Game_Score_Font2: class extends self.ISpriteFontInstance {},
 	Text_NewHighScoreMessage2: class extends self.ISpriteFontInstance {},
+	RecipientErrorText: class extends self.ISpriteFontInstance {},
 	Button_Exit: class extends self.ISpriteInstance {},
 	Button_Fullscreen: class extends self.ISpriteInstance {},
 	Button_Menu: class extends self.ISpriteInstance {},
@@ -810,6 +813,7 @@ self.InstanceType = {
 	PromoCodeList: class extends self.IListInstance {},
 	Sprite_Menu: class extends self.ISpriteInstance {},
 	Button_Auth_Oisy: class extends self.ISpriteInstance {},
+	Sprite_ConfirmBG2: class extends self.ISpriteInstance {},
 	Buttons: class extends self.ISpriteInstance {},
 	Texts: class extends self.ISpriteInstance {}
 }
