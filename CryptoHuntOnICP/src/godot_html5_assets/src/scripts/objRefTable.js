@@ -206,7 +206,7 @@ self.C3_GetObjectRefTable = function () {
 		C3.JavaScriptInEvents.Game_over_event_Event7_Act1,
 		C3.Plugins.Button.Acts.SetVisible,
 		C3.JavaScriptInEvents.Game_over_event_Event10_Act1,
-		C3.JavaScriptInEvents.Game_over_event_Event11_Act2,
+		C3.JavaScriptInEvents.Game_over_event_Event11_Act3,
 		C3.JavaScriptInEvents.Game_over_event_Event15_Act1,
 		C3.JavaScriptInEvents.Game_over_event_Event16_Act1,
 		C3.JavaScriptInEvents.Game_over_event_Event17_Act2,

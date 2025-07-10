@@ -255,7 +255,7 @@ const scriptsInEvents = {
 		self.submitHighScore();
 	},
 
-	async Game_over_event_Event11_Act2(runtime, localVars)
+	async Game_over_event_Event11_Act3(runtime, localVars)
 	{
 		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
 		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();

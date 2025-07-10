@@ -2065,6 +2065,7 @@ self.C3_ExpressionFuncs = [
 		() => "Button Submit Score",
 		() => 1400,
 		() => 893,
+		() => 8,
 		() => 712,
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
