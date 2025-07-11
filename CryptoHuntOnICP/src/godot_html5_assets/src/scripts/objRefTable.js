@@ -185,22 +185,22 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.System.Cnds.LayerCmpOpacity,
 		C3.Plugins.System.Acts.Signal,
 		C3.Plugins.Text.Acts.SetText,
-		C3.JavaScriptInEvents.Menu_event_Event4_Act1,
-		C3.JavaScriptInEvents.Menu_event_Event4_Act2,
-		C3.JavaScriptInEvents.Menu_event_Event4_Act20,
+		C3.JavaScriptInEvents.Menu_event_Event5_Act1,
 		C3.JavaScriptInEvents.Menu_event_Event5_Act2,
-		C3.JavaScriptInEvents.Menu_event_Event5_Act3,
-		C3.JavaScriptInEvents.Menu_event_Event6_Act1,
+		C3.JavaScriptInEvents.Menu_event_Event5_Act15,
+		C3.JavaScriptInEvents.Menu_event_Event6_Act2,
+		C3.JavaScriptInEvents.Menu_event_Event6_Act3,
+		C3.JavaScriptInEvents.Menu_event_Event7_Act1,
 		C3.Plugins.Spritefont2.Cnds.CompareText,
-		C3.JavaScriptInEvents.Menu_event_Event7_Act2,
+		C3.JavaScriptInEvents.Menu_event_Event8_Act2,
 		C3.Plugins.Browser.Acts.Close,
 		C3.Plugins.TextBox.Acts.SetVisible,
-		C3.JavaScriptInEvents.Menu_event_Event19_Act1,
+		C3.JavaScriptInEvents.Menu_event_Event20_Act1,
 		C3.Plugins.Mouse.Cnds.OnObjectClicked,
 		C3.Plugins.TextBox.Acts.SetText,
-		C3.JavaScriptInEvents.Menu_event_Event26_Act6,
-		C3.JavaScriptInEvents.Menu_event_Event28_Act5,
-		C3.JavaScriptInEvents.Menu_event_Event35_Act2,
+		C3.JavaScriptInEvents.Menu_event_Event27_Act6,
+		C3.JavaScriptInEvents.Menu_event_Event29_Act5,
+		C3.JavaScriptInEvents.Menu_event_Event36_Act2,
 		C3.JavaScriptInEvents.Game_over_event_Event2_Act1,
 		C3.JavaScriptInEvents.Game_over_event_Event5_Act1,
 		C3.JavaScriptInEvents.Game_over_event_Event7_Act1,
@@ -255,8 +255,8 @@ self.C3_GetObjectRefTable = function () {
 		C3.JavaScriptInEvents.Wallet_event_Event2_Act1,
 		C3.JavaScriptInEvents.Wallet_event_Event2_Act2,
 		C3.JavaScriptInEvents.Wallet_event_Event3_Act1,
-		C3.JavaScriptInEvents.Wallet_event_Event4_Act4,
-		C3.JavaScriptInEvents.Wallet_event_Event4_Act6,
+		C3.JavaScriptInEvents.Wallet_event_Event4_Act1,
+		C3.JavaScriptInEvents.Wallet_event_Event4_Act5,
 		C3.JavaScriptInEvents.Wallet_event_Event4_Act8,
 		C3.JavaScriptInEvents.Wallet_event_Event4_Act9,
 		C3.JavaScriptInEvents.Wallet_event_Event4_Act10,
@@ -296,7 +296,8 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.List.Cnds.OnClicked,
 		C3.Plugins.List.Acts.SetInstanceVar,
 		C3.Plugins.List.Exps.SelectedText,
-		C3.JavaScriptInEvents.Admin_event_Event9_Act2
+		C3.JavaScriptInEvents.Admin_event_Event9_Act2,
+		C3.JavaScriptInEvents.Free_game_event_Event242_Act8
 	];
 };
 self.C3_JsPropNameTable = [
@@ -522,6 +523,12 @@ self.C3_JsPropNameTable = [
 	{Sprite_Menu: 0},
 	{Button_Auth_Oisy: 0},
 	{Sprite_ConfirmBG2: 0},
+	{Sprite_FreePlay: 0},
+	{Sprite5: 0},
+	{Sprite_No_Bounties: 0},
+	{Sprite_No_Leaderboard: 0},
+	{Sprite_Banner_Message_Background: 0},
+	{Sprite_Banner_Message: 0},
 	{Buttons: 0},
 	{Texts: 0},
 	{Spawn_Duck: 0},
@@ -586,6 +593,7 @@ self.C3_JsPropNameTable = [
 	{TopBoundary: 0},
 	{BottomBoundary: 0},
 	{isPaymentInProgress: 0},
+	{ResetMenu: 0},
 	{message: 0},
 	{GotHighScore: 0},
 	{PlayerNameInput: 0},
@@ -620,7 +628,8 @@ self.C3_JsPropNameTable = [
 	{ActivePromoCodesCount: 0},
 	{ActivePromoCodes: 0},
 	{success: 0},
-	{isListInteracting: 0}
+	{isListInteracting: 0},
+	{BannerTimer: 0}
 ];
 
 self.InstanceType = {
@@ -814,6 +823,12 @@ self.InstanceType = {
 	Sprite_Menu: class extends self.ISpriteInstance {},
 	Button_Auth_Oisy: class extends self.ISpriteInstance {},
 	Sprite_ConfirmBG2: class extends self.ISpriteInstance {},
+	Sprite_FreePlay: class extends self.ISpriteInstance {},
+	Sprite5: class extends self.ISpriteInstance {},
+	Sprite_No_Bounties: class extends self.ISpriteInstance {},
+	Sprite_No_Leaderboard: class extends self.ISpriteInstance {},
+	Sprite_Banner_Message_Background: class extends self.ISpriteInstance {},
+	Sprite_Banner_Message: class extends self.ISpriteInstance {},
 	Buttons: class extends self.ISpriteInstance {},
 	Texts: class extends self.ISpriteInstance {}
 }

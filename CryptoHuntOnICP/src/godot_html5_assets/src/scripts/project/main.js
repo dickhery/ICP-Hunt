@@ -1033,7 +1033,7 @@ self.checkTokenBalance = async function () {
 
     const textInstance = runtimeGlobal.objects.Text_Balance.getFirstInstance();
     if (textInstance) {
-      textInstance.text = displayBalance + " ICP";
+      textInstance.text = "Your Balance: " + displayBalance + " ICP";
     } else {
       console.warn("Text_Balance instance not found on current layout.");
     }

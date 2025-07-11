@@ -116,25 +116,9 @@ const scriptsInEvents = {
 		
 	},
 
-	async Menu_event_Event4_Act1(runtime, localVars)
+	async Menu_event_Event5_Act1(runtime, localVars)
 	{
 		window.checkTokenBalance();
-	},
-
-	async Menu_event_Event4_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Menu_event_Event4_Act20(runtime, localVars)
-	{
-		window.checkLastAwardTs();
 	},
 
 	async Menu_event_Event5_Act2(runtime, localVars)
@@ -148,18 +132,12 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Menu_event_Event5_Act3(runtime, localVars)
+	async Menu_event_Event5_Act15(runtime, localVars)
 	{
-		window.checkTokenBalance();
+		window.checkLastAwardTs();
 	},
 
-	async Menu_event_Event6_Act1(runtime, localVars)
-	{
-		window.copyPrincipalToClipboard();
-		
-	},
-
-	async Menu_event_Event7_Act2(runtime, localVars)
+	async Menu_event_Event6_Act2(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
 		
@@ -170,22 +148,44 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Menu_event_Event19_Act1(runtime, localVars)
+	async Menu_event_Event6_Act3(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Menu_event_Event7_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
+	},
+
+	async Menu_event_Event8_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Menu_event_Event20_Act1(runtime, localVars)
 	{
 		window.depositIcpForUser();
 	},
 
-	async Menu_event_Event26_Act6(runtime, localVars)
+	async Menu_event_Event27_Act6(runtime, localVars)
 	{
 		window.depositIcpForUser();
 	},
 
-	async Menu_event_Event28_Act5(runtime, localVars)
+	async Menu_event_Event29_Act5(runtime, localVars)
 	{
 		window.validatePromoCode();
 	},
 
-	async Menu_event_Event35_Act2(runtime, localVars)
+	async Menu_event_Event36_Act2(runtime, localVars)
 	{
 		window.logout();
 	},
@@ -615,7 +615,7 @@ const scriptsInEvents = {
 		window.refreshTransactionLogs();
 	},
 
-	async Wallet_event_Event4_Act4(runtime, localVars)
+	async Wallet_event_Event4_Act5(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
 		
@@ -626,13 +626,6 @@ const scriptsInEvents = {
 		}
 		
 		runtime.objects.Text_Balance.getFirstInstance().text = "Balance: ???";
-		
-	},
-
-	async Wallet_event_Event4_Act6(runtime, localVars)
-	{
-		// call your main.js function
-		window.checkTokenBalance();
 		
 	},
 
@@ -855,6 +848,39 @@ const scriptsInEvents = {
 		} else {
 		    setStatusMessage("Promo code list not found.");
 		}
+	},
+
+	async Free_game_event_Event14_Act19(runtime, localVars)
+	{
+
+	},
+
+	async Free_game_event_Event14_Act20(runtime, localVars)
+	{
+
+	},
+
+	async Free_game_event_Event28_Act1(runtime, localVars)
+	{
+
+	},
+
+	async Free_game_event_Event28_Act2(runtime, localVars)
+	{
+
+	},
+
+	async Free_game_event_Event242_Act8(runtime, localVars)
+	{
+		self.fetchNextAd();
+		
+	},
+
+	async Wallet_event_Event4_Act1(runtime, localVars)
+	{
+		// call your main.js function
+		window.checkTokenBalance();
+		
 	}
 };
 
