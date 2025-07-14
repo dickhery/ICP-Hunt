@@ -14,7 +14,6 @@ export const idlFactory = ({ IDL }) => {
     'amount' : Tokens,
   });
   const Result = IDL.Variant({ 'Ok' : IDL.Nat64, 'Err' : IDL.Text });
-  const TransferResult = IDL.Variant({ 'Ok' : IDL.Nat64, 'Err' : IDL.Text });
   return IDL.Service({
     'addToGoldPot' : IDL.Func([IDL.Nat64], [IDL.Bool], []),
     'addToHighScorePot' : IDL.Func([IDL.Nat64], [IDL.Bool], []),
@@ -36,7 +35,6 @@ export const idlFactory = ({ IDL }) => {
     'resetHighScorePot' : IDL.Func([], [IDL.Bool], []),
     'resetSilverPot' : IDL.Func([], [IDL.Bool], []),
     'transfer' : IDL.Func([TransferArgs], [Result], []),
-    'withdraw' : IDL.Func([IDL.Nat64], [TransferResult], []),
   });
 };
   
