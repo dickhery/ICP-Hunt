@@ -203,36 +203,6 @@ async fn recordDeposit(user: Principal, amount_e8s: u64, block_index: u64) -> bo
     }
 }
 
-/// Withdraw ICP back to caller
-#[update]
-async fn withdraw(amount_e8s: u64) -> TransferResult {
-    let caller = api::caller();
-    let bal = with_state(|st| st.balances.get(&caller).copied().unwrap_or(0));
-
-    if amount_e8s > bal {
-        return TransferResult::Err("Insufficient balance".into());
-    }
-
-    let args = LedgerTransferArgs {
-        memo: Memo(0),
-        amount: Tokens::from_e8s(amount_e8s),
-        fee: Tokens::from_e8s(10_000),
-        from_subaccount: None,
-        to: AccountIdentifier::new(&caller, &DEFAULT_SUBACCOUNT),
-        created_at_time: None,
-    };
-
-    match ledger_transfer(MAINNET_LEDGER_CANISTER_ID, args).await {
-        Ok(Ok(idx)) => {
-            with_state_mut(|st| st.balances.insert(caller, bal - amount_e8s));
-            add_log(caller, "withdraw", amount_e8s, Some(idx));
-            TransferResult::Ok(idx)
-        }
-        Ok(Err(e)) => TransferResult::Err(format!("ledger error: {:?}", e)),
-        Err(e) => TransferResult::Err(format!("call failed: {:?}", e)),
-    }
-}
-
 /// Balance helpers
 #[query]
 fn getBalanceOf(user: Principal) -> u64 {

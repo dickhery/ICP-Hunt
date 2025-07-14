@@ -12,7 +12,6 @@ type TransferArgs = record {
   to_subaccount : opt blob;
   amount : Tokens;
 };
-type TransferResult = variant { Ok : nat64; Err : text };
 service : () -> {
   addToGoldPot : (nat64) -> (bool);
   addToHighScorePot : (nat64) -> (bool);
@@ -30,5 +29,4 @@ service : () -> {
   resetHighScorePot : () -> (bool);
   resetSilverPot : () -> (bool);
   transfer : (TransferArgs) -> (Result);
-  withdraw : (nat64) -> (TransferResult);
 }
