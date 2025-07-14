@@ -1173,10 +1173,11 @@ self.loadHighScores = async function () {
     console.log("loadHighScores(): direct getHighScores returned:", allScores);
 
     runtimeGlobal.globalVars.HighScoreArray = allScores;
+    runtimeGlobal.globalVars.HighScoresFetched = 1; // Set to 1 on success
     setStatusMessage("High scores loaded directly!");
-
   } catch (err) {
     console.error("loadHighScores error:", err);
+    runtimeGlobal.globalVars.HighScoresFetched = 0; // Set to 0 on error
     setStatusMessage("Error loading high scores: " + err.message);
   }
 };

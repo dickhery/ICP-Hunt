@@ -116,6 +116,99 @@ const scriptsInEvents = {
 		
 	},
 
+	async Game_over_event_Event2_Act1(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
+	async Game_over_event_Event5_Act1(runtime, localVars)
+	{
+
+	},
+
+	async Game_over_event_Event8_Act1(runtime, localVars)
+	{
+		(async function() {
+		  console.log("[GameOver] Checking if new high score?");
+		  await self.loadHighScores();
+		  if (runtime.globalVars.HighScoresFetched === 1) {
+		    let arr = runtime.globalVars.HighScoreArray || [];
+		    arr = arr.slice().sort((a, b) => Number(b[3]) - Number(a[3]));
+		    let score = runtime.globalVars.Score;
+		    let isTop = false;
+		    if (arr.length < 10 && score > 0) {  // Modified condition
+		      isTop = true;
+		    } else if (arr.length >= 10) {      // Explicitly check >= 10
+		      let tenthPlaceScore = Number(arr[9][3]);
+		      if (score > tenthPlaceScore) {
+		        isTop = true;
+		      }
+		    }
+		    if (isTop) {
+		      console.log("You got a new high score!");
+		      runtime.globalVars.GotHighScore = 1;
+		    } else {
+		      console.log("Not a top score.");
+		      runtime.globalVars.GotHighScore = 0;
+		    }
+		  } else {
+		    console.log("High scores not fetched successfully.");
+		    runtime.globalVars.GotHighScore = 0;
+		  }
+		  runtime.globalVars.HighScoreCheckComplete = 1;
+		})();
+	},
+
+	async Game_over_event_Event11_Act1(runtime, localVars)
+	{
+		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
+		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
+		
+		const nameInput = nameBox ? nameBox.text.trim() : "";
+		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
+		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
+		
+		self.submitHighScore();
+	},
+
+	async Game_over_event_Event12_Act3(runtime, localVars)
+	{
+		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
+		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
+		const nameInput = nameBox ? nameBox.text.trim() : "";
+		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
+		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
+		self.submitHighScore();
+	},
+
+	async Game_over_event_Event19_Act1(runtime, localVars)
+	{
+		window.checkTokenBalance();
+	},
+
+	async Game_over_event_Event20_Act1(runtime, localVars)
+	{
+		window.copyPrincipalToClipboard();
+		
+	},
+
+	async Game_over_event_Event21_Act2(runtime, localVars)
+	{
+		const p = runtime.globalVars.currentPrincipal;
+		
+		if (p && p.length > 0) {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
+		} else {
+		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
+		}
+	},
+
 	async Menu_event_Event5_Act1(runtime, localVars)
 	{
 		window.checkTokenBalance();
@@ -170,121 +263,24 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Menu_event_Event20_Act1(runtime, localVars)
+	async Menu_event_Event21_Act1(runtime, localVars)
 	{
 		window.depositIcpForUser();
 	},
 
-	async Menu_event_Event27_Act6(runtime, localVars)
+	async Menu_event_Event28_Act6(runtime, localVars)
 	{
 		window.depositIcpForUser();
 	},
 
-	async Menu_event_Event29_Act5(runtime, localVars)
+	async Menu_event_Event30_Act5(runtime, localVars)
 	{
 		window.validatePromoCode();
 	},
 
-	async Menu_event_Event36_Act2(runtime, localVars)
+	async Menu_event_Event37_Act2(runtime, localVars)
 	{
 		window.logout();
-	},
-
-	async Game_over_event_Event2_Act1(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
-	},
-
-	async Game_over_event_Event5_Act1(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Game_over_event_Event7_Act1(runtime, localVars)
-	{
-		(async function() {
-		  console.log("[GameOver] Checking if new high score?");
-		  
-		  // 1) Load scoreboard
-		  await self.loadHighScores();  
-		  let arr = runtime.globalVars.HighScoreArray || [];
-		
-		  // 2) Sort descending by score
-		  arr = arr.slice().sort((a, b) => Number(b[3]) - Number(a[3]));
-		
-		  // 3) Compare the player's final Score
-		  let score = runtime.globalVars.Score;
-		  let isTop = false;
-		
-		  if (arr.length < 10) {
-		    isTop = true;
-		  } else {
-		    let tenthPlaceScore = Number(arr[9][3]);
-		    if (score > tenthPlaceScore) {
-		      isTop = true;
-		    }
-		  }
-		
-		  // 4) Instead of show/hide directly, do this:
-		  if (isTop) {
-		    console.log("You got a new high score!");
-		    runtime.globalVars.GotHighScore = 1;
-		  } else {
-		    console.log("Not a top score.");
-		    runtime.globalVars.GotHighScore = 0;
-		  }
-		  runtime.globalVars.HighScoreCheckComplete = 1;
-		})();
-	},
-
-	async Game_over_event_Event10_Act1(runtime, localVars)
-	{
-		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
-		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
-		
-		const nameInput = nameBox ? nameBox.text.trim() : "";
-		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
-		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
-		
-		self.submitHighScore();
-	},
-
-	async Game_over_event_Event11_Act3(runtime, localVars)
-	{
-		const nameBox = runtime.objects.NameInputBox.getFirstInstance();
-		const emailBox = runtime.objects.EmailInputBox.getFirstInstance();
-		const nameInput = nameBox ? nameBox.text.trim() : "";
-		runtime.globalVars.PlayerNameInput = nameInput === "" ? "Anonymous" : nameInput;
-		runtime.globalVars.PlayerEmailInput = emailBox ? emailBox.text : "";
-		self.submitHighScore();
-	},
-
-	async Game_over_event_Event15_Act1(runtime, localVars)
-	{
-		window.checkTokenBalance();
-	},
-
-	async Game_over_event_Event16_Act1(runtime, localVars)
-	{
-		window.copyPrincipalToClipboard();
-		
-	},
-
-	async Game_over_event_Event17_Act2(runtime, localVars)
-	{
-		const p = runtime.globalVars.currentPrincipal;
-		
-		if (p && p.length > 0) {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal: " + p;
-		} else {
-		  runtime.objects.Text_Principal.getFirstInstance().text = "Principal not found";
-		}
 	},
 
 	async Auth_event_Event1_Act1(runtime, localVars)
@@ -615,6 +611,13 @@ const scriptsInEvents = {
 		window.refreshTransactionLogs();
 	},
 
+	async Wallet_event_Event4_Act1(runtime, localVars)
+	{
+		// call your main.js function
+		window.checkTokenBalance();
+		
+	},
+
 	async Wallet_event_Event4_Act5(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
@@ -670,22 +673,16 @@ const scriptsInEvents = {
 
 	async Wallet_event_Event14_Act1(runtime, localVars)
 	{
-		window.withdrawIcp();
-		
-	},
-
-	async Wallet_event_Event15_Act1(runtime, localVars)
-	{
 		window.checkMyIcpTransferBalance();
 		
 	},
 
-	async Wallet_event_Event16_Act2(runtime, localVars)
+	async Wallet_event_Event15_Act2(runtime, localVars)
 	{
 		window.checkUserIcpTransferBalance();
 	},
 
-	async Wallet_event_Event17_Act1(runtime, localVars)
+	async Wallet_event_Event16_Act1(runtime, localVars)
 	{
 		let typed = runtime.objects.TextInput_PotAmount.getFirstInstance().text;
 		let potNum = parseFloat(typed) || 0;
@@ -693,7 +690,7 @@ const scriptsInEvents = {
 		
 	},
 
-	async Wallet_event_Event18_Act1(runtime, localVars)
+	async Wallet_event_Event17_Act1(runtime, localVars)
 	{
 		let typed = runtime.objects.TextInput_PotAmount.getFirstInstance().text;
 		let potNum = parseFloat(typed) || 0;
@@ -701,33 +698,33 @@ const scriptsInEvents = {
 		
 	},
 
-	async Wallet_event_Event19_Act1(runtime, localVars)
+	async Wallet_event_Event18_Act1(runtime, localVars)
 	{
 		window.getGoldPot();
 	},
 
-	async Wallet_event_Event20_Act1(runtime, localVars)
+	async Wallet_event_Event19_Act1(runtime, localVars)
 	{
 		window.getSilverPot();
 	},
 
-	async Wallet_event_Event21_Act1(runtime, localVars)
+	async Wallet_event_Event20_Act1(runtime, localVars)
 	{
 		window.getTotalPot();
 	},
 
-	async Wallet_event_Event22_Act1(runtime, localVars)
+	async Wallet_event_Event21_Act1(runtime, localVars)
 	{
 		window.resetGoldPotFromCustodian();
 	},
 
-	async Wallet_event_Event23_Act1(runtime, localVars)
+	async Wallet_event_Event22_Act1(runtime, localVars)
 	{
 		window.copyPrincipalToClipboard();
 		
 	},
 
-	async Wallet_event_Event24_Act2(runtime, localVars)
+	async Wallet_event_Event23_Act2(runtime, localVars)
 	{
 		const p = runtime.globalVars.currentPrincipal;
 		
@@ -738,17 +735,12 @@ const scriptsInEvents = {
 		}
 	},
 
-	async Wallet_event_Event24_Act3(runtime, localVars)
+	async Wallet_event_Event23_Act3(runtime, localVars)
 	{
 		window.checkTokenBalance();
 	},
 
-	async Wallet_event_Event27_Act2(runtime, localVars)
-	{
-
-	},
-
-	async Wallet_event_Event28_Act5(runtime, localVars)
+	async Wallet_event_Event27_Act5(runtime, localVars)
 	{
 		window.transferTokens();
 	},
@@ -876,11 +868,9 @@ const scriptsInEvents = {
 		
 	},
 
-	async Wallet_event_Event4_Act1(runtime, localVars)
+	async Game_over_event_Event6_Act1(runtime, localVars)
 	{
-		// call your main.js function
 		window.checkTokenBalance();
-		
 	}
 };
 
