@@ -103,17 +103,16 @@ actor {
   stable var promoCodeRecords : [PromoCode] = [];
 
   system func postupgrade() {
-    let defaultExpiry = Time.now() + (7 * 24 * 3600 * 1_000_000_000); // 7 days from upgrade
-
-    // Convert every legacy string into a full record with the default expiry.
-    promoCodeRecords := Array.map<Text, PromoCode>(
-      Array.append(promoCodes, _old_promoCodes),
-      func(c : Text) : PromoCode { { code = c; expiration = defaultExpiry } },
-    );
-
-    // We don’t need the text-only lists any more – clear them to save space.
-    promoCodes := [];
-    _old_promoCodes := [];
+    if (promoCodeRecords.size() == 0) {
+      let defaultExpiry = Time.now() + (7 * 24 * 3600 * 1_000_000_000); // 7 days from upgrade
+      promoCodeRecords := Array.map<Text, PromoCode>(
+        Array.append(promoCodes, _old_promoCodes),
+        func(c : Text) : PromoCode { { code = c; expiration = defaultExpiry } },
+      );
+      promoCodes := [];
+      _old_promoCodes := [];
+    };
+    // Otherwise, do nothing to preserve existing promoCodeRecords
   };
 
   type PlayerRoundState = {
