@@ -418,10 +418,8 @@ actor {
   };
 
   public query func getRecentWins() : async [WinLog] {
-    let len = winLogs.size();
-    let allWinLogs = Iter.toArray(winLogs.vals());
-    if (len <= 20) allWinLogs else Array.tabulate<WinLog>(20, func(i) { allWinLogs[len - 20 + i] });
-  };
+  Iter.toArray(winLogs.vals())
+};
 
   public func getSilverPot() : async Nat64 {
     return await tokenTransferActor.getSilverPot();
