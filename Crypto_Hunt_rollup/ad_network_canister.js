@@ -62,4 +62,4 @@ export const idlFactory = ({ IDL }) => {
 };
 
 // Just export your canister ID as usual:
-export const canisterId = "qanay-uyaaa-aaaag-qbbwa-cai"; 
+export const canisterId = "7kuqs-jaaaa-aaaal-qsrca-cai"; 
