@@ -27214,7 +27214,7 @@ const idlFactory$4 = ({ IDL }) => {
 };
 
 // Just export your canister ID as usual:
-const canisterId$4 = "qanay-uyaaa-aaaag-qbbwa-cai";
+const canisterId$4 = "7kuqs-jaaaa-aaaal-qsrca-cai";
 
 // ledger_canister.js
 const idlFactory$3 = ({ IDL }) => {
